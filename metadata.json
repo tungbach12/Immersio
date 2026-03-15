@@ -1,0 +1,8 @@
+{
+  "name": "IMMERSIO - best version",
+  "description": "A vibrant, AI-powered language learning platform featuring interactive scenarios, AR modes, and deep analytics.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

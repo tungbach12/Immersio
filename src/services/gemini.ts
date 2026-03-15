@@ -1,9 +1,18 @@
 import { GoogleGenAI } from "@google/genai";
 
 // Initialize Gemini Client
-// Note: In a real app, you might want to handle the missing key more gracefully
 const apiKey = process.env.GEMINI_API_KEY || "";
-const ai = new GoogleGenAI({ apiKey });
+let ai: GoogleGenAI | null = null;
+
+if (apiKey) {
+  try {
+    ai = new GoogleGenAI({ apiKey });
+  } catch (error) {
+    console.warn("Failed to initialize GoogleGenAI:", error);
+  }
+} else {
+  console.warn("GEMINI_API_KEY is missing. AI features will be disabled.");
+}
 
 export interface ChatMessage {
   role: "user" | "model";
@@ -35,6 +44,10 @@ export async function generateScenarioResponse(
       4. If the user is stuck, provide a subtle hint in the response.
       5. Do not break character to say you are an AI.
     `;
+
+    if (!ai) {
+      return "Error: Gemini AI client not initialized (missing API Key).";
+    }
 
     const chat = ai.chats.create({
       model: model,
@@ -68,6 +81,7 @@ export async function getCorrection(userText: string, targetLanguage: string = "
             2. "explanation": A brief explanation of the error (if any), or "Perfect!" if it was correct.
         `;
         
+        if (!ai) throw new Error("AI client not initialized");
         const response = await ai.models.generateContent({
             model,
             contents: prompt,
@@ -98,6 +112,7 @@ export async function generateFeedback(history: ChatMessage[], scenarioContext: 
       Provide a brief, encouraging feedback summary (2-3 paragraphs) for the student. Highlight what they did well and areas for improvement.
     `;
     
+    if (!ai) throw new Error("AI client not initialized");
     const response = await ai.models.generateContent({
       model,
       contents: prompt,
@@ -141,6 +156,7 @@ export async function generateFlashcards(history: ChatMessage[], option: "gramma
       - "explanation": A brief explanation of the rule or meaning.
     `;
     
+    if (!ai) throw new Error("AI client not initialized");
     const response = await ai.models.generateContent({
       model,
       contents: prompt,
@@ -157,6 +173,8 @@ export async function generateFlashcards(history: ChatMessage[], option: "gramma
 }
 export async function generateSpeech(text: string): Promise<string | null> {
     if (!apiKey) return null;
+
+    if (!ai) return null;
 
     try {
         const response = await ai.models.generateContent({

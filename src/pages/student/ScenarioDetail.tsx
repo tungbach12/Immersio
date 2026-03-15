@@ -44,6 +44,14 @@ export default function ScenarioDetail() {
   const [decks, setDecks] = useState<Deck[]>([]);
   const [newDeckName, setNewDeckName] = useState("");
   const [isSaved, setIsSaved] = useState(false);
+  const [dragOrigin, setDragOrigin] = useState({ x: 0, y: 0 });
+  
+  // Navigation Mode States
+  const [navPhase, setNavPhase] = useState<"intro" | "local_explaining" | "ai_question" | "feedback">("intro");
+  const [userAnswer, setUserAnswer] = useState("");
+  const [navFeedback, setNavFeedback] = useState<{isCorrect: boolean, explanation: string} | null>(null);
+  const [mapDestination, setMapDestination] = useState({ x: 75, y: 25 }); // Example target on mini-map
+  const [userPos, setUserPos] = useState({ x: 20, y: 80 }); // User start on mini-map
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -267,9 +275,9 @@ export default function ScenarioDetail() {
 
   const availableModels = [
     // Add more local .glb models here as they are added to /public/assets
-    { name: "Frieren", url: "/assets/frierenmodel.glb", image: "/assets/Shinji.png" },
-    { name: "Model 76", url: "/assets/76.glb", image: "/assets/Shinji.png" },
-    { name: "Model 80", url: "/assets/80.glb", image: "/assets/Shinji.png" },
+    { name: "Frieren", url: "/assets/frierenmodel.glb", image: "/ModelImage/Frieren.png" },
+    { name: "Model 76", url: "/assets/76.glb", image: "/ModelImage/model76.png" },
+    { name: "Model 80", url: "/assets/80.glb", image: "/ModelImage/model80.png" },
   ];
 
   const handleSend = async () => {
@@ -287,15 +295,42 @@ export default function ScenarioDetail() {
       // Auto-play NPC response
       playTextToSpeech(response);
 
-      // Analyze user input for feedback
-      const correction = await getCorrection(userMsg, scenario.language);
-      if (correction.corrected !== userMsg && correction.explanation !== "Perfect!") {
-          setShowCorrection({
-              original: userMsg,
-              corrected: correction.corrected,
-              explanation: correction.explanation
-          });
-          setTimeout(() => setShowCorrection(null), 8000);
+      // --- Navigation Mode Logic ---
+      if (scenario.isNavigation) {
+          if (navPhase === "intro") {
+              setNavPhase("local_explaining");
+          } else if (navPhase === "local_explaining") {
+              // After local explains, trigger AI question phase
+              setTimeout(() => {
+                  setNavPhase("ai_question");
+                  const aiMsg = "AI Assistant: Based on the directions, where should you turn right?";
+                  setMessages(prev => [...prev, { role: "model", text: aiMsg }]);
+                  playTextToSpeech(aiMsg);
+              }, 3000);
+          } else if (navPhase === "ai_question") {
+              // Analyze user answer
+              const isCorrect = userMsg.toLowerCase().includes("starbucks") || userMsg.toLowerCase().includes("right");
+              setNavFeedback({
+                  isCorrect,
+                  explanation: isCorrect 
+                    ? "Perfect! You understood the spatial direction correctly." 
+                    : "Not quite. The local said to turn right at the Starbucks."
+              });
+              setNavPhase("feedback");
+          }
+      }
+
+      // Analyze user input for feedback (standard logic)
+      if (!scenario.isNavigation || navPhase !== "ai_question") {
+          const correction = await getCorrection(userMsg, scenario.language);
+          if (correction.corrected !== userMsg && correction.explanation !== "Perfect!") {
+              setShowCorrection({
+                  original: userMsg,
+                  corrected: correction.corrected,
+                  explanation: correction.explanation
+              });
+              setTimeout(() => setShowCorrection(null), 8000);
+          }
       }
 
     } catch (error) {
@@ -390,16 +425,155 @@ export default function ScenarioDetail() {
               onClick={handleARClick}
               className="absolute inset-0 cursor-crosshair overflow-hidden z-10"
             >
-                {/* Corner Brackets */}
-                <div className="absolute top-10 left-10 w-20 h-20 border-t-4 border-l-4 border-cyan-400/50 rounded-tl-3xl" />
-                <div className="absolute top-10 right-10 w-20 h-20 border-t-4 border-r-4 border-cyan-400/50 rounded-tr-3xl" />
-                <div className="absolute bottom-10 left-10 w-20 h-20 border-b-4 border-l-4 border-cyan-400/50 rounded-bl-3xl" />
-                <div className="absolute bottom-10 right-10 w-20 h-20 border-b-4 border-r-4 border-cyan-400/50 rounded-br-3xl" />
 
-                {/* Center Reticle */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-40 pointer-events-none">
-                    <Crosshair size={64} className={cn("transition-colors", pendingModel ? "text-yellow-400 scale-125" : "text-cyan-400")} />
-                </div>
+
+                {/* Mini-Map Overlay for Navigation Mode */}
+                {scenario.isNavigation && (
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.8, x: -20 }}
+                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                        className="absolute top-24 left-6 z-40"
+                    >
+                        <div className="w-48 h-48 bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] border-4 border-white/20 shadow-2xl relative overflow-hidden group">
+                           {/* Map Background Grid */}
+                           <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 opacity-20">
+                               {[...Array(36)].map((_, i) => <div key={i} className="border-[0.5px] border-cyan-400/30" />)}
+                           </div>
+                           
+                           {/* Streets / Paths - High-Density Urban Noise */}
+                           <div className="absolute top-[10%] left-0 w-full h-[1px] bg-white/5" />
+                           <div className="absolute top-[30%] left-0 w-full h-[2px] bg-white/10" />
+                           <div className="absolute top-[50%] left-0 w-full h-8 bg-slate-800/40 -translate-y-1/2" />
+                           <div className="absolute top-[70%] left-0 w-full h-[2px] bg-white/10" />
+                           <div className="absolute top-[90%] left-0 w-full h-[1px] bg-white/5" />
+                           
+                           <div className="absolute left-[10%] top-0 h-full w-[1px] bg-white/5" />
+                           <div className="absolute left-[30%] top-0 h-full w-[2px] bg-white/10" />
+                           <div className="absolute left-[50%] top-0 h-full w-8 bg-slate-800/40 -translate-x-1/2" />
+                           <div className="absolute left-[70%] top-0 h-full w-[2px] bg-white/10" />
+                           <div className="absolute left-[90%] top-0 h-full w-[1px] bg-white/5" />
+                           
+                           {/* Random Alleyways & "Noise" */}
+                           {[...Array(8)].map((_, i) => (
+                               <div 
+                                   key={`alley-${i}`}
+                                   style={{ 
+                                       left: `${15 + i * 12}%`, 
+                                       top: `${(i % 3) * 30}%`, 
+                                       width: '1px', 
+                                       height: '40%',
+                                       transform: `rotate(${i * 15}deg)` 
+                                   }}
+                                   className="absolute bg-white/5"
+                               />
+                           ))}
+
+                           {/* Diagonal "Scramble" Paths */}
+                           <div className="absolute top-1/2 left-1/2 w-[150%] h-6 bg-slate-800/30 -translate-x-1/2 -translate-y-1/2 rotate-[35deg]" />
+                           <div className="absolute top-1/2 left-1/2 w-[150%] h-6 bg-slate-800/30 -translate-x-1/2 -translate-y-1/2 -rotate-[35deg]" />
+
+                           {/* SVG Layer for Routes */}
+                           <svg 
+                             viewBox="0 0 100 100"
+                             className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
+                           >
+                                <defs>
+                                    <linearGradient id="route-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stopColor="#22d3ee" />
+                                        <stop offset="100%" stopColor="#818cf8" />
+                                    </linearGradient>
+                                    <linearGradient id="decoy-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stopColor="#94a3b8" />
+                                        <stop offset="100%" stopColor="#475569" />
+                                    </linearGradient>
+                                </defs>
+ 
+                                {/* Decoy Paths (Noise) */}
+                                <motion.path
+                                    d={`M ${userPos.x} ${userPos.y} L 20 20 L 80 20`}
+                                    fill="none"
+                                    stroke="url(#decoy-gradient)"
+                                    strokeWidth="1"
+                                    opacity="0.3"
+                                    strokeDasharray="2 2"
+                                />
+                                <motion.path
+                                    d="M 50 75 L 75 75 L 75 25"
+                                    fill="none"
+                                    stroke="url(#decoy-gradient)"
+                                    strokeWidth="1"
+                                    opacity="0.2"
+                                    strokeDasharray="2 2"
+                                />
+                                <motion.path
+                                    d="M 20 50 L 20 20 L 60 20"
+                                    fill="none"
+                                    stroke="url(#decoy-gradient)"
+                                    strokeWidth="1"
+                                    opacity="0.25"
+                                    strokeDasharray="2 2"
+                                />
+ 
+                                {/* Active Multi-Turn Route Line */}
+                                <motion.path
+                                    d={`
+                                        M ${userPos.x} ${userPos.y} 
+                                        L ${userPos.x} ${50} 
+                                        L ${50} ${50} 
+                                        L ${50} ${mapDestination.y}
+                                        L ${mapDestination.x} ${mapDestination.y}
+                                    `}
+                                    fill="none"
+                                    stroke="url(#route-gradient)"
+                                    strokeWidth="3"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeDasharray="4 3"
+                                    initial={{ strokeDashoffset: 100 }}
+                                    animate={{ strokeDashoffset: 0 }}
+                                    transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                                />
+                           </svg>
+                           
+                           {/* Destination Marker */}
+                           <motion.div 
+                                animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }}
+                                transition={{ repeat: Infinity, duration: 2 }}
+                                style={{ left: `${mapDestination.x}%`, top: `${mapDestination.y}%` }}
+                                className="absolute -translate-x-1/2 -translate-y-1/2"
+                           >
+                               <div className="w-6 h-6 bg-red-500 rounded-full blur-md opacity-50" />
+                               <div className="w-3 h-3 bg-red-500 rounded-full border-2 border-white relative z-10 shadow-lg" />
+                           </motion.div>
+                           
+                           {/* User Pulse */}
+                           <div 
+                                style={{ left: `${userPos.x}%`, top: `${userPos.y}%` }}
+                                className="absolute -translate-x-1/2 -translate-y-1/2"
+                           >
+                               <div className="w-8 h-8 bg-cyan-400 rounded-full animate-ping opacity-25" />
+                               <div className="w-3 h-3 bg-cyan-400 rounded-full border-2 border-white relative z-10 shadow-lg" />
+                           </div>
+
+                           {/* Map Label */}
+                           <div className="absolute bottom-3 left-0 w-full text-center">
+                               <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">Shibuya Area 4-B1</span>
+                           </div>
+                        </div>
+
+                        {/* Navigation Stats below Map */}
+                        <div className="mt-4 space-y-2">
+                             <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-3">
+                                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                 <span className="text-[10px] font-mono text-white/80 uppercase tracking-widest">Target: Shibuya Crossing</span>
+                             </div>
+                             <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-3">
+                                 <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                                 <span className="text-[10px] font-mono text-white/80 uppercase tracking-widest">Distance: 150m</span>
+                             </div>
+                        </div>
+                    </motion.div>
+                )}
 
                 {/* Placement Hint */}
                 <AnimatePresence>
@@ -425,14 +599,26 @@ export default function ScenarioDetail() {
                     drag
                     dragMomentum={false}
                     dragElastic={0}
-                    onDragStart={() => setSelectedModelIndex(idx)}
+                    onDragStart={(e, info) => {
+                      setSelectedModelIndex(idx);
+                      if (!arContainerRef.current) return;
+                      const rect = arContainerRef.current.getBoundingClientRect();
+                      const modelXInPx = (model.x / 100) * rect.width;
+                      const modelYInPx = (model.y / 100) * rect.height;
+                      setDragOrigin({
+                        x: info.point.x - (rect.left + modelXInPx),
+                        y: info.point.y - (rect.top + modelYInPx)
+                      });
+                    }}
                     onDragEnd={(e, info) => {
                       if (!arContainerRef.current) return;
                       const rect = arContainerRef.current.getBoundingClientRect();
                       
-                      // Calculate the new percentage based on where the pointer is
-                      const newX = ((info.point.x - rect.left) / rect.width) * 100;
-                      const newY = ((info.point.y - rect.top) / rect.height) * 100;
+                      const adjustedX = info.point.x - dragOrigin.x;
+                      const adjustedY = info.point.y - dragOrigin.y;
+                      
+                      const newX = ((adjustedX - rect.left) / rect.width) * 100;
+                      const newY = ((adjustedY - rect.top) / rect.height) * 100;
                       
                       const updated = [...placedModels];
                       updated[idx] = { ...updated[idx], x: newX, y: newY };
@@ -463,12 +649,19 @@ export default function ScenarioDetail() {
                       <model-viewer
                         src={model.url}
                         alt={model.name}
-                        auto-rotate
-                        camera-controls
+                        ar
+                        ar-modes="webxr scene-viewer quick-look"
+                        ar-placement="floor"
+                        camera-orbit="0deg 75deg 105%"
+                        autoplay
                         disable-zoom
                         disable-pan
-                        shadow-intensity="1"
-                        style={{ width: 'min(250px, 60vw)', height: 'min(250px, 60vw)', pointerEvents: 'none' }}
+                        shadow-intensity="2"
+                        shadow-softness="1"
+                        environment-image="neutral"
+                        exposure="1"
+                        loading="eager"
+                        style={{ width: 'min(320px, 85vw)', height: 'min(320px, 85vw)', pointerEvents: 'none' }}
                       />
                       
                       {/* Label */}
@@ -479,71 +672,9 @@ export default function ScenarioDetail() {
                   </motion.div>
                 ))}
 
-                {/* AR Controls (When model selected) */}
-                <AnimatePresence>
-                  {selectedModelIndex !== null && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                      className="absolute bottom-24 left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:top-1/2 md:-translate-y-1/2 md:translate-x-0 bg-black/60 backdrop-blur-xl p-6 rounded-[2rem] border border-white/10 z-30 w-[90%] md:w-64 pointer-events-auto"
-                    >
-                      <div className="flex items-center justify-between mb-6">
-                        <h4 className="text-white font-black uppercase tracking-widest text-xs">Model Controls</h4>
-                        <button onClick={() => setSelectedModelIndex(null)} className="text-white/40 hover:text-white">
-                          <X size={16} />
-                        </button>
-                      </div>
 
-                      <div className="space-y-6">
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Scale</label>
-                            <span className="text-[10px] font-mono text-cyan-400">{Math.round(placedModels[selectedModelIndex].scale * 100)}%</span>
-                          </div>
-                          <input 
-                            type="range" 
-                            min="0.2" 
-                            max="3" 
-                            step="0.1"
-                            value={placedModels[selectedModelIndex].scale}
-                            onChange={(e) => updateModelScale(parseFloat(e.target.value))}
-                            className="modern-slider"
-                          />
-                        </div>
 
-                        <Button 
-                          variant="destructive" 
-                          className="w-full rounded-xl h-10 text-xs font-bold uppercase tracking-widest"
-                          onClick={removeModel}
-                        >
-                          Remove Asset
-                        </Button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
 
-                {/* Tech Data Overlays */}
-                <div className="absolute top-24 left-10 space-y-4 hidden md:block pointer-events-none">
-                    <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
-                        <Scan size={14} className="text-cyan-400" />
-                        <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Environment: Scanned</span>
-                    </div>
-                    <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
-                        <Target size={14} className="text-cyan-400" />
-                        <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Depth: 1.42m</span>
-                    </div>
-                </div>
-
-                <div className="absolute top-24 right-10 space-y-4 hidden md:block pointer-events-none">
-                    <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
-                        <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">FPS: 60.0</span>
-                    </div>
-                    <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
-                        <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">LAT: 12ms</span>
-                    </div>
-                </div>
 
                 {/* Grid Overlay */}
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
@@ -588,8 +719,8 @@ export default function ScenarioDetail() {
       </div>
 
       {/* Header */}
-      <div className="relative z-30 p-4 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent">
-        <div className="flex items-center gap-3">
+      <div className="relative z-30 p-2 sm:p-4 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent">
+        <div className="flex items-center gap-1.5 sm:gap-3">
           <Button 
             variant="ghost" 
             size="icon"
@@ -598,7 +729,7 @@ export default function ScenarioDetail() {
           >
             <ArrowLeft size={24} />
           </Button>
-          <div className="flex items-center gap-2 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-full border border-white/10 shadow-2xl">
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-black/40 backdrop-blur-xl px-2 sm:px-4 py-2 rounded-full border border-white/10 shadow-2xl">
             <span className="text-white font-black text-[10px] uppercase tracking-[0.2em]">{scenario.language}</span>
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
           </div>
@@ -606,24 +737,25 @@ export default function ScenarioDetail() {
 
         <div className="flex items-center gap-2">
           {mode !== "feedback" && (
-            <Button 
-              variant="glass" 
-              size="sm" 
-              className="rounded-full h-10 px-4 bg-indigo-500/20 border-indigo-500/30 text-indigo-400 font-bold text-xs mr-2"
-              onClick={handleFinishLesson}
-            >
-              Finish Lesson
-            </Button>
+              <Button 
+                variant="glass" 
+                size="sm" 
+                className="rounded-full h-10 px-3 sm:px-4 bg-indigo-500/20 border-indigo-500/30 text-indigo-400 font-bold text-[10px] sm:text-xs"
+                onClick={handleFinishLesson}
+              >
+                <span className="hidden sm:inline">Finish Lesson</span>
+                <span className="sm:hidden">Finish</span>
+              </Button>
           )}
           {mode === "ar" && (
             <Button 
               variant="glass" 
               size="sm" 
-              className="rounded-full h-10 px-4 bg-cyan-500/20 border-cyan-500/30 text-cyan-400 font-bold text-xs"
+              className="rounded-full h-10 px-3 sm:px-4 bg-cyan-500/20 border-cyan-500/30 text-cyan-400 font-bold text-[10px] sm:text-xs"
               onClick={() => setShowModelPicker(true)}
             >
-              <Box size={16} className="mr-2" />
-              Place Asset
+              <Box size={16} className="sm:mr-2" />
+              <span className="hidden sm:inline">Place Asset</span>
             </Button>
           )}
         </div>
@@ -971,6 +1103,42 @@ export default function ScenarioDetail() {
               )}
           </AnimatePresence>
 
+          {/* Navigation Feedback Overlay */}
+          <AnimatePresence>
+              {scenario.isNavigation && navPhase === "feedback" && navFeedback && (
+                  <motion.div
+                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                      className="absolute bottom-64 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-50"
+                  >
+                      <div className={cn(
+                          "glass-card rounded-[2.5rem] p-8 border-4 shadow-3xl text-center backdrop-blur-3xl",
+                          navFeedback.isCorrect ? "bg-emerald-500/90 border-emerald-400 text-white" : "bg-red-500/90 border-red-400 text-white"
+                      )}>
+                          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                              {navFeedback.isCorrect ? <Check size={32} /> : <X size={32} />}
+                          </div>
+                          <h3 className="text-2xl font-black italic tracking-tighter mb-2">
+                              {navFeedback.isCorrect ? "Navigation Sync!" : "Path Deviation"}
+                          </h3>
+                          <p className="font-bold text-white/90 mb-8 leading-relaxed">
+                              {navFeedback.explanation}
+                          </p>
+                          <Button 
+                            className="w-full h-14 bg-white text-slate-950 hover:bg-slate-100 rounded-2xl font-black uppercase tracking-widest text-xs"
+                            onClick={() => {
+                                setNavPhase("intro");
+                                setNavFeedback(null);
+                            }}
+                          >
+                            Continue Expedition
+                          </Button>
+                      </div>
+                  </motion.div>
+              )}
+          </AnimatePresence>
+
         </div>
       )}
 
@@ -1007,6 +1175,73 @@ export default function ScenarioDetail() {
           </Button>
         </div>
       </div>
+
+      {/* AR Model Controls (Mobile Bottom Dock / Desktop Side Panel) */}
+      <AnimatePresence>
+        {selectedModelIndex !== null && (
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-1/2 md:right-8 md:-translate-y-1/2 md:left-auto md:w-80 bg-slate-950/95 backdrop-blur-2xl px-6 py-8 md:p-8 rounded-t-[2.5rem] md:rounded-[2.5rem] border-t md:border border-white/10 z-[60] w-full shadow-[0_-20px_50px_rgba(0,0,0,0.5)] md:shadow-2xl pointer-events-auto transition-all"
+          >
+            {/* Grab Handle for Mobile */}
+            <div className="md:hidden w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 -mt-2" />
+
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 flex items-center justify-center text-cyan-400">
+                  <Maximize size={20} />
+                </div>
+                <div>
+                  <h4 className="text-white font-black uppercase tracking-widest text-[10px] sm:text-xs">Asset Controls</h4>
+                  <p className="text-[10px] text-slate-500 font-bold">{placedModels[selectedModelIndex].name}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedModelIndex(null)} 
+                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Scale Size</label>
+                  <span className="text-lg font-mono font-black text-cyan-400 tracking-tight">{Math.round(placedModels[selectedModelIndex].scale * 100)}%</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0.2" 
+                  max="3" 
+                  step="0.1"
+                  value={placedModels[selectedModelIndex].scale}
+                  onChange={(e) => updateModelScale(parseFloat(e.target.value))}
+                  className="modern-slider w-full h-2 bg-white/5 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                />
+              </div>
+
+              <div className="flex gap-4">
+                <Button 
+                  variant="destructive" 
+                  className="flex-1 rounded-[1.25rem] h-14 text-[10px] font-black uppercase tracking-widest shadow-xl shadow-red-900/20 transition-transform active:scale-95"
+                  onClick={removeModel}
+                >
+                  Remove Asset
+                </Button>
+                <Button 
+                  className="bg-white/5 hover:bg-white/10 text-white rounded-[1.25rem] h-14 px-6 md:hidden"
+                  onClick={() => setSelectedModelIndex(null)}
+                >
+                  <Check size={20} />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

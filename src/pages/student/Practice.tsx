@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { BookOpen, Mic, ChevronLeft, ChevronRight, Check, X, RefreshCw, Volume2, Target, Square, SkipBack, SkipForward, Plus } from "lucide-react";
+import { BookOpen, Mic, ChevronLeft, ChevronRight, Check, X, RefreshCw, Volume2, Target, Square, SkipBack, SkipForward, Plus, ArrowRight, Monitor, Video } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 import { getDecks, Deck, Flashcard } from "@/services/decks";
 
 const PRONUNCIATION_PHRASES = [
@@ -33,51 +35,51 @@ export default function Practice() {
 function MainMenu({ onSelect }: { onSelect: (view: ViewState) => void, key?: string }) {
   return (
     <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="px-4 py-6 pb-24 md:pb-6 flex flex-col gap-8 max-w-2xl mx-auto"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="px-6 py-10 pb-24 md:pb-10 flex flex-col gap-10 max-w-2xl mx-auto"
     >
-      <div className="flex items-center gap-4 mt-4">
-        <div className="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center shrink-0">
-          <Target className="w-7 h-7 text-indigo-600" />
+      <div className="flex items-center gap-6">
+        <div className="w-16 h-16 bg-gradient-premium rounded-2xl flex items-center justify-center shrink-0 shadow-2xl shadow-indigo-200">
+          <Target className="w-8 h-8 text-white" />
         </div>
         <div>
-          <h1 className="text-3xl font-display font-bold text-slate-900">Practice</h1>
-          <p className="text-slate-500">Daily exercises & drills</p>
+          <h1 className="text-4xl font-display font-black text-slate-950 italic tracking-tight leading-tight">Practice <span className="text-indigo-600">Lab</span></h1>
+          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] mt-1">Sharpen your linguistic instincts</p>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="grid gap-6">
         <div 
-          className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-100 active:scale-[0.98] transition-transform flex items-center gap-4 cursor-pointer"
+          className="glass-card bg-white rounded-[3rem] p-10 flex items-center gap-8 cursor-pointer group border border-slate-100 shadow-xl shadow-slate-100/50"
           onClick={() => onSelect("decks")}
         >
-          <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
-            <BookOpen className="w-8 h-8 text-indigo-600" />
+          <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500">
+            <BookOpen className="w-10 h-10 text-indigo-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-lg text-slate-900 leading-tight">Smart Cards</h3>
-            <p className="text-sm text-slate-500 mt-0.5">Vocabulary & Grammar drills</p>
+            <h3 className="font-black text-2xl text-slate-950 leading-tight tracking-tight">Smart Cards</h3>
+            <p className="text-sm font-medium text-slate-400 mt-2 leading-relaxed">Master vocabulary & grammar through adaptive drilling</p>
           </div>
-          <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center shrink-0 ml-auto">
-            <ChevronRight className="w-5 h-5 text-slate-400" />
+          <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center shrink-0 ml-auto group-hover:translate-x-1 transition-transform">
+            <ChevronRight className="w-6 h-6 text-slate-400" />
           </div>
         </div>
 
         <div 
-          className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-100 active:scale-[0.98] transition-transform flex items-center gap-4 cursor-pointer"
+          className="glass-card bg-white rounded-[3rem] p-10 flex items-center gap-8 cursor-pointer group border border-slate-100 shadow-xl shadow-slate-100/50"
           onClick={() => onSelect("pronunciation")}
         >
-          <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center shrink-0">
-            <Mic className="w-8 h-8 text-emerald-600" />
+          <div className="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500">
+            <Mic className="w-10 h-10 text-emerald-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-lg text-slate-900 leading-tight">Pronunciation Lab</h3>
-            <p className="text-sm text-slate-500 mt-0.5">AI voice feedback & grading</p>
+            <h3 className="font-black text-2xl text-slate-950 leading-tight tracking-tight">Pronunciation Lab</h3>
+            <p className="text-sm font-medium text-slate-400 mt-2 leading-relaxed">AI-powered voice feedback for perfect accent mastery</p>
           </div>
-          <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center shrink-0 ml-auto">
-            <ChevronRight className="w-5 h-5 text-slate-400" />
+          <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center shrink-0 ml-auto group-hover:translate-x-1 transition-transform">
+            <ChevronRight className="w-6 h-6 text-slate-400" />
           </div>
         </div>
       </div>
@@ -98,35 +100,46 @@ function DeckSelection({ onBack, onSelectDeck }: { onBack: () => void, onSelectD
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
-      className="fixed inset-0 z-[100] bg-slate-50 flex flex-col"
+      className="fixed inset-0 z-[100] bg-white flex flex-col"
     >
-      <div className="h-16 bg-white border-b border-slate-100 flex items-center px-4 shrink-0">
-        <button onClick={onBack} className="p-2 -ml-2 rounded-full active:bg-slate-100 text-slate-600 transition-colors">
-          <ChevronLeft className="w-7 h-7" />
+      <div className="h-24 bg-white/80 backdrop-blur-3xl border-b border-slate-100 flex items-center px-6 shrink-0 justify-between">
+        <button onClick={onBack} className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors">
+          <ChevronLeft className="w-6 h-6" />
         </button>
-        <h2 className="flex-1 text-center font-bold text-slate-900 text-lg">Select Deck</h2>
-        <div className="w-11" /> {/* Spacer */}
+        <h2 className="font-black text-slate-950 text-xl tracking-tight italic">Select Deck</h2>
+        <div className="w-12" />
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+      <div className="flex-1 overflow-y-auto p-10 flex flex-col gap-6 max-w-2xl mx-auto w-full">
+        <div className="mb-4">
+           <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.3em]">Ready to Drill?</p>
+           <h3 className="text-2xl font-black text-slate-950 mt-1">Available Decks</h3>
+        </div>
+
         {decks.map(deck => (
           <div 
             key={deck.id}
-            className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 active:scale-[0.98] transition-transform flex items-center gap-4 cursor-pointer"
+            className="glass-card bg-white rounded-[2.5rem] p-8 flex items-center gap-6 cursor-pointer group border border-slate-100 shadow-lg shadow-slate-100/50"
             onClick={() => onSelectDeck(deck)}
           >
-            <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center shrink-0">
-              <BookOpen className="w-6 h-6 text-indigo-600" />
+            <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <BookOpen className="w-7 h-7 text-indigo-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-slate-900">{deck.name}</h3>
-              <p className="text-xs text-slate-500">{deck.cards.length} cards</p>
+              <h3 className="font-black text-xl text-slate-950 leading-tight">{deck.name}</h3>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{deck.cards.length} Mastery Cards</p>
             </div>
-            <ChevronRight className="w-5 h-5 text-slate-400" />
+            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform">
+              <ChevronRight className="w-5 h-5 text-slate-400" />
+            </div>
           </div>
         ))}
+
         {decks.length === 0 && (
-          <div className="text-center text-slate-400 mt-10">No decks available.</div>
+          <div className="text-center py-20 bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
+            <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">No decks found yet</p>
+          </div>
         )}
       </div>
     </motion.div>
@@ -148,7 +161,6 @@ function SmartCards({ deck, onBack }: { deck: Deck, onBack: () => void, key?: st
       setKnownWords(prev => [...prev, currentIndex]);
     }
     
-    // Update mastery level
     setCardList(prev => prev.map((item, idx) => {
       if (idx === currentIndex) {
         const newMastery = known 
@@ -171,7 +183,6 @@ function SmartCards({ deck, onBack }: { deck: Deck, onBack: () => void, key?: st
     setIsFlipped(false);
   };
 
-  // Calculate mastery distribution for the end screen
   const masteryCounts = [1, 2, 3, 4, 5].map(level => 
     cardList.filter(w => (w.mastery || 1) === level).length
   );
@@ -182,167 +193,163 @@ function SmartCards({ deck, onBack }: { deck: Deck, onBack: () => void, key?: st
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
-      className="fixed inset-0 z-[100] bg-slate-50 flex flex-col"
+      className="fixed inset-0 z-[100] bg-white flex flex-col"
     >
-      {/* App Bar */}
-      <div className="h-16 bg-white border-b border-slate-100 flex items-center px-4 shrink-0">
-        <button onClick={onBack} className="p-2 -ml-2 rounded-full active:bg-slate-100 text-slate-600 transition-colors">
-          <ChevronLeft className="w-7 h-7" />
+      <div className="h-24 bg-white/80 backdrop-blur-3xl border-b border-slate-100 flex items-center px-6 shrink-0 justify-between">
+        <button onClick={onBack} className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors">
+          <ChevronLeft className="w-6 h-6" />
         </button>
-        <h2 className="flex-1 text-center font-bold text-slate-900 text-lg">Smart Cards</h2>
-        <div className="w-12 text-right text-sm font-bold text-indigo-600">
-          {Math.min(currentIndex + 1, cardList.length)}/{cardList.length}
+        <div className="text-center">
+            <h2 className="font-black text-slate-950 text-xl tracking-tight italic">Smart Cards</h2>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mt-0.5">Session Progress</p>
+        </div>
+        <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center font-black text-indigo-600 text-sm">
+          {Math.min(currentIndex + 1, cardList.length)}
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="h-1 bg-slate-100 w-full shrink-0">
-        <div 
-          className="h-full bg-indigo-500 transition-all duration-300 ease-out" 
-          style={{ width: `${progress}%` }}
+      <div className="h-1.5 bg-slate-50 w-full shrink-0">
+        <motion.div 
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          className="h-full bg-gradient-vibrant shadow-lg shadow-indigo-100" 
         />
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 flex flex-col justify-center max-w-md mx-auto w-full">
+      <div className="flex-1 overflow-y-auto p-10 flex flex-col justify-center max-w-lg mx-auto w-full">
         {cardList.length === 0 ? (
-          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8 text-center">
-            <div className="w-20 h-20 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
-              <BookOpen className="w-10 h-10" />
+          <div className="glass-card bg-white rounded-[3rem] border border-slate-100 shadow-xl p-12 text-center">
+            <div className="w-24 h-24 bg-slate-50 text-slate-300 rounded-3xl flex items-center justify-center mx-auto mb-8">
+              <BookOpen className="w-12 h-12" />
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">Empty Deck</h3>
-            <p className="text-slate-500 mb-8">
-              There are no flashcards in this deck yet. Practice scenarios to generate and save new cards!
+            <h3 className="text-3xl font-black text-slate-950 mb-4 tracking-tight">Deck is Empty</h3>
+            <p className="text-slate-500 font-medium mb-12 leading-relaxed">
+              Unlock vocabulary by completing scenarios and drills in the Library.
             </p>
-            <button 
+            <Button 
               onClick={onBack} 
-              className="w-full h-14 bg-indigo-600 text-white rounded-2xl font-bold text-lg flex items-center justify-center active:scale-95 transition-transform"
+              className="w-full h-16 bg-slate-950 hover:bg-black text-white rounded-[1.5rem] font-black uppercase tracking-widest text-xs shadow-2xl transition-transform active:scale-95"
             >
-              Go Back
-            </button>
+              Back to Practice
+            </Button>
           </div>
         ) : isComplete ? (
-          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8 text-center">
-            <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="w-10 h-10" />
-            </div>
-            <h3 className="text-3xl font-bold text-slate-900 mb-2">Complete!</h3>
-            <p className="text-slate-500 mb-8">
-              You mastered <span className="font-bold text-slate-900">{knownWords.length}</span> out of {cardList.length} cards.
+          <div className="glass-card bg-white rounded-[3rem] border border-slate-100 shadow-xl p-12 text-center">
+             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 font-black text-[10px] uppercase tracking-widest mb-6">
+                 <Check className="w-4 h-4" /> Goal Met
+             </div>
+            <h3 className="text-4xl font-black text-slate-950 mb-4 tracking-tighter italic">Drill Complete!</h3>
+            <p className="text-slate-500 font-medium mb-12">
+              You mastered <span className="font-black text-slate-950 underline decoration-indigo-200 decoration-4">{knownWords.length} cards</span> this session.
             </p>
 
-            {/* Mastery Chart */}
-            <div className="bg-slate-50 rounded-2xl p-5 mb-8">
-              <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-8">Mastery Overview</h4>
-              <div className="flex items-end justify-between h-32 gap-3 px-2">
+            <div className="bg-slate-50/50 rounded-[2.5rem] p-8 mb-12 border border-slate-100">
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-12">Mastery Performance</h4>
+              <div className="flex items-end justify-between h-40 gap-4 px-2">
                 {[1, 2, 3, 4, 5].map((level, idx) => {
                   const count = masteryCounts[idx];
                   const percentage = (count / cardList.length) * 100;
                   return (
-                    <div key={level} className="flex flex-col items-center flex-1 gap-3 h-full">
-                      <div className="w-full bg-slate-200 rounded-full relative flex items-end justify-center h-full">
+                    <div key={level} className="flex flex-col items-center flex-1 gap-4 h-full">
+                      <div className="w-full bg-slate-100 rounded-full relative flex items-end justify-center h-full">
                         <motion.div 
                           initial={{ height: 0 }}
                           animate={{ height: `${Math.max(percentage, 5)}%` }}
-                          transition={{ duration: 0.8, ease: "easeOut", delay: idx * 0.1 }}
-                          className={`w-full rounded-full ${
-                            level <= 2 ? 'bg-rose-400' : level <= 4 ? 'bg-amber-400' : 'bg-emerald-500'
-                          }`}
+                          transition={{ duration: 1, ease: "circOut", delay: idx * 0.1 }}
+                          className={cn(
+                            "w-full rounded-full shadow-lg",
+                            level <= 2 ? 'bg-gradient-soft' : level <= 4 ? 'bg-gradient-premium' : 'bg-gradient-vibrant'
+                          )}
                         />
                         {count > 0 && (
-                          <span className="absolute -top-7 text-[10px] font-black text-slate-600 bg-white px-1.5 py-0.5 rounded-md shadow-sm border border-slate-100">{count}</span>
+                          <span className="absolute -top-10 text-[10px] font-black text-indigo-600 bg-white px-2 py-1.5 rounded-xl shadow-xl border border-slate-100">{count}</span>
                         )}
                       </div>
-                      <span className="text-[10px] font-bold text-slate-400">Lv {level}</span>
+                      <span className="text-[10px] font-black text-slate-400">Lv {level}</span>
                     </div>
                   );
                 })}
               </div>
             </div>
 
-            <button 
+            <Button 
               onClick={handleRestart} 
-              className="w-full h-14 bg-indigo-600 text-white rounded-2xl font-bold text-lg flex items-center justify-center active:scale-95 transition-transform"
+              className="w-full h-16 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-xs shadow-2xl shadow-indigo-100 transition-transform active:scale-95"
             >
-              <RefreshCw className="w-5 h-5 mr-2" /> Practice Again
-            </button>
+              <RefreshCw className="w-5 h-5 mr-3" /> Retry Session
+            </Button>
           </div>
         ) : (
-          <div className="perspective-1000 w-full aspect-[3/4] max-h-[60vh] cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
+          <div className="perspective-2000 w-full aspect-[3/4] cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
             <motion.div
-              className="w-full h-full relative preserve-3d transition-transform duration-500"
-              animate={{ rotateX: isFlipped ? 180 : 0 }}
+              className="w-full h-full relative preserve-3d transition-transform duration-700 h-full"
+              animate={{ rotateY: isFlipped ? 180 : 0 }}
             >
               {/* Front */}
-              <div className="absolute w-full h-full backface-hidden rounded-[2.5rem] border border-slate-200 shadow-md flex flex-col items-center justify-center p-8 bg-white">
-                <div className="absolute top-8 w-full px-8 flex flex-col items-center">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mastery Level</span>
-                  </div>
-                  <div className="flex gap-1.5">
+              <div className="absolute inset-0 backface-hidden rounded-[3rem] border border-slate-100 shadow-2xl flex flex-col items-center justify-center p-12 bg-white">
+                <div className="absolute top-10 w-full px-12 flex flex-col items-center">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Mastery Rank</p>
+                  <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map(level => (
                       <div 
                         key={level} 
-                        className={`h-2 w-6 rounded-full transition-colors ${
+                        className={cn(
+                          "h-2.5 w-10 rounded-full transition-all duration-500",
                           level <= (currentCard.mastery || 1)
-                            ? ((currentCard.mastery || 1) <= 2 ? 'bg-rose-400' : (currentCard.mastery || 1) <= 4 ? 'bg-amber-400' : 'bg-emerald-500')
-                            : 'bg-slate-100'
-                        }`} 
+                            ? ((currentCard.mastery || 1) <= 2 ? 'bg-indigo-200' : (currentCard.mastery || 1) <= 4 ? 'bg-indigo-400' : 'bg-indigo-600 shadow-lg shadow-indigo-100')
+                            : 'bg-slate-50'
+                        )} 
                       />
                     ))}
                   </div>
                 </div>
                 
-                <h3 className="text-3xl sm:text-4xl font-black text-slate-900 text-center leading-tight mt-8">{currentCard.front}</h3>
+                <h3 className="text-4xl sm:text-5xl font-black text-slate-950 text-center tracking-tighter italic leading-tight mt-12">{currentCard.front}</h3>
                 
-                <span className="absolute bottom-8 text-xs font-bold text-indigo-400 uppercase tracking-widest bg-indigo-50 px-4 py-2 rounded-full">Tap to flip</span>
+                <span className="absolute bottom-10 inline-flex items-center gap-2 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] bg-indigo-50/50 px-5 py-2.5 rounded-full border border-indigo-100/50">
+                   Tap to uncover <ArrowRight size={12} />
+                </span>
               </div>
 
               {/* Back */}
-              <div className="absolute w-full h-full backface-hidden rounded-[2.5rem] border border-indigo-100 shadow-lg flex flex-col items-center justify-center p-8 bg-indigo-50 [transform:rotateX(180deg)]">
-                <div className="absolute top-8 w-full px-8 flex flex-col items-center">
-                  <div className="flex gap-1.5">
-                    {[1, 2, 3, 4, 5].map(level => (
-                      <div 
-                        key={level} 
-                        className={`h-1.5 w-5 rounded-full transition-colors ${
-                          level <= (currentCard.mastery || 1)
-                            ? ((currentCard.mastery || 1) <= 2 ? 'bg-rose-400' : (currentCard.mastery || 1) <= 4 ? 'bg-amber-400' : 'bg-emerald-500')
-                            : 'bg-indigo-100'
-                        }`} 
-                      />
-                    ))}
-                  </div>
+              <div className="absolute inset-0 backface-hidden rounded-[3rem] border-none shadow-3xl flex flex-col items-center justify-center p-12 bg-slate-950 text-white [transform:rotateY(180deg)] overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-premium opacity-40 shrink-0" />
+                <div className="relative z-10 w-full flex flex-col items-center text-center">
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-8">Meaning & Context</p>
+                    <h3 className="text-3xl font-black text-white mb-8 tracking-tighter italic">{currentCard.front}</h3>
+                    <div className="w-16 h-1.5 bg-indigo-500/50 rounded-full mb-10" />
+                    <p className="text-2xl font-bold text-white/90 leading-relaxed mb-10 px-4 italic">"{currentCard.back}"</p>
+                    
+                    {currentCard.explanation && (
+                      <div className="bg-white/10 backdrop-blur-3xl p-8 rounded-[2rem] w-full border border-white/10">
+                        <p className="text-indigo-200 text-sm font-medium leading-relaxed">"{currentCard.explanation}"</p>
+                      </div>
+                    )}
                 </div>
-
-                <h3 className="text-2xl font-bold text-indigo-900 mb-6 mt-4 text-center">{currentCard.front}</h3>
-                <p className="text-lg text-indigo-800 text-center mb-8 font-medium leading-relaxed">"{currentCard.back}"</p>
-                {currentCard.explanation && (
-                  <div className="bg-white/60 p-5 rounded-2xl w-full text-center">
-                    <p className="text-indigo-600 italic leading-relaxed">"{currentCard.explanation}"</p>
-                  </div>
-                )}
+                
+                {/* Decoration */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -mr-32 -mt-32 blur-3xl" />
               </div>
             </motion.div>
           </div>
         )}
       </div>
 
-      {/* Bottom Actions */}
       {!isComplete && cardList.length > 0 && (
-        <div className="p-6 bg-white border-t border-slate-100 shrink-0 flex gap-4 pb-8">
-          <button 
-            className="flex-1 h-16 rounded-2xl border-2 border-rose-100 bg-rose-50 text-rose-600 font-bold text-lg flex items-center justify-center active:scale-95 transition-transform"
+        <div className="p-8 bg-white/80 backdrop-blur-3xl border-t border-slate-100 shrink-0 flex gap-5 pb-10 max-w-lg mx-auto w-full">
+          <Button 
+             variant="outline"
+            className="flex-1 h-16 rounded-[1.5rem] border-2 border-slate-100 hover:bg-slate-50 text-slate-450 font-black text-xs uppercase tracking-widest flex items-center justify-center transition-all active:scale-95"
             onClick={(e) => { e.stopPropagation(); handleNext(false); }}
           >
-            <X className="w-6 h-6 mr-2" /> Learning
-          </button>
-          <button 
-            className="flex-1 h-16 rounded-2xl bg-emerald-500 text-white font-bold text-lg flex items-center justify-center shadow-lg shadow-emerald-200 active:scale-95 transition-transform"
+            Learning
+          </Button>
+          <Button 
+            className="flex-1 h-16 rounded-[1.5rem] bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center shadow-2xl shadow-indigo-100 transition-all active:scale-95"
             onClick={(e) => { e.stopPropagation(); handleNext(true); }}
           >
-            <Check className="w-6 h-6 mr-2" /> Got It
-          </button>
+            Got It
+          </Button>
         </div>
       )}
     </motion.div>
@@ -417,10 +424,10 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
     const score = Math.min(100, Math.round((matches / targetWords.length) * 100));
     
     let message = "";
-    if (score >= 90) message = "Excellent! Perfect pronunciation.";
-    else if (score >= 70) message = "Good job! A few words were slightly off.";
-    else if (score >= 40) message = "Keep practicing. Try speaking more clearly.";
-    else message = "Let's try that again. Listen closely to the phrase.";
+    if (score >= 90) message = "Linguistic Precision! Perfect accent.";
+    else if (score >= 70) message = "Great flow, keep refining those vowels.";
+    else if (score >= 40) message = "A bit muffled. Try enunciating more clearly.";
+    else message = "Listen to the guide and try again.";
 
     setFeedback({ score, message });
   };
@@ -437,70 +444,73 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
-      className="fixed inset-0 z-[100] bg-slate-50 flex flex-col"
+      className="fixed inset-0 z-[100] bg-white flex flex-col"
     >
-      {/* App Bar */}
-      <div className="h-16 bg-white border-b border-slate-100 flex items-center px-4 shrink-0">
-        <button onClick={onBack} className="p-2 -ml-2 rounded-full active:bg-slate-100 text-slate-600 transition-colors">
-          <ChevronLeft className="w-7 h-7" />
+      <div className="h-24 bg-white/80 backdrop-blur-3xl border-b border-slate-100 flex items-center px-6 shrink-0 justify-between">
+        <button onClick={onBack} className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors">
+          <ChevronLeft className="w-6 h-6" />
         </button>
-        <h2 className="flex-1 text-center font-bold text-slate-900 text-lg">Pronunciation</h2>
-        <div className="w-10" /> {/* Spacer */}
+        <div className="text-center">
+            <h2 className="font-black text-slate-950 text-xl tracking-tight italic">Pronunciation Lab</h2>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] leading-none mt-0.5">Vocal Feedback</p>
+        </div>
+        <div className="w-12" />
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col max-w-md mx-auto w-full">
-        <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 mb-4 shrink-0">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-xs font-bold text-emerald-500 uppercase tracking-widest">Target Phrase</span>
-            <button 
+      <div className="flex-1 overflow-y-auto p-8 flex flex-col max-w-xl mx-auto w-full gap-8">
+        <div className="glass-card bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-100/50 border border-slate-100 shrink-0">
+          <div className="flex justify-between items-center mb-8">
+            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em] bg-indigo-50 px-4 py-1.5 rounded-full border border-indigo-100/50">Guide Audio</span>
+            <Button 
+               size="icon"
               onClick={playTTS}
-              className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-600 active:bg-slate-100 transition-colors"
+              className="w-12 h-12 bg-slate-950 hover:bg-black rounded-2xl flex items-center justify-center text-white shadow-xl transition-transform active:scale-95"
             >
-              <Volume2 className="w-5 h-5" />
-            </button>
+              <Volume2 className="w-6 h-6" />
+            </Button>
           </div>
-          <h3 className="text-2xl font-medium text-slate-900 leading-relaxed">
+          <h3 className="text-4xl font-black text-slate-950 leading-tight tracking-tighter italic">
             "{currentPhrase}"
           </h3>
         </div>
 
-        <div className="flex-1 bg-slate-100 rounded-[2rem] p-6 relative flex flex-col border border-slate-200/50">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Your Speech</span>
-          <div className="flex-1 flex flex-col justify-center">
+        <div className="flex-1 bg-slate-50/50 rounded-[3rem] p-10 relative flex flex-col border border-slate-100/50 border-dashed">
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Live Transcript</span>
+          <div className="flex-1 flex flex-col justify-center min-h-[160px]">
             {transcript ? (
-              <p className="text-xl text-slate-700 leading-relaxed text-center">{transcript}</p>
+              <p className="text-3xl font-black text-slate-950 leading-tight tracking-tight italic text-center">{transcript}</p>
             ) : (
-              <p className="text-lg text-slate-400 italic text-center">
-                {isRecording ? "Listening..." : "Tap the microphone and start speaking..."}
+              <p className="text-xl text-slate-300 font-bold italic text-center leading-relaxed">
+                {isRecording ? "Analyzing audio waves..." : "Engage the mic and start speaking..."}
               </p>
             )}
           </div>
 
           {feedback && (
             <motion.div 
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`mt-6 p-5 rounded-2xl border-l-4 ${
-                feedback.score >= 80 ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 
-                feedback.score >= 50 ? 'bg-amber-50 border-amber-500 text-amber-800' : 
-                'bg-rose-50 border-rose-500 text-rose-800'
-              }`}
+              className={cn(
+                "mt-8 p-8 rounded-[2rem] border shadow-2xl",
+                feedback.score >= 80 ? 'bg-emerald-500 text-white shadow-emerald-200 border-emerald-400' : 
+                feedback.score >= 50 ? 'bg-amber-400 text-white shadow-amber-100 border-amber-300' : 
+                'bg-slate-950 text-white border-slate-800'
+              )}
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-sm uppercase tracking-wider">Score</span>
-                <span className="text-2xl font-black">{feedback.score}%</span>
+              <div className="flex items-center justify-between mb-4">
+                <span className="font-black text-[10px] uppercase tracking-[0.4em] opacity-80">Fluency Score</span>
+                <span className="text-4xl font-black italic tracking-tighter">{feedback.score}%</span>
               </div>
-              <p className="text-sm font-medium">{feedback.message}</p>
+              <p className="text-sm font-black uppercase tracking-widest">{feedback.message}</p>
             </motion.div>
           )}
         </div>
       </div>
 
-      {/* Bottom Controls */}
-      <div className="p-6 bg-white border-t border-slate-100 shrink-0 flex items-center justify-between pb-8 max-w-md mx-auto w-full">
-        <button 
-          className="w-14 h-14 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100 active:text-slate-900 transition-colors"
+      <div className="p-10 bg-white/80 backdrop-blur-3xl border-t border-slate-100 shrink-0 flex items-center justify-between pb-12 max-w-xl mx-auto w-full">
+        <Button 
+           variant="outline"
+          className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-100 active:text-slate-950 transition-all border-none"
           onClick={() => {
             setTranscript("");
             setFeedback(null);
@@ -508,22 +518,30 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
           }}
           disabled={isRecording}
         >
-          <SkipBack className="w-6 h-6" />
-        </button>
+          <SkipBack className="w-8 h-8" />
+        </Button>
         
-        <button 
-          className={`w-20 h-20 rounded-full flex items-center justify-center shadow-xl active:scale-95 transition-all duration-300 ${
-            isRecording 
-              ? 'bg-rose-500 text-white shadow-rose-200 animate-pulse' 
-              : 'bg-emerald-500 text-white shadow-emerald-200'
-          }`}
-          onClick={toggleRecording}
-        >
-          {isRecording ? <Square className="w-8 h-8 fill-current" /> : <Mic className="w-8 h-8" />}
-        </button>
+        <div className="relative group">
+            <div className={cn(
+                "absolute -inset-4 rounded-full blur-2xl transition-opacity duration-1000",
+                isRecording ? "bg-indigo-500/30 opacity-100 animate-pulse" : "opacity-0"
+            )} />
+            <button 
+              className={cn(
+                "w-24 h-24 rounded-full flex items-center justify-center shadow-3xl active:scale-95 transition-all duration-500 relative z-10",
+                isRecording 
+                  ? 'bg-indigo-600 text-white' 
+                  : 'bg-slate-950 text-white'
+              )}
+              onClick={toggleRecording}
+            >
+              {isRecording ? <Square className="w-10 h-10 fill-current" /> : <Mic className="w-10 h-10" />}
+            </button>
+        </div>
 
-        <button 
-          className="w-14 h-14 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100 active:text-slate-900 transition-colors"
+        <Button 
+           variant="outline"
+           className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-100 active:text-slate-950 transition-all border-none"
           onClick={() => {
             setTranscript("");
             setFeedback(null);
@@ -531,8 +549,8 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
           }}
           disabled={isRecording}
         >
-          <SkipForward className="w-6 h-6" />
-        </button>
+          <SkipForward className="w-8 h-8" />
+        </Button>
       </div>
     </motion.div>
   );

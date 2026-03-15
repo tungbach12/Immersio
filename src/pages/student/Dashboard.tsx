@@ -50,23 +50,23 @@ export default function StudentDashboard() {
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-400/20 rounded-full -ml-16 -mb-16 blur-2xl" />
         </Card>
         
-        <div className="bg-white glass-card rounded-[2.5rem] p-8 flex flex-col items-center justify-center text-center gap-3">
-          <div className="w-14 h-14 bg-emerald-50 rounded-[1.5rem] flex items-center justify-center text-emerald-500 shadow-sm border border-emerald-100/50">
+        <div className="glass-card rounded-[2.5rem] p-8 flex flex-col items-center justify-center text-center gap-3 accent-glow high-contrast-shadow border-glow">
+          <div className="w-14 h-14 bg-emerald-500 rounded-[1.5rem] flex items-center justify-center text-white shadow-[0_0_25px_rgba(16,185,129,0.5)] border-2 border-white/40">
             <Target size={28} strokeWidth={2.5} />
           </div>
           <div>
             <h3 className="text-3xl font-black text-slate-950 tracking-tighter">85%</h3>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Daily Goal</p>
+            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mt-1">Daily Goal</p>
           </div>
         </div>
 
-        <div className="bg-white glass-card rounded-[2.5rem] p-8 flex flex-col items-center justify-center text-center gap-3">
-          <div className="w-14 h-14 bg-blue-50 rounded-[1.5rem] flex items-center justify-center text-blue-500 shadow-sm border border-blue-100/50">
+        <div className="glass-card rounded-[2.5rem] p-8 flex flex-col items-center justify-center text-center gap-3 accent-glow high-contrast-shadow border-glow">
+          <div className="w-14 h-14 bg-indigo-600 rounded-[1.5rem] flex items-center justify-center text-white shadow-[0_0_25px_rgba(79,70,229,0.5)] border-2 border-white/40">
             <BookOpen size={28} strokeWidth={2.5} />
           </div>
           <div>
             <h3 className="text-3xl font-black text-slate-950 tracking-tighter">1.2k</h3>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Vocab Size</p>
+            <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mt-1">Vocab Size</p>
           </div>
       </div>
     </div>

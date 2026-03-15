@@ -51,8 +51,8 @@ export default function Profile() {
           { icon: Award, label: "Exp", value: "2.4k", color: "text-indigo-600", bg: "bg-indigo-50" },
           { icon: Clock, label: "Hours", value: "48", color: "text-emerald-500", bg: "bg-emerald-50" },
         ].map((stat, i) => (
-          <div key={i} className="bg-white glass-card rounded-[2.5rem] p-6 flex flex-col items-center justify-center gap-2 border border-slate-100 shadow-xl shadow-slate-100/30">
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", stat.bg, stat.color)}>
+          <div key={i} className="glass-card rounded-[2.5rem] p-6 flex flex-col items-center justify-center gap-2 border-white/50 shadow-xl shadow-slate-200/20 relative z-10 accent-glow">
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shadow-lg", stat.bg, stat.color)}>
                <stat.icon size={18} strokeWidth={2.5} />
             </div>
             <span className="text-xl font-black text-slate-950 italic tracking-tighter mt-1">{stat.value}</span>
@@ -89,7 +89,7 @@ export default function Profile() {
            <Settings size={14} className="text-slate-400" />
            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Account Ecosystem</h2>
         </div>
-        <div className="bg-white rounded-[3rem] border border-slate-100 overflow-hidden shadow-2xl shadow-slate-100/50">
+        <div className="bg-white/60 backdrop-blur-2xl rounded-[3rem] border border-white/50 overflow-hidden shadow-2xl shadow-slate-200/20 relative z-10">
           {menuItems.map((item, i) => (
             <Link 
               to={item.path || "#"} 

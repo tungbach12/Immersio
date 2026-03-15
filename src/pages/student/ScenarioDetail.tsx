@@ -407,6 +407,8 @@ export default function ScenarioDetail() {
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
+
+
       {/* Background Layer */}
       <div className="absolute inset-0 z-0 bg-slate-900">
         {mode === "ar" ? (
@@ -734,6 +736,7 @@ export default function ScenarioDetail() {
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
           </div>
         </div>
+
 
         <div className="flex items-center gap-2">
           {mode !== "feedback" && (

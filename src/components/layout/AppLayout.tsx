@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 export default function AppLayout() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
+  const isScenarioDetail = location.pathname.includes("/scenarios/") && !location.pathname.endsWith("/scenarios");
 
   const studentLinks = [
     { icon: Home, label: "Home", path: "/student/dashboard" },
@@ -42,27 +43,73 @@ export default function AppLayout() {
   const links = isAdmin ? adminLinks : studentLinks;
 
   return (
-    <div className="min-h-screen bg-[#FDFEFE] flex flex-col md:flex-row overflow-hidden font-body text-slate-900">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-80 flex-col bg-white border-r border-slate-100 z-20">
-        <div className="p-10 flex items-center gap-4">
-          <img src="/logo.png" alt="IMMERSIO Logo" className="h-10 w-auto object-contain rounded-xl" />
-          <span className="text-xl font-black italic tracking-tighter text-indigo-600">IMMERSIO</span>
-        </div>
+    <div className="min-h-screen bg-white flex flex-col md:flex-row overflow-hidden font-body text-slate-900 relative">
+      {/* Background Decorative Blobs */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-slate-50">
+        <motion.div 
+          animate={{ x: [0, 60, 0], y: [0, -40, 0], rotate: [0, 45, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-[5%] -left-[10%] w-[60%] h-[60%] bg-indigo-500/10 rounded-full blur-[120px]" 
+        />
+        <motion.div 
+          animate={{ x: [0, -50, 0], y: [0, 60, 0], rotate: [0, -45, 0] }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[5%] -right-[10%] w-[55%] h-[55%] bg-fuchsia-500/15 rounded-full blur-[100px]" 
+        />
+        <motion.div 
+          animate={{ x: [0, 40, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
+          className="absolute -bottom-[15%] left-[15%] w-[65%] h-[60%] bg-blue-500/15 rounded-full blur-[130px]" 
+        />
+        
+        {/* Dynamic Multi-color Core */}
+        <motion.div 
+          animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.2, 0.1] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[40%] left-[30%] w-[40%] h-[40%] bg-gradient-to-tr from-violet-500/20 via-pink-500/20 to-amber-500/20 rounded-full blur-[110px]" 
+        />
 
-        <nav className="flex-1 px-6 py-4 space-y-3">
-          {links.map((link) => {
-            const isActive = location.pathname === link.path;
-            return (
-              <Link to={link.path} key={link.path}>
-                <div
-                  className={cn(
-                    "flex items-center gap-4 px-6 py-5 rounded-[1.5rem] transition-all duration-500 group relative overflow-hidden",
-                    isActive
-                      ? "bg-slate-950 text-white shadow-2xl shadow-slate-200"
-                      : "text-slate-500 hover:bg-slate-50"
-                  )}
-                >
+        {/* High Saturation Floating Particles */}
+        <motion.div 
+          animate={{ y: [0, -120, 0], x: [0, 30, 0], opacity: [0, 0.6, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[80%] right-[20%] w-6 h-6 rounded-full bg-indigo-600 blur-md shadow-[0_0_20px_rgba(79,70,229,0.5)]"
+        />
+        <motion.div 
+          animate={{ y: [0, -100, 0], x: [0, -20, 0], opacity: [0, 0.5, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear", delay: 3 }}
+          className="absolute top-[20%] left-[15%] w-5 h-5 rounded-full bg-pink-600 blur-md shadow-[0_0_20px_rgba(219,39,119,0.5)]"
+        />
+        <motion.div 
+          animate={{ y: [0, -150, 0], opacity: [0, 0.4, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "linear", delay: 1 }}
+          className="absolute top-[50%] right-[40%] w-4 h-4 rounded-full bg-cyan-500 blur-md shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+        />
+        
+        {/* Subtle Grid Pattern - Increased visibility slightly */}
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.035]" />
+      </div>
+      {/* Desktop Sidebar */}
+      {!isScenarioDetail && (
+        <aside className="hidden md:flex w-80 flex-col bg-white/70 backdrop-blur-3xl border-r border-slate-100 z-20">
+          <div className="p-10 flex items-center gap-4">
+            <img src="/logo.png" alt="IMMERSIO Logo" className="h-10 w-auto object-contain rounded-xl" />
+            <span className="text-xl font-black italic tracking-tighter text-indigo-600">IMMERSIO</span>
+          </div>
+
+          <nav className="flex-1 px-6 py-4 space-y-3">
+            {links.map((link) => {
+              const isActive = location.pathname === link.path;
+              return (
+                <Link to={link.path} key={link.path}>
+                  <div
+                    className={cn(
+                      "flex items-center gap-4 px-6 py-5 rounded-[1.5rem] transition-all duration-500 group relative overflow-hidden",
+                      isActive
+                        ? "bg-slate-950 text-white shadow-2xl shadow-slate-200"
+                        : "text-slate-500 hover:bg-slate-50"
+                    )}
+                  >
                   <link.icon
                     size={20}
                     className={cn(
@@ -108,62 +155,73 @@ export default function AppLayout() {
           </Link>
         </div>
       </aside>
+      )}
 
       {/* Mobile Top Header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 h-20 bg-white/90 backdrop-blur-2xl border-b border-slate-100 z-40 flex items-center justify-between px-6">
-        <div className="flex items-center gap-2">
-           <img src="/logo.png" alt="IMMERSIO Logo" className="h-8 w-auto object-contain" />
-           <span className="text-lg font-black italic tracking-tighter text-indigo-600">IMMERSIO</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <button className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 shadow-sm border border-slate-100">
-            <Bell size={20} />
-          </button>
-          <Link to="/student/profile">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-vibrant flex items-center justify-center text-white font-black text-xs shadow-lg shadow-indigo-100">
-              JD
-            </div>
-          </Link>
-        </div>
-      </header>
+      {!isScenarioDetail && (
+        <header className="md:hidden fixed top-0 left-0 right-0 h-20 bg-white/90 backdrop-blur-2xl border-b border-slate-100 z-40 flex items-center justify-between px-6">
+          <div className="flex items-center gap-2">
+             <img src="/logo.png" alt="IMMERSIO Logo" className="h-8 w-auto object-contain" />
+             <span className="text-lg font-black italic tracking-tighter text-indigo-600">IMMERSIO</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 shadow-sm border border-slate-100">
+              <Bell size={20} />
+            </button>
+            <Link to="/student/profile">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-vibrant flex items-center justify-center text-white font-black text-xs shadow-lg shadow-indigo-100">
+                JD
+              </div>
+            </Link>
+          </div>
+        </header>
+      )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pt-20 pb-24 md:pt-0 md:pb-0">
-        <div className="max-w-5xl mx-auto p-6 md:p-12 min-h-full">
+      <main className={cn(
+        "flex-1 overflow-y-auto relative z-10",
+        !isScenarioDetail && "pt-20 pb-24 md:pt-0 md:pb-0"
+      )}>
+        <div className={cn(
+          "max-w-5xl mx-auto min-h-full",
+          !isScenarioDetail ? "p-6 md:p-12" : "p-0 max-w-none"
+        )}>
           <Outlet />
         </div>
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-6 left-6 right-6 h-20 bg-slate-950/95 backdrop-blur-3xl rounded-[2.5rem] z-40 flex items-center justify-around px-2 shadow-2xl border border-white/10">
-        {links.map((link) => {
-          const isActive = location.pathname === link.path;
-          return (
-            <Link to={link.path} key={link.path} className="flex-1">
-              <div className="flex flex-col items-center justify-center gap-1.5 relative h-full">
-                <div className={cn(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 relative",
-                  isActive ? "text-white -translate-y-2 scale-110" : "text-slate-500"
-                )}>
-                  {isActive && (
-                    <motion.div 
-                      layoutId="mobile-nav-active"
-                      className="absolute inset-0 bg-gradient-vibrant rounded-2xl shadow-xl shadow-indigo-500/20"
-                    />
-                  )}
-                  <link.icon size={22} strokeWidth={isActive ? 2.5 : 2} className="relative z-10" />
+      {!isScenarioDetail && (
+        <nav className="md:hidden fixed bottom-6 left-6 right-6 h-20 bg-slate-950/95 backdrop-blur-3xl rounded-[2.5rem] z-40 flex items-center justify-around px-2 shadow-2xl border border-white/10">
+          {links.map((link) => {
+            const isActive = location.pathname === link.path;
+            return (
+              <Link to={link.path} key={link.path} className="flex-1">
+                <div className="flex flex-col items-center justify-center gap-1.5 relative h-full">
+                  <div className={cn(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 relative",
+                    isActive ? "text-white -translate-y-2 scale-110" : "text-slate-500"
+                  )}>
+                    {isActive && (
+                      <motion.div 
+                        layoutId="mobile-nav-active"
+                        className="absolute inset-0 bg-gradient-vibrant rounded-2xl shadow-xl shadow-indigo-500/20"
+                      />
+                    )}
+                    <link.icon size={22} strokeWidth={isActive ? 2.5 : 2} className="relative z-10" />
+                  </div>
+                  <span className={cn(
+                    "text-[8px] font-black uppercase tracking-widest transition-all duration-500",
+                    isActive ? "text-indigo-400 translate-y-0 opacity-100" : "text-slate-600 translate-y-2 opacity-0"
+                  )}>
+                    {link.label}
+                  </span>
                 </div>
-                <span className={cn(
-                  "text-[8px] font-black uppercase tracking-widest transition-all duration-500",
-                  isActive ? "text-indigo-400 translate-y-0 opacity-100" : "text-slate-600 translate-y-2 opacity-0"
-                )}>
-                  {link.label}
-                </span>
-              </div>
-            </Link>
-          );
-        })}
-      </nav>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }

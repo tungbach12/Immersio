@@ -31,14 +31,14 @@ export default function Scenarios() {
           <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] mt-3">Discover 500+ immersive linguistic experiences</p>
         </div>
         
-        <div className="relative group">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 transition-colors group-focus-within:text-indigo-600" size={22} />
+        <div className="relative group accent-glow rounded-[2.5rem]">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 transition-all group-focus-within:text-indigo-600 group-focus-within:scale-110" size={22} />
           <input 
             type="text" 
             placeholder="Search scenarios, languages, levels..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-16 pr-8 py-5 rounded-[2.5rem] bg-white border border-slate-100 focus:outline-none focus:ring-8 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all shadow-xl shadow-slate-100/50 font-bold text-base placeholder:text-slate-300"
+            className="w-full pl-16 pr-8 py-5 rounded-[2.5rem] bg-white/70 backdrop-blur-xl border border-white/50 focus:outline-none focus:ring-8 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all shadow-xl shadow-slate-200/20 font-bold text-base placeholder:text-slate-300 relative z-10"
           />
         </div>
       </div>
@@ -105,8 +105,8 @@ export default function Scenarios() {
       {/* Scenarios Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredScenarios.map((scenario) => (
-          <Link to={`/student/scenarios/${scenario.id}?mode=${selectedMode}`} key={scenario.id} className="block group">
-            <div className="glass-card rounded-[3rem] overflow-hidden bg-white h-full flex flex-col group border border-slate-100">
+          <Link to={`/student/scenarios/${scenario.id}?mode=${selectedMode}`} key={scenario.id} className="block group accent-glow high-contrast-shadow">
+            <div className="glass-card rounded-[3rem] overflow-hidden h-full flex flex-col group border-white/50 relative z-10 border-glow">
               <div className="h-64 bg-slate-100 relative overflow-hidden">
                 <img 
                   src={scenario.image} 
@@ -146,7 +146,7 @@ export default function Scenarios() {
                     </div>
                     <span className="text-[10px] font-black uppercase tracking-widest">{scenario.users}</span>
                   </div>
-                  <Button className="rounded-xl bg-slate-950 hover:bg-black text-white px-6 h-12 text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-200/50 group-hover:scale-105 transition-transform">
+                  <Button className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-6 h-12 text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(79,70,229,0.3)] group-hover:scale-105 transition-transform border border-white/20">
                     Simulate
                   </Button>
                 </div>

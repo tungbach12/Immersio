@@ -1,19 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
-
-// Initialize Gemini Client
-const apiKey = process.env.GEMINI_API_KEY || "";
-let ai: GoogleGenAI | null = null;
-
-if (apiKey) {
-  try {
-    ai = new GoogleGenAI({ apiKey });
-  } catch (error) {
-    console.warn("Failed to initialize GoogleGenAI:", error);
-  }
-} else {
-  console.warn("GEMINI_API_KEY is missing. AI features will be disabled.");
-}
-
 export interface ChatMessage {
   role: "user" | "model";
   text: string;
@@ -24,104 +8,102 @@ export async function generateScenarioResponse(
   scenarioContext: string,
   userMessage: string
 ): Promise<string> {
-  if (!apiKey) {
-    return "Error: Gemini API Key is missing. Please configure it in .env.";
-  }
-
   try {
-    const model = "gemini-3-flash-preview"; // Fast model for chat
-    
-    const systemInstruction = `
-      You are a roleplay character in a language learning app called IMMERSIO.
-      
-      SCENARIO CONTEXT:
-      ${scenarioContext}
-      
-      INSTRUCTIONS:
-      1. Stay in character at all times.
-      2. Keep responses concise (1-3 sentences) to encourage conversation.
-      3. Correct major grammatical errors gently if they impede understanding, but prioritize flow.
-      4. If the user is stuck, provide a subtle hint in the response.
-      5. Do not break character to say you are an AI.
-    `;
-
-    if (!ai) {
-      return "Error: Gemini AI client not initialized (missing API Key).";
-    }
-
-    const chat = ai.chats.create({
-      model: model,
-      config: {
-        systemInstruction: systemInstruction,
+    const messages = [
+      {
+        role: "system",
+        content: `You are a roleplay character in a language learning app called IMMERSIO.
+        
+        SCENARIO CONTEXT:
+        ${scenarioContext}
+        
+        INSTRUCTIONS:
+        1. Stay in character at all times.
+        2. Keep responses concise (1-3 sentences).
+        3. Prioritize natural conversation flow.
+        4. Do not break character.`
       },
-      history: history.map(msg => ({
-        role: msg.role,
-        parts: [{ text: msg.text }],
+      ...history.map(msg => ({
+        role: msg.role === "user" ? "user" : "assistant",
+        content: msg.text
       })),
+      { role: "user", content: userMessage }
+    ];
+
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages })
     });
 
-    const result = await chat.sendMessage({ message: userMessage });
-    return result.text || "I didn't catch that. Could you say it again?";
+    if (!response.ok) throw new Error("AI request failed");
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || "I'm sorry, I didn't get that.";
   } catch (error) {
-    console.error("Gemini API Error:", error);
-    return "Sorry, I'm having trouble connecting to the server. Please try again.";
+    console.error("Groq Chat Error:", error);
+    return "Sorry, I'm having trouble connecting. Let's try again.";
   }
 }
 
 export async function getCorrection(userText: string, targetLanguage: string = "English"): Promise<{corrected: string, explanation: string}> {
-    if (!apiKey) return { corrected: "", explanation: "API Key missing" };
+  try {
+    const messages = [
+      {
+        role: "system",
+        content: `Analyze the sentence spoken by a language learner in ${targetLanguage}. 
+        Return a JSON object with "corrected" (natural version) and "explanation" (brief note or "Perfect!"). 
+        The output must be strictly valid JSON.`
+      },
+      { role: "user", content: userText }
+    ];
 
-    try {
-        const model = "gemini-3-flash-preview";
-        const prompt = `
-            Analyze the following sentence spoken by a language learner in ${targetLanguage}: "${userText}"
-            
-            Return a JSON object with:
-            1. "corrected": The corrected version of the sentence (natural sounding).
-            2. "explanation": A brief explanation of the error (if any), or "Perfect!" if it was correct.
-        `;
-        
-        if (!ai) throw new Error("AI client not initialized");
-        const response = await ai.models.generateContent({
-            model,
-            contents: prompt,
-            config: { responseMimeType: "application/json" }
-        });
-        
-        const text = response.text;
-        if (!text) throw new Error("No response");
-        return JSON.parse(text);
-    } catch (e) {
-        console.error(e);
-        return { corrected: userText, explanation: "Could not analyze." };
-    }
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        messages,
+        response_format: { type: "json_object" }
+      })
+    });
+
+    if (!response.ok) throw new Error(`Correction API error: ${response.status}`);
+    
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error("Correction: Empty response content");
+    
+    return JSON.parse(content);
+  } catch (e) {
+    console.error("Correction Parsing Error:", e);
+    return { corrected: userText, explanation: "Could not analyze sentence at this time." };
+  }
 }
 
 export async function generateFeedback(history: ChatMessage[], scenarioContext: string): Promise<string> {
-  if (!apiKey) return "API Key missing";
-
   try {
-    const model = "gemini-3-flash-preview";
-    const prompt = `
-      Analyze the following conversation history for a language learning scenario:
-      Scenario Context: ${scenarioContext}
-      
-      Conversation:
-      ${history.map(msg => `${msg.role === "user" ? "Student" : "AI"}: ${msg.text}`).join("\n")}
-      
-      Provide a brief, encouraging feedback summary (2-3 paragraphs) for the student. Highlight what they did well and areas for improvement.
-    `;
-    
-    if (!ai) throw new Error("AI client not initialized");
-    const response = await ai.models.generateContent({
-      model,
-      contents: prompt,
+    const messages = [
+      {
+        role: "system",
+        content: "Analyze the conversation and provide encouraging feedback (2-3 paragraphs) for a language learner. Highlight strengths and areas for improvement."
+      },
+      {
+        role: "user",
+        content: `Context: ${scenarioContext}\n\nHistory:\n${history.map(msg => `${msg.role}: ${msg.text}`).join("\n")}`
+      }
+    ];
+
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages })
     });
-    
-    return response.text || "Good job on completing the scenario!";
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || "Excellent practice today!";
   } catch (e) {
-    console.error("Feedback generation error:", e);
-    return "Great effort! Keep practicing to improve your skills.";
+    console.error(e);
+    return "Great effort! Keep practicing!";
   }
 }
 
@@ -132,68 +114,61 @@ export interface Flashcard {
 }
 
 export async function generateFlashcards(history: ChatMessage[], option: "grammar" | "vocabulary" | "improvement"): Promise<Flashcard[]> {
-  if (!apiKey) return [];
-
   try {
-    const model = "gemini-3-flash-preview";
-    
-    let focus = "";
-    if (option === "grammar") focus = "grammar rules and corrections based on the student's mistakes or complex structures used.";
-    else if (option === "vocabulary") focus = "key vocabulary words, idioms, or phrases used in the conversation.";
-    else if (option === "improvement") focus = "better, more natural ways to phrase the student's sentences (Sentence Improvement).";
+    let focus = option === "grammar" ? "grammar rules/corrections" : option === "vocabulary" ? "key words/idioms" : "more natural phrasing";
 
-    const prompt = `
-      Analyze the following conversation history for a language learning scenario:
-      
-      Conversation:
-      ${history.map(msg => `${msg.role === "user" ? "Student" : "AI"}: ${msg.text}`).join("\n")}
-      
-      Generate 3 to 5 flashcards focusing on: ${focus}
-      
-      Return a JSON array of objects, where each object has:
-      - "front": The front of the flashcard (e.g., a word, a grammatically incorrect sentence, or a prompt).
-      - "back": The back of the flashcard (e.g., the definition, the corrected sentence, or the improved version).
-      - "explanation": A brief explanation of the rule or meaning.
-    `;
-    
-    if (!ai) throw new Error("AI client not initialized");
-    const response = await ai.models.generateContent({
-      model,
-      contents: prompt,
-      config: { responseMimeType: "application/json" }
+    const messages = [
+      {
+        role: "system",
+        content: `Analyze the conversation and generate 3-5 flashcards focusing on ${focus}. 
+        Return a JSON object with a "flashcards" key containing an array of objects with "front", "back", and "explanation".
+        The output must be strictly valid JSON.`
+      },
+      {
+        role: "user",
+        content: history.map(msg => `${msg.role}: ${msg.text}`).join("\n")
+      }
+    ];
+
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        messages,
+        response_format: { type: "json_object" }
+      })
     });
+
+    if (!response.ok) throw new Error(`Flashcard API error: ${response.status}`);
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error("Flashcards: Empty response content");
     
-    const text = response.text;
-    if (!text) throw new Error("No response");
-    return JSON.parse(text);
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed.flashcards && Array.isArray(parsed.flashcards)) return parsed.flashcards;
+    
+    return [];
   } catch (e) {
-    console.error("Flashcard generation error:", e);
+    console.error("Flashcard Generation Error:", e);
     return [];
   }
 }
+
 export async function generateSpeech(text: string): Promise<string | null> {
-    if (!apiKey) return null;
-
-    if (!ai) return null;
-
+    // Redirect to the existing Groq TTS service via AppLayout/ScenarioDetail patterns if needed,
+    // but for simplicity, we provide a unified way to fetch it if some old code still calls this.
     try {
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash-preview-tts",
-            contents: [{ parts: [{ text }] }],
-            config: {
-                responseModalities: ["AUDIO"],
-                speechConfig: {
-                    voiceConfig: {
-                        prebuiltVoiceConfig: { voiceName: "Puck" },
-                    },
-                },
-            },
+        const response = await fetch("/api/tts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text })
         });
-
-        const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-        return base64Audio || null;
-    } catch (error) {
-        console.error("Gemini TTS Error:", error);
+        if (!response.ok) return null;
+        const arrayBuffer = await response.arrayBuffer();
+        return btoa(new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ""));
+    } catch (e) {
         return null;
     }
 }

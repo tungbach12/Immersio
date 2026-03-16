@@ -57,13 +57,15 @@ export default function ScenarioDetail() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const arContainerRef = useRef<HTMLDivElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const initialAudioPlayedRef = useRef<string | null>(null);
 
   // Initialize messages when scenario loads
   useEffect(() => {
-    if (scenario) {
+    if (scenario && initialAudioPlayedRef.current !== scenario.id) {
       setMessages([{ role: "model", text: scenario.initialMessage }]);
-      // Optional: Play initial message audio automatically
-      // playTextToSpeech(scenario.initialMessage); 
+      // Play initial message audio automatically
+      playTextToSpeech(scenario.initialMessage); 
+      initialAudioPlayedRef.current = scenario.id;
     }
   }, [scenario]);
 
@@ -295,42 +297,15 @@ export default function ScenarioDetail() {
       // Auto-play NPC response
       playTextToSpeech(response);
 
-      // --- Navigation Mode Logic ---
-      if (scenario.isNavigation) {
-          if (navPhase === "intro") {
-              setNavPhase("local_explaining");
-          } else if (navPhase === "local_explaining") {
-              // After local explains, trigger AI question phase
-              setTimeout(() => {
-                  setNavPhase("ai_question");
-                  const aiMsg = "AI Assistant: Based on the directions, where should you turn right?";
-                  setMessages(prev => [...prev, { role: "model", text: aiMsg }]);
-                  playTextToSpeech(aiMsg);
-              }, 3000);
-          } else if (navPhase === "ai_question") {
-              // Analyze user answer
-              const isCorrect = userMsg.toLowerCase().includes("starbucks") || userMsg.toLowerCase().includes("right");
-              setNavFeedback({
-                  isCorrect,
-                  explanation: isCorrect 
-                    ? "Perfect! You understood the spatial direction correctly." 
-                    : "Not quite. The local said to turn right at the Starbucks."
-              });
-              setNavPhase("feedback");
-          }
-      }
-
-      // Analyze user input for feedback (standard logic)
-      if (!scenario.isNavigation || navPhase !== "ai_question") {
-          const correction = await getCorrection(userMsg, scenario.language);
-          if (correction.corrected !== userMsg && correction.explanation !== "Perfect!") {
-              setShowCorrection({
-                  original: userMsg,
-                  corrected: correction.corrected,
-                  explanation: correction.explanation
-              });
-              setTimeout(() => setShowCorrection(null), 8000);
-          }
+      // Analysis for feedback (standard logic)
+      const correction = await getCorrection(userMsg, scenario.language);
+      if (correction.corrected !== userMsg && correction.explanation !== "Perfect!") {
+          setShowCorrection({
+              original: userMsg,
+              corrected: correction.corrected,
+              explanation: correction.explanation
+          });
+          setTimeout(() => setShowCorrection(null), 8000);
       }
 
     } catch (error) {
@@ -1106,41 +1081,7 @@ export default function ScenarioDetail() {
               )}
           </AnimatePresence>
 
-          {/* Navigation Feedback Overlay */}
-          <AnimatePresence>
-              {scenario.isNavigation && navPhase === "feedback" && navFeedback && (
-                  <motion.div
-                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                      className="absolute bottom-64 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-50"
-                  >
-                      <div className={cn(
-                          "glass-card rounded-[2.5rem] p-8 border-4 shadow-3xl text-center backdrop-blur-3xl",
-                          navFeedback.isCorrect ? "bg-emerald-500/90 border-emerald-400 text-white" : "bg-red-500/90 border-red-400 text-white"
-                      )}>
-                          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                              {navFeedback.isCorrect ? <Check size={32} /> : <X size={32} />}
-                          </div>
-                          <h3 className="text-2xl font-black italic tracking-tighter mb-2">
-                              {navFeedback.isCorrect ? "Navigation Sync!" : "Path Deviation"}
-                          </h3>
-                          <p className="font-bold text-white/90 mb-8 leading-relaxed">
-                              {navFeedback.explanation}
-                          </p>
-                          <Button 
-                            className="w-full h-14 bg-white text-slate-950 hover:bg-slate-100 rounded-2xl font-black uppercase tracking-widest text-xs"
-                            onClick={() => {
-                                setNavPhase("intro");
-                                setNavFeedback(null);
-                            }}
-                          >
-                            Continue Expedition
-                          </Button>
-                      </div>
-                  </motion.div>
-              )}
-          </AnimatePresence>
+
 
         </div>
       )}

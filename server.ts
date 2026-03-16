@@ -74,6 +74,50 @@ async function startServer() {
     }
   });
 
+  // API Route for Groq Chat
+  app.post("/api/chat", async (req, res) => {
+    const { messages, model, temperature, response_format } = req.body;
+    const apiKey = process.env.GROQ_API_KEY;
+
+    console.log(`[Groq Chat] Request received for model: ${model || "llama-3.3-70b-versatile"}`);
+
+    if (!apiKey) {
+      console.error("[Groq Chat] API Key missing");
+      return res.status(500).json({ error: "Server configuration error: Groq API Key missing" });
+    }
+
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: model || "llama-3.3-70b-versatile",
+          messages,
+          temperature: temperature ?? 0.7,
+          max_completion_tokens: 1024,
+          response_format: response_format || { type: "text" },
+          stream: false // Non-streaming for simplicity in standard fetch
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[Groq Chat] API Error: ${response.status}`, errorText);
+        return res.status(response.status).json({ error: "Groq Chat Error", details: errorText });
+      }
+
+      const data = await response.json();
+      console.log(`[Groq Chat] Success: ${data.choices?.[0]?.message?.content?.substring(0, 50)}...`);
+      res.json(data);
+    } catch (error: any) {
+      console.error("[Groq Chat] Proxy Error:", error);
+      res.status(500).json({ error: "Internal Server Error", message: error.message });
+    }
+  });
+
   // API Route for Health Check
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });

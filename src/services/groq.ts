@@ -14,10 +14,16 @@ export async function generateGroqSpeech(text: string): Promise<string | null> {
         if (!response.ok) {
             let errorDetail = "Unknown error";
             try {
-                const errorData = await response.json();
-                errorDetail = JSON.stringify(errorData);
+                // Clone the response so we can read the body multiple times if needed
+                const clonedResponse = response.clone();
+                try {
+                    const errorData = await clonedResponse.json();
+                    errorDetail = JSON.stringify(errorData);
+                } catch (e) {
+                    errorDetail = await clonedResponse.text();
+                }
             } catch (e) {
-                errorDetail = await response.text();
+                console.error("Failed to parse error response", e);
             }
             console.error(`TTS API Error: ${response.status}`, errorDetail);
             return null;

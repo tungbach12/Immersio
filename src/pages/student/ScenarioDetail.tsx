@@ -66,8 +66,12 @@ export default function ScenarioDetail() {
       }
 
       // Calculate relative movement
-      // Sensitivity factor to match pixels to degrees (approximate)
-      const sensitivity = 5;
+      if (!arContainerRef.current) return;
+      const rect = arContainerRef.current.getBoundingClientRect();
+
+      // Estimated FOV of 50 degrees (tighter than 60). Convert degrees diff to pixel offset.
+      const sensitivityX = rect.width / 50;
+      const sensitivityY = rect.height / 50;
 
       let alphaDiff = e.alpha - initialOrientation.alpha;
       if (alphaDiff > 180) alphaDiff -= 360;
@@ -76,8 +80,8 @@ export default function ScenarioDetail() {
       const betaDiff = e.beta - initialOrientation.beta;
 
       setGyroOffset({
-        x: alphaDiff * sensitivity,
-        y: betaDiff * sensitivity
+        x: alphaDiff * sensitivityX,
+        y: betaDiff * sensitivityY
       });
     };
 
@@ -311,9 +315,9 @@ export default function ScenarioDetail() {
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
     if (pendingModel) {
-      // Grounded placement: Use a point lower than the tap for a "floor" feel if scanning is active
-      const placementY = surfaceDetected ? reticlePos.y : y;
+      // Direct placement at reticle or cursor
       const placementX = surfaceDetected ? reticlePos.x : x;
+      const placementY = surfaceDetected ? reticlePos.y : y;
 
       const newModel = {
         id: Math.random().toString(36).substr(2, 9),
@@ -324,11 +328,15 @@ export default function ScenarioDetail() {
         image: pendingModel.image,
         name: pendingModel.name
       };
+
       setPlacedModels([...placedModels, newModel]);
       setSelectedModelIndex(placedModels.length);
       setPendingModel(null);
       setIsScanning(false);
       setSurfaceDetected(false);
+
+      // Re-center orientation anchor on placement to reduce cumulative drift
+      setInitialOrientation(null);
       return;
     }
 
@@ -765,6 +773,25 @@ export default function ScenarioDetail() {
                           {surfaceDetected && <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity }} className="absolute w-4 h-4 bg-cyan-400 rounded-full blur-md opacity-40" />}
                         </div>
 
+                        {/* Ghost Model Preview */}
+                        {surfaceDetected && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.5, y: -50 }}
+                            animate={{ opacity: 0.4, scale: 0.8, y: -80 }}
+                            className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+                          >
+                            {/* @ts-ignore */}
+                            <model-viewer
+                              src={pendingModel.url}
+                              style={{ width: '180px', height: '180px' }}
+                              loading="eager"
+                              environment-image="neutral"
+                              auto-rotate
+                              camera-orbit="0deg 75deg 105%"
+                            />
+                          </motion.div>
+                        )}
+
                         {/* Scanning HUD labels */}
                         <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
                           <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
@@ -859,12 +886,18 @@ export default function ScenarioDetail() {
                   )}
                 >
                   <div className="relative group">
-                    {/* Visual Grounding / Anchoring */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-48 h-12 bg-black/40 blur-2xl rounded-full scale-110 pointer-events-none" />
+                    {/* Visual Grounding / Anchoring - Deep Presence */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-48 h-12 bg-black/60 blur-3xl rounded-full scale-125 pointer-events-none" />
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-32 h-8 bg-black/80 blur-xl rounded-full pointer-events-none" />
                     <div className={cn(
                       "absolute bottom-4 left-1/2 -translate-x-1/2 w-40 h-10 border-2 rounded-full pointer-events-none transition-all duration-500",
-                      selectedModelIndex === idx ? "border-cyan-400/60 opacity-100 scale-100" : "border-white/10 opacity-30 scale-90"
+                      selectedModelIndex === idx ? "border-cyan-400/80 opacity-100 scale-100" : "border-white/20 opacity-40 scale-95"
                     )} />
+
+                    {/* Base Glow for Selected State */}
+                    {selectedModelIndex === idx && (
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-40 h-10 bg-cyan-400/20 blur-lg rounded-full animate-pulse pointer-events-none" />
+                    )}
 
                     {/* @ts-ignore */}
                     <model-viewer

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, MouseEvent } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
-import { Mic, Send, ArrowLeft, Video, Monitor, Sparkles, Volume2, Info, AlertCircle, Loader2, Target, Scan, Maximize, Crosshair, Box, X, Check, RefreshCcw, Coffee, Utensils, Soup, Triangle, Flame } from "lucide-react";
+import { Mic, Send, ArrowLeft, Video, Monitor, Sparkles, Volume2, Info, AlertCircle, Loader2, Target, Scan, Maximize, Crosshair, Box, X, Check, RefreshCcw, Coffee, Utensils, Soup, Triangle, Flame, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { generateScenarioResponse, ChatMessage, getCorrection, generateFeedback, generateFlashcards, Flashcard } from "@/services/gemini";
@@ -32,6 +32,9 @@ export default function ScenarioDetail() {
   const recognitionRef = useRef<any>(null);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [cameraFacingMode, setCameraFacingMode] = useState<"user" | "environment">("user");
+  const [isScanning, setIsScanning] = useState(false);
+  const [surfaceDetected, setSurfaceDetected] = useState(false);
+  const [reticlePos, setReticlePos] = useState({ x: 50, y: 70 });
 
   // Feedback & Flashcards state
   const [feedbackText, setFeedbackText] = useState<string | null>(null);
@@ -46,6 +49,69 @@ export default function ScenarioDetail() {
   const [newDeckName, setNewDeckName] = useState("");
   const [isSaved, setIsSaved] = useState(false);
   const [dragOrigin, setDragOrigin] = useState({ x: 0, y: 0 });
+  const [initialOrientation, setInitialOrientation] = useState<{ alpha: number, beta: number, gamma: number } | null>(null);
+  const [gyroOffset, setGyroOffset] = useState({ x: 0, y: 0 });
+  const [gyroPermissionStatus, setGyroPermissionStatus] = useState<"prompt" | "granted" | "denied">("prompt");
+
+  // Gyroscope tracking for spatial anchoring
+  useEffect(() => {
+    if (mode !== "ar") return;
+
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      if (e.alpha === null || e.beta === null) return;
+
+      if (!initialOrientation) {
+        setInitialOrientation({ alpha: e.alpha, beta: e.beta, gamma: e.gamma || 0 });
+        return;
+      }
+
+      // Calculate relative movement
+      // Sensitivity factor to match pixels to degrees (approximate)
+      const sensitivity = 5;
+
+      let alphaDiff = e.alpha - initialOrientation.alpha;
+      if (alphaDiff > 180) alphaDiff -= 360;
+      if (alphaDiff < -180) alphaDiff += 360;
+
+      const betaDiff = e.beta - initialOrientation.beta;
+
+      setGyroOffset({
+        x: alphaDiff * sensitivity,
+        y: betaDiff * sensitivity
+      });
+    };
+
+    const requestPermission = async () => {
+      // @ts-ignore - iOS specific permission request
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          // @ts-ignore
+          const response = await DeviceOrientationEvent.requestPermission();
+          if (response === 'granted') {
+            setGyroPermissionStatus("granted");
+            window.addEventListener('deviceorientation', handleOrientation);
+          } else {
+            setGyroPermissionStatus("denied");
+          }
+        } catch (error) {
+          console.error("Permission request failed", error);
+          setGyroPermissionStatus("denied");
+        }
+      } else {
+        // Android or non-iOS
+        setGyroPermissionStatus("granted");
+        window.addEventListener('deviceorientation', handleOrientation);
+      }
+    };
+
+    if (gyroPermissionStatus === "prompt") {
+      requestPermission();
+    } else if (gyroPermissionStatus === "granted") {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    return () => window.removeEventListener('deviceorientation', handleOrientation);
+  }, [mode, initialOrientation, gyroPermissionStatus]);
 
   // Navigation Mode States
   const [navPhase, setNavPhase] = useState<"intro" | "local_explaining" | "ai_question" | "feedback">("intro");
@@ -135,6 +201,12 @@ export default function ScenarioDetail() {
 
     stopCamera();
     startCamera();
+
+    // Reset spatial anchoring tracking when mode changes
+    if (mode === "ar") {
+      setInitialOrientation(null);
+      setGyroOffset({ x: 0, y: 0 });
+    }
 
     return () => {
       mounted = false;
@@ -239,10 +311,14 @@ export default function ScenarioDetail() {
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
     if (pendingModel) {
+      // Grounded placement: Use a point lower than the tap for a "floor" feel if scanning is active
+      const placementY = surfaceDetected ? reticlePos.y : y;
+      const placementX = surfaceDetected ? reticlePos.x : x;
+
       const newModel = {
         id: Math.random().toString(36).substr(2, 9),
-        x,
-        y,
+        x: placementX,
+        y: placementY,
         scale: 1,
         url: pendingModel.url,
         image: pendingModel.image,
@@ -251,6 +327,8 @@ export default function ScenarioDetail() {
       setPlacedModels([...placedModels, newModel]);
       setSelectedModelIndex(placedModels.length);
       setPendingModel(null);
+      setIsScanning(false);
+      setSurfaceDetected(false);
       return;
     }
 
@@ -270,6 +348,13 @@ export default function ScenarioDetail() {
     setPendingModel(model);
     setShowModelPicker(false);
     setSelectedModelIndex(null);
+    setIsScanning(true);
+    setSurfaceDetected(false);
+
+    // Simulate surface detection delay
+    setTimeout(() => {
+      setSurfaceDetected(true);
+    }, 2000);
   };
 
   const updateModelScale = (newScale: number) => {
@@ -640,19 +725,83 @@ export default function ScenarioDetail() {
                 </motion.div>
               )}
 
-              {/* Placement Hint */}
+              {/* Surface Scanner UI */}
               <AnimatePresence>
-                {pendingModel && (
+                {isScanning && (
+                  <>
+                    {/* Reticle / Ground Target */}
+                    <motion.div
+                      initial={{ opacity: 0, scale: 2 }}
+                      animate={{
+                        opacity: 1,
+                        scale: 1,
+                        x: "-50%",
+                        y: "-50%"
+                      }}
+                      exit={{ opacity: 0, scale: 0.5 }}
+                      style={{
+                        left: `${reticlePos.x}%`,
+                        top: `${reticlePos.y}%`,
+                        position: 'absolute'
+                      }}
+                      className="z-40 pointer-events-none"
+                    >
+                      <div className="relative">
+                        {/* Outer Glow */}
+                        <div className={cn(
+                          "w-32 h-20 rounded-full border-2 transition-all duration-500 blur-sm",
+                          surfaceDetected ? "border-cyan-400 bg-cyan-400/10 scale-110" : "border-white/20 scale-100"
+                        )} />
+
+                        {/* Target Ring */}
+                        <div className={cn(
+                          "absolute inset-0 w-32 h-20 rounded-full border-2 border-dashed transition-all duration-300",
+                          surfaceDetected ? "border-cyan-400 animate-[spin_8s_linear_infinite]" : "border-white/40"
+                        )} />
+
+                        {/* Center Dot / Crosshair */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+                          <Plus size={24} className={cn("transition-colors", surfaceDetected ? "text-cyan-400" : "text-white/40")} />
+                          {surfaceDetected && <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity }} className="absolute w-4 h-4 bg-cyan-400 rounded-full blur-md opacity-40" />}
+                        </div>
+
+                        {/* Scanning HUD labels */}
+                        <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
+                          <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                            <div className={cn("w-1.5 h-1.5 rounded-full", surfaceDetected ? "bg-cyan-400" : "bg-amber-400 animate-pulse")} />
+                            <span className="text-[8px] font-black text-white uppercase tracking-widest whitespace-nowrap">
+                              {surfaceDetected ? "Surface Anchored" : "Searching for Floor..."}
+                            </span>
+                          </div>
+                          {surfaceDetected && (
+                            <span className="text-[7px] font-bold text-cyan-400/60 uppercase tracking-widest">Tap anywhere to place</span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Floor Mesh Simulation */}
+                    <div className="absolute inset-0 pointer-events-none z-30">
+                      <div className="absolute bottom-0 left-0 w-full h-[60%] bg-gradient-to-t from-cyan-400/5 to-transparent opacity-30" />
+                      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.05]" />
+                    </div>
+                  </>
+                )}
+              </AnimatePresence>
+
+              {/* Placement Hint (Legacy fallback, now replaced by HUD) */}
+              <AnimatePresence>
+                {pendingModel && !surfaceDetected && (
                   <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className="absolute top-32 left-1/2 -translate-x-1/2 bg-yellow-500/90 backdrop-blur-md px-6 py-2 rounded-full border border-yellow-300/50 shadow-lg z-40"
+                    className="absolute top-32 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/10 shadow-2xl z-40"
                   >
-                    <p className="text-xs font-black text-black uppercase tracking-widest flex items-center gap-2">
-                      <Target size={14} />
-                      Tap anywhere to place {pendingModel.name}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                      <p className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Calibrating Environment...</p>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -693,9 +842,9 @@ export default function ScenarioDetail() {
                   animate={{
                     scale: model.scale,
                     opacity: 1,
-                    // Reset the drag offset to 0 after state update to prevent "double-positioning"
-                    x: 0,
-                    y: 0
+                    // Apply gyro offset to maintain spatial anchoring
+                    x: gyroOffset.x,
+                    y: gyroOffset.y
                   }}
                   style={{
                     left: `${model.x}%`,
@@ -710,6 +859,13 @@ export default function ScenarioDetail() {
                   )}
                 >
                   <div className="relative group">
+                    {/* Visual Grounding / Anchoring */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-48 h-12 bg-black/40 blur-2xl rounded-full scale-110 pointer-events-none" />
+                    <div className={cn(
+                      "absolute bottom-4 left-1/2 -translate-x-1/2 w-40 h-10 border-2 rounded-full pointer-events-none transition-all duration-500",
+                      selectedModelIndex === idx ? "border-cyan-400/60 opacity-100 scale-100" : "border-white/10 opacity-30 scale-90"
+                    )} />
+
                     {/* @ts-ignore */}
                     <model-viewer
                       src={model.url}

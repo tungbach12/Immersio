@@ -110,100 +110,105 @@ export default function Subscription() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
   return (
-    <div className="max-w-6xl mx-auto py-6 md:py-12 px-4 pb-24">
-      <div className="text-center mb-10 md:mb-16">
+    <div className="max-w-6xl mx-auto py-8 md:py-12 px-4 pb-24 overflow-x-hidden relative">
+      <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full -z-10" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full -z-10" />
+
+      <div className="text-center mb-12 md:mb-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-[10px] md:text-sm font-black border border-indigo-100 mb-6 uppercase tracking-widest"
+          className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-5 py-2 rounded-full text-[10px] md:text-sm font-black border border-indigo-100 mb-8 uppercase tracking-[0.2em]"
         >
-          <Sparkles size={14} className="animate-pulse" /> Premium Learning Experience
+          <Sparkles size={14} className="animate-pulse text-amber-400" /> Premium Learning Experience
         </motion.div>
-        <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight mb-4 md:mb-6 italic leading-none">
-          Choose Your Path
+        <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter mb-6 italic leading-none">
+          Choose Your <span className="text-indigo-600">Path.</span>
         </h1>
-        <p className="text-slate-500 max-w-2xl mx-auto text-sm md:text-lg font-medium px-4">
-          Unlock the full potential of IMMERSIO. Master languages faster with our most advanced AI models.
+        <p className="text-slate-500 max-w-2xl mx-auto text-base md:text-lg font-medium px-4 opacity-80">
+          Unlock the full potential of IMMERSIO. Master languages faster with our most advanced AI models and immersive AR environments.
         </p>
 
-        {/* Billing Toggle */}
-        <div className="mt-8 md:mt-10 flex items-center justify-center gap-4 md:gap-6">
-          <span className={cn("text-[10px] md:text-sm font-black uppercase tracking-widest", billingCycle === "monthly" ? "text-slate-900" : "text-slate-400")}>Monthly</span>
+        {/* Billing Toggle - Refined */}
+        <div className="mt-12 flex items-center justify-center gap-6">
+          <span className={cn("text-[10px] md:text-xs font-black uppercase tracking-[0.2em] transition-colors", billingCycle === "monthly" ? "text-slate-900" : "text-slate-400")}>Monthly</span>
           <button 
             onClick={() => setBillingCycle(billingCycle === "monthly" ? "yearly" : "monthly")}
-            className="w-14 md:w-16 h-7 md:h-8 bg-slate-200 rounded-full relative p-1 transition-all hover:bg-slate-300 shadow-inner"
+            className="w-16 h-8 bg-slate-200 rounded-full relative p-1 transition-all hover:bg-slate-300 shadow-inner group"
           >
             <motion.div 
-              animate={{ x: billingCycle === "monthly" ? 0 : (window.innerWidth < 768 ? 28 : 32) }}
-              className="w-5 md:w-6 h-5 md:h-6 bg-white rounded-full shadow-md"
+              animate={{ x: billingCycle === "monthly" ? 0 : 32 }}
+              className="w-6 h-6 bg-white rounded-full shadow-lg group-hover:scale-110 transition-transform"
             />
           </button>
-          <span className={cn("text-[10px] md:text-sm font-black uppercase tracking-widest", billingCycle === "yearly" ? "text-slate-900" : "text-slate-400")}>
-            Yearly <span className="text-emerald-500 ml-1 bg-emerald-50 px-2 py-0.5 rounded-full text-[8px] md:text-[10px]">-20%</span>
+          <span className={cn("text-[10px] md:text-xs font-black uppercase tracking-[0.2em] transition-colors", billingCycle === "yearly" ? "text-slate-900" : "text-slate-400")}>
+            Yearly <span className="text-emerald-500 ml-2 bg-emerald-50 px-2.5 py-1 rounded-lg text-[9px] font-black border border-emerald-100">-20% OFF</span>
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-20 md:mb-24">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24 relative z-10">
         {plans.map((plan, idx) => (
           <motion.div
             key={plan.name}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className={cn(plan.popular && "md:scale-105 z-10")}
+            className={cn(plan.popular && "md:scale-105")}
           >
             <Card 
               className={cn(
-                "h-full flex flex-col relative overflow-hidden border-2 transition-all duration-500 rounded-[2.5rem] md:rounded-[3rem]",
+                "h-full flex flex-col relative overflow-hidden border-2 transition-all duration-700 rounded-[3rem] bg-white group",
                 plan.popular 
-                  ? "border-indigo-600 shadow-[0_20px_40px_-12px_rgba(79,70,229,0.2)] bg-white" 
-                  : "border-slate-100 hover:border-indigo-200 shadow-lg bg-white/50"
+                  ? "border-indigo-600 shadow-[0_30px_60px_-15px_rgba(79,70,229,0.25)]" 
+                  : "border-slate-100 hover:border-indigo-200 shadow-xl shadow-slate-200/50"
               )}
             >
               {plan.popular && (
-                <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[9px] md:text-[10px] font-black px-4 md:px-6 py-1.5 md:py-2 rounded-bl-2xl md:rounded-bl-3xl uppercase tracking-[0.2em]">
+                <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-black px-6 py-2.5 rounded-bl-[2rem] uppercase tracking-[0.2em] z-20">
                   Popular
                 </div>
               )}
               
-              <CardContent className="p-6 md:p-8 flex-1 flex flex-col">
+              <CardContent className="p-8 md:p-10 flex-1 flex flex-col relative overflow-hidden">
+                {plan.popular && <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl -mr-16 -mt-16" />}
+                
                 <div className={cn(
-                  "w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center mb-4 md:mb-6 shadow-lg",
-                  plan.color === "indigo" ? "bg-indigo-600 text-white shadow-indigo-200" : 
-                  plan.color === "amber" ? "bg-amber-500 text-white shadow-amber-200" : "bg-slate-800 text-white shadow-slate-200"
+                  "w-12 h-12 rounded-2xl flex items-center justify-center mb-8 shadow-xl transition-transform group-hover:rotate-12",
+                  plan.color === "indigo" ? "bg-slate-950 text-white" : 
+                  plan.color === "amber" ? "bg-amber-100 text-amber-600" : "bg-slate-50 text-slate-400"
                 )}>
-                  <plan.icon size={20} className="md:w-6 md:h-6" />
+                  <plan.icon size={24} strokeWidth={2.5} />
                 </div>
                 
-                <h3 className="text-xl md:text-2xl font-black text-slate-900 mb-1 italic tracking-tight">{plan.name}</h3>
-                <div className="flex items-baseline gap-1 mb-3 md:mb-4">
-                  <span className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter">
+                <h3 className="text-2xl font-black text-slate-900 mb-2 italic tracking-tight">{plan.name}</h3>
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter">
                     {billingCycle === "yearly" && plan.price !== "Free" 
                       ? `${(parseInt(plan.price.replace(/\D/g, '')) * 0.8 / 1000).toFixed(3)}.000đ` 
                       : plan.price}
                   </span>
-                  {plan.price !== "Free" && <span className="text-slate-400 font-bold text-[10px] md:text-xs uppercase tracking-widest">{plan.period}</span>}
+                  {plan.price !== "Free" && <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">{plan.period}</span>}
                 </div>
-                <p className="text-slate-500 text-[10px] md:text-xs font-medium mb-6 md:mb-8 leading-relaxed">{plan.description}</p>
+                <p className="text-slate-500 text-xs font-medium mb-10 leading-relaxed opacity-80">{plan.description}</p>
                 
-                <div className="space-y-3 md:space-y-4 mb-8 md:mb-10 flex-1">
+                <div className="space-y-4 mb-12 flex-1">
                   {plan.features.map((feature) => (
-                    <div key={feature} className="flex items-start gap-2 md:gap-3">
-                      <div className="mt-1 bg-emerald-500 rounded-full p-0.5 shadow-sm shrink-0">
-                        <Check size={6} className="text-white md:w-2 md:h-2" strokeWidth={5} />
+                    <div key={feature} className="flex items-start gap-4 group/item">
+                      <div className="mt-1 bg-emerald-500 rounded-full p-1 shadow-sm shrink-0 group-hover/item:scale-125 transition-transform">
+                        <Check size={8} className="text-white" strokeWidth={5} />
                       </div>
-                      <span className="text-[10px] md:text-xs text-slate-700 font-bold leading-tight">{feature}</span>
+                      <span className="text-xs text-slate-700 font-bold leading-tight group-hover/item:text-slate-950 transition-colors uppercase tracking-tight">{feature}</span>
                     </div>
                   ))}
                 </div>
                 
                 <Button 
                   className={cn(
-                    "w-full h-10 md:h-12 rounded-xl font-black uppercase tracking-[0.2em] text-[8px] md:text-[9px] transition-all duration-300",
+                    "w-full h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-300 shadow-2xl active:scale-95",
                     plan.popular 
-                      ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-200" 
-                      : "bg-slate-900 hover:bg-black text-white shadow-lg"
+                      ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200" 
+                      : "bg-slate-900 hover:bg-black text-white"
                   )}
                 >
                   {plan.buttonText}
@@ -214,38 +219,47 @@ export default function Subscription() {
         ))}
       </div>
 
-      {/* Detailed Comparison Table - Optimized for Mobile */}
-      <div className="mt-20 md:mt-32">
-        <div className="text-center mb-10 md:mb-16">
-          <h2 className="text-2xl md:text-3xl font-black text-slate-900 italic tracking-tight mb-3 md:mb-4">Deep Comparison</h2>
-          <p className="text-slate-400 font-bold text-[9px] md:text-[10px] uppercase tracking-[0.2em]">Every detail matters for your mastery</p>
+      {/* Detailed Comparison Table - Ultra Clean App Look */}
+      <div className="mt-24 md:mt-36 relative">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-black text-slate-900 italic tracking-tight mb-4">Deep Comparison</h2>
+          <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">Every detail matters for your mastery</p>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] md:rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden">
-          <div className="overflow-x-auto scrollbar-hide">
-            <table className="w-full text-left border-collapse min-w-[600px] md:min-w-full">
+        <div className="bg-white rounded-[3rem] border border-slate-100 shadow-3xl overflow-hidden relative">
+          <div className="overflow-x-auto scrollbar-hide px-4 md:px-0">
+            <table className="w-full text-left border-collapse min-w-[700px] md:min-w-full">
               <thead>
                 <tr className="bg-slate-50/50">
-                  <th className="p-6 md:p-8 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-slate-100">Category</th>
-                  <th className="p-6 md:p-8 text-base md:text-lg font-black italic text-slate-900 border-b border-slate-100">Basic</th>
-                  <th className="p-6 md:p-8 text-base md:text-lg font-black italic text-indigo-600 border-b border-slate-100">Plus</th>
-                  <th className="p-6 md:p-8 text-base md:text-lg font-black italic text-amber-600 border-b border-slate-100">Premium</th>
+                  <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-slate-100">Feature</th>
+                  <th className="p-8 text-xl font-black italic text-slate-900 border-b border-slate-100">Basic</th>
+                  <th className="p-8 text-xl font-black italic text-indigo-600 border-b border-slate-100 relative">
+                    Plus
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600" />
+                  </th>
+                  <th className="p-8 text-xl font-black italic text-amber-600 border-b border-slate-100">Premium</th>
                 </tr>
               </thead>
               <tbody>
                 {comparisonData.map((row, i) => (
                   <tr key={i} className="group hover:bg-slate-50/30 transition-colors">
-                    <td className="p-6 md:p-8 border-b border-slate-50">
-                      <span className="text-xs md:text-sm font-black text-slate-900 uppercase tracking-tight">{row.category}</span>
+                    <td className="p-8 border-b border-slate-50">
+                      <span className="text-xs md:text-sm font-black text-slate-950 uppercase tracking-tight">{row.category}</span>
                     </td>
-                    <td className="p-6 md:p-8 border-b border-slate-50">
-                      <span className="text-xs md:text-sm text-slate-500 font-medium">{row.basic}</span>
+                    <td className="p-8 border-b border-slate-50">
+                      <div className="text-xs md:text-sm text-slate-500 font-medium flex items-center gap-2">
+                        {row.basic}
+                      </div>
                     </td>
-                    <td className="p-6 md:p-8 border-b border-slate-50 bg-indigo-50/5 md:bg-indigo-50/10">
-                      <span className="text-xs md:text-sm text-slate-700 font-bold">{row.plus}</span>
+                    <td className="p-8 border-b border-slate-50 bg-indigo-50/10">
+                      <div className="text-xs md:text-sm text-indigo-900 font-bold flex items-center gap-2">
+                        {row.plus}
+                      </div>
                     </td>
-                    <td className="p-6 md:p-8 border-b border-slate-50 bg-amber-50/5 md:bg-amber-50/10">
-                      <span className="text-xs md:text-sm text-slate-900 font-black">{row.premium}</span>
+                    <td className="p-8 border-b border-slate-50 bg-amber-50/10">
+                      <div className="text-xs md:text-sm text-slate-900 font-black flex items-center gap-2">
+                         <Crown size={12} className="text-amber-500 shrink-0" /> {row.premium}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -254,28 +268,28 @@ export default function Subscription() {
           </div>
           {/* Mobile Swipe Hint */}
           <div className="md:hidden p-4 bg-slate-50 text-center border-t border-slate-100">
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center justify-center gap-2">
-              <ArrowRight size={10} /> Swipe left to see more <ArrowRight size={10} />
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center justify-center gap-3">
+              <ArrowRight size={12} /> Swipe left to see full details <ArrowRight size={12} />
             </p>
           </div>
         </div>
       </div>
 
-      {/* Trust Badges */}
-      <div className="mt-20 md:mt-32 grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 border-t border-slate-100 pt-16 md:pt-20">
+      {/* Trust Badges - Modern Layout */}
+      <div className="mt-24 md:mt-40 grid grid-cols-2 lg:grid-cols-4 gap-12 border-t border-slate-100 pt-20">
         {[
-          { icon: Shield, title: "Secure", desc: "Stripe Payment" },
-          { icon: Zap, title: "Instant", desc: "Unlock now" },
-          { icon: Star, title: "Trial", desc: "7-Day Free" },
-          { icon: Crown, title: "Cancel", desc: "Anytime" },
+          { icon: Shield, title: "Guaranteed", desc: "Stripe Secured" },
+          { icon: Zap, title: "Instant Access", desc: "Unlock now" },
+          { icon: Star, title: "Free Trial", desc: "7-Day Pro" },
+          { icon: Crown, title: "No Commits", desc: "Cancel anytime" },
         ].map((badge, i) => (
-          <div key={i} className="flex flex-col items-center text-center gap-3 md:gap-4 group">
-            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-indigo-600 transition-all group-hover:scale-110 group-hover:bg-indigo-50">
-              <badge.icon size={24} className="md:w-8 md:h-8" />
+          <div key={i} className="flex flex-col items-center text-center gap-5 group">
+            <div className="w-16 h-16 rounded-[2rem] bg-slate-50 flex items-center justify-center text-indigo-600 transition-all group-hover:scale-110 group-hover:bg-indigo-50 shadow-sm border border-slate-100/50">
+              <badge.icon size={28} strokeWidth={2.5} />
             </div>
             <div>
-              <h4 className="font-black text-slate-900 italic tracking-tight text-sm md:text-base">{badge.title}</h4>
-              <p className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{badge.desc}</p>
+              <h4 className="font-black text-slate-950 italic tracking-tight text-base mb-1">{badge.title}</h4>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{badge.desc}</p>
             </div>
           </div>
         ))}

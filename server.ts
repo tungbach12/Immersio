@@ -119,6 +119,25 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+// Production static file serving (moved outside startServer for Vercel)
+if (process.env.NODE_ENV === "production") {
+  const path = await import("path");
+  const { fileURLToPath } = await import("url");
+  
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  
+  // Serve static files from the dist directory
+  app.use(express.static(path.join(__dirname, "dist")));
+  
+  // SPA fallback: redirect all non-API requests to index.html
+  app.get("*", (req, res) => {
+    if (!req.path.startsWith("/api/")) {
+      res.sendFile(path.join(__dirname, "dist", "index.html"));
+    }
+  });
+}
+
 // Export the app instance for Vercel
 export default app;
 
@@ -138,24 +157,6 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
-    // Production static file serving
-    const path = await import("path");
-    const { fileURLToPath } = await import("url");
-    
-    // In ES modules, we need to derive __dirname
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
-    
-    // Serve static files from the dist directory
-    app.use(express.static(path.join(__dirname, "dist")));
-    
-    // SPA fallback: redirect all non-API requests to index.html
-    app.get("*", (req, res) => {
-      if (!req.path.startsWith("/api/")) {
-        res.sendFile(path.join(__dirname, "dist", "index.html"));
-      }
-    });
   }
 
   server.listen(PORT, "0.0.0.0", () => {

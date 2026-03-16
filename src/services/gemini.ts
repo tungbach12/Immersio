@@ -36,7 +36,11 @@ export async function generateScenarioResponse(
       body: JSON.stringify({ messages })
     });
 
-    if (!response.ok) throw new Error("AI request failed");
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Chat API Error Body:", errorText);
+      throw new Error(`AI request failed: ${response.status} ${errorText}`);
+    }
 
     const data = await response.json();
     return data.choices?.[0]?.message?.content || "I'm sorry, I didn't get that.";
@@ -67,7 +71,11 @@ export async function getCorrection(userText: string, targetLanguage: string = "
       })
     });
 
-    if (!response.ok) throw new Error(`Correction API error: ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Correction API Error Body:", errorText);
+      throw new Error(`Correction API error: ${response.status} ${errorText}`);
+    }
     
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;

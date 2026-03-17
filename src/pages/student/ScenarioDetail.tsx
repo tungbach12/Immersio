@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, MouseEvent } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
-import { Mic, Send, ArrowLeft, Video, Monitor, Sparkles, Volume2, Info, AlertCircle, Loader2, Target, Scan, Maximize, Crosshair, Box, X, Check, RefreshCcw, Coffee, Utensils, Soup, Triangle, Flame, Plus } from "lucide-react";
+import { Mic, Send, ArrowLeft, Video, Monitor, Sparkles, Volume2, Info, AlertCircle, Loader2, Target, Scan, Maximize, Crosshair, Box, X, Check, RefreshCcw, RotateCcw, Coffee, Utensils, Soup, Triangle, Flame, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { generateScenarioResponse, ChatMessage, getCorrection, generateFeedback, generateFlashcards, Flashcard } from "@/services/gemini";
@@ -9,6 +9,9 @@ import { getDecks, addCardsToDeck, addDeck, Deck } from "@/services/decks";
 import { generateGroqSpeech } from "@/services/groq";
 import { scenarios } from "@/data/scenarios";
 import '@google/model-viewer';
+
+// Global guard for initial audio to prevent duplication in React Strict Mode (dev)
+let lastPlayedInitialScenarioId: string | null = null;
 
 export default function ScenarioDetail() {
   const { id } = useParams();
@@ -79,11 +82,18 @@ export default function ScenarioDetail() {
 
       const betaDiff = e.beta - initialOrientation.beta;
 
-      // Smoothly update offsets to compensate for camera rotation
-      setGyroOffset({
-        // Invert X to stay fixed in space as camera rotates
-        x: -alphaDiff * sensitivityX,
-        y: betaDiff * sensitivityY
+      // Smoothly update offsets to compensate for camera rotation using exponential smoothing (Damping)
+      setGyroOffset(prev => {
+        const targetX = -alphaDiff * sensitivityX;
+        // Invert Y: When tilting down (beta increases), floor points move UP in visual space.
+        const targetY = -betaDiff * sensitivityY;
+        
+        // Damping factor: 0.15 for high stability (lower = more smooth)
+        const damping = 0.15;
+        return {
+          x: prev.x + (targetX - prev.x) * damping,
+          y: prev.y + (targetY - prev.y) * damping
+        };
       });
     };
 
@@ -138,10 +148,11 @@ export default function ScenarioDetail() {
 
   // Initialize messages when scenario loads
   useEffect(() => {
-    if (scenario && initialAudioPlayedRef.current !== scenario.id) {
+    if (scenario && lastPlayedInitialScenarioId !== scenario.id) {
       setMessages([{ role: "model", text: scenario.initialMessage }]);
       // Play initial message audio automatically
       playTextToSpeech(scenario.initialMessage);
+      lastPlayedInitialScenarioId = scenario.id;
       initialAudioPlayedRef.current = scenario.id;
     }
   }, [scenario]);
@@ -381,6 +392,11 @@ export default function ScenarioDetail() {
     setSelectedModelIndex(null);
     setIsScanning(true);
     setSurfaceDetected(true); // Direct engagement
+  };
+
+  const recenterAR = () => {
+    setInitialOrientation(null);
+    setGyroOffset({ x: 0, y: 0 });
   };
 
   const updateModelScale = (newScale: number) => {
@@ -791,24 +807,30 @@ export default function ScenarioDetail() {
                           {surfaceDetected && <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity }} className="absolute w-4 h-4 bg-cyan-400 rounded-full blur-md opacity-40" />}
                         </div>
 
-                        {/* Ghost Model Preview */}
-                        {surfaceDetected && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.5, y: -50 }}
-                            animate={{ opacity: 0.4, scale: 0.8, y: -80 }}
-                            className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
-                          >
-                            {/* @ts-ignore */}
-                            <model-viewer
-                              src={pendingModel.url}
-                              style={{ width: '180px', height: '180px' }}
-                              loading="eager"
-                              environment-image="neutral"
-                              auto-rotate
-                              camera-orbit="0deg 75deg 105%"
-                            />
-                          </motion.div>
-                        )}
+                {/* Ghost Model Preview */}
+                {surfaceDetected && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5, y: -50 }}
+                    animate={{ opacity: 0.4, scale: 0.8, y: -80 }}
+                    className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+                  >
+                    {/* @ts-ignore */}
+                    <model-viewer
+                      src={pendingModel.url}
+                      style={{ width: '180px', height: '180px' }}
+                      loading="eager"
+                      environment-image="neutral"
+                      auto-rotate
+                      camera-orbit="0deg 75deg 105%"
+                    >
+                       <div className="absolute inset-x-0 bottom-0 p-4">
+                          <div className="bg-cyan-400/20 backdrop-blur-md border border-cyan-400/30 rounded-full px-4 py-1 text-[8px] font-black text-cyan-400 uppercase tracking-widest text-center">
+                            Placement HUD Active
+                          </div>
+                       </div>
+                    </model-viewer>
+                  </motion.div>
+                )}
 
                         {/* Scanning HUD labels */}
                         <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
@@ -819,7 +841,7 @@ export default function ScenarioDetail() {
                             </span>
                           </div>
                           {surfaceDetected && (
-                            <motion.span 
+                            <motion.span
                               animate={{ opacity: [0.4, 1, 0.4] }}
                               transition={{ repeat: Infinity, duration: 2 }}
                               className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.3em] drop-shadow-lg"
@@ -924,7 +946,30 @@ export default function ScenarioDetail() {
                       exposure="1"
                       loading="eager"
                       style={{ width: 'min(320px, 85vw)', height: 'min(320px, 85vw)', pointerEvents: 'none' }}
-                    />
+                    >
+                      {/* Shared UI Overlay for WebXR Session Persistence */}
+                      <div className="absolute inset-0 pointer-events-none flex flex-col justify-between">
+                         <div className="p-4 flex flex-col gap-2">
+                            <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 w-fit">
+                               <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{scenario.title}</span>
+                               <p className="text-[9px] text-white/70 font-bold mt-1 max-w-[150px]">Interacting in stable world scale</p>
+                            </div>
+                         </div>
+                         
+                         {/* Bottom Controls Replicated */}
+                         <div className="p-4 flex flex-col gap-3">
+                            <div className="bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-2xl">
+                               <p className="text-white text-xs font-bold leading-relaxed">
+                                 {messages.length > 0 ? messages[messages.length - 1].text : scenario.initialMessage}
+                               </p>
+                            </div>
+                            <div className="h-10 w-full bg-black/60 border border-white/10 rounded-full px-4 flex items-center justify-between pointer-events-auto">
+                               <span className="text-[8px] font-black text-white/40 uppercase tracking-widest italic">Return to chat for full controls</span>
+                               <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                            </div>
+                         </div>
+                      </div>
+                    </model-viewer>
 
                     {/* Label */}
                     <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 whitespace-nowrap shadow-xl pointer-events-none">
@@ -965,6 +1010,38 @@ export default function ScenarioDetail() {
                     </Button>
                   </div>
                 </motion.div>
+              </div>
+            )}
+
+            {/* Hybrid AR Guidance and Recenter */}
+            {mode === "ar" && !cameraError && (
+              <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[60] flex flex-col items-center gap-4 w-full px-8 pointer-events-none">
+                {/* Guidance Toast */}
+                <motion.div 
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1 }}
+                  className="bg-black/80 backdrop-blur-2xl px-4 py-2 rounded-2xl border border-white/10 shadow-2xl flex items-center gap-3 pointer-events-auto"
+                >
+                  <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                  <span className="text-[9px] font-black text-white/80 uppercase tracking-widest whitespace-nowrap">
+                    Interactive Overlay Active
+                  </span>
+                </motion.div>
+
+                {/* Vertical Recenter Action */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    recenterAR();
+                  }}
+                  className="bg-white/5 border-white/20 backdrop-blur-md rounded-full px-6 h-10 pointer-events-auto hover:bg-white/10 transition-all flex items-center gap-2"
+                >
+                  <RotateCcw size={14} className="text-cyan-400" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Recenter Hybrid AR</span>
+                </Button>
               </div>
             )}
           </>
@@ -1319,7 +1396,7 @@ export default function ScenarioDetail() {
 
               {/* Message Text */}
               <div className="text-white text-base md:text-lg font-bold leading-relaxed mt-6">
-                {messages.length > 0 ? messages[messages.length - 1].text : `Welcome! I'm your ${scenario.language} tutor. Let's start practicing!`}
+                {messages.length > 0 ? messages[messages.length - 1].text : scenario.initialMessage}
               </div>
 
               {/* Audio Control */}
@@ -1531,3 +1608,6 @@ export default function ScenarioDetail() {
     </div>
   );
 }
+
+// Reset the global guard when navigating away or unmounting if necessary
+// But for now, we want it to persist across dev remounts.

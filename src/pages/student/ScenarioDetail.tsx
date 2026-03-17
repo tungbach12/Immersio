@@ -69,9 +69,9 @@ export default function ScenarioDetail() {
       if (!arContainerRef.current) return;
       const rect = arContainerRef.current.getBoundingClientRect();
 
-      // Estimated FOV of 50 degrees (tighter than 60). Convert degrees diff to pixel offset.
-      const sensitivityX = rect.width / 50;
-      const sensitivityY = rect.height / 50;
+      // Higher sensitivity for more responsive anchoring (Market Standard)
+      const sensitivityX = rect.width / 65; // FOV approx 65 degrees
+      const sensitivityY = rect.height / 65;
 
       let alphaDiff = e.alpha - initialOrientation.alpha;
       if (alphaDiff > 180) alphaDiff -= 360;
@@ -79,8 +79,10 @@ export default function ScenarioDetail() {
 
       const betaDiff = e.beta - initialOrientation.beta;
 
+      // Smoothly update offsets to compensate for camera rotation
       setGyroOffset({
-        x: alphaDiff * sensitivityX,
+        // Invert X to stay fixed in space as camera rotates
+        x: -alphaDiff * sensitivityX,
         y: betaDiff * sensitivityY
       });
     };
@@ -246,24 +248,17 @@ export default function ScenarioDetail() {
     }
   };
 
-  const startListening = () => {
+  // Speech Recognition Initialization
+  useEffect(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert("Speech recognition is not supported in this browser.");
       return;
     }
 
     // @ts-ignore
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognitionRef.current = recognition;
-
-    recognition.lang = scenario.language === "English" ? 'en-US' :
-      scenario.language === "Chinese" ? 'zh-CN' :
-        scenario.language === "Japanese" ? 'ja-JP' : 'en-US';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
-
-    setIsListening(true);
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
@@ -284,8 +279,39 @@ export default function ScenarioDetail() {
       setIsListening(false);
     };
 
+    recognitionRef.current = recognition;
+
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          // ignore
+        }
+      }
+    };
+  }, []);
+
+  // Update Recognition Language when scenario/language changes
+  useEffect(() => {
+    if (recognitionRef.current && scenario) {
+      recognitionRef.current.lang = scenario.language === "English" ? 'en-US' :
+        scenario.language === "Chinese" ? 'zh-CN' :
+          scenario.language === "Japanese" ? 'ja-JP' : 'en-US';
+    }
+  }, [scenario]);
+
+  const startListening = () => {
+    if (!recognitionRef.current) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    if (isListening) return;
+
+    setIsListening(true);
     try {
-      recognition.start();
+      recognitionRef.current.start();
     } catch (e) {
       console.error("Recognition start error:", e);
       setIsListening(false);
@@ -334,9 +360,6 @@ export default function ScenarioDetail() {
       setPendingModel(null);
       setIsScanning(false);
       setSurfaceDetected(false);
-
-      // Re-center orientation anchor on placement to reduce cumulative drift
-      setInitialOrientation(null);
       return;
     }
 
@@ -357,12 +380,7 @@ export default function ScenarioDetail() {
     setShowModelPicker(false);
     setSelectedModelIndex(null);
     setIsScanning(true);
-    setSurfaceDetected(false);
-
-    // Simulate surface detection delay
-    setTimeout(() => {
-      setSurfaceDetected(true);
-    }, 2000);
+    setSurfaceDetected(true); // Direct engagement
   };
 
   const updateModelScale = (newScale: number) => {
@@ -793,15 +811,21 @@ export default function ScenarioDetail() {
                         )}
 
                         {/* Scanning HUD labels */}
-                        <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
-                          <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                            <div className={cn("w-1.5 h-1.5 rounded-full", surfaceDetected ? "bg-cyan-400" : "bg-amber-400 animate-pulse")} />
-                            <span className="text-[8px] font-black text-white uppercase tracking-widest whitespace-nowrap">
-                              {surfaceDetected ? "Surface Anchored" : "Searching for Floor..."}
+                        <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+                          <div className="flex items-center gap-3 bg-black/80 backdrop-blur-2xl px-4 py-2 rounded-full border border-white/20 shadow-[0_0_30px_rgba(34,211,238,0.2)]">
+                            <div className={cn("w-2 h-2 rounded-full", surfaceDetected ? "bg-cyan-400" : "bg-amber-400 animate-pulse")} />
+                            <span className="text-[10px] font-black text-white uppercase tracking-[0.2em] whitespace-nowrap">
+                              {surfaceDetected ? "Stabilized & Ready" : "Relocalizing Environment..."}
                             </span>
                           </div>
                           {surfaceDetected && (
-                            <span className="text-[7px] font-bold text-cyan-400/60 uppercase tracking-widest">Tap anywhere to place</span>
+                            <motion.span 
+                              animate={{ opacity: [0.4, 1, 0.4] }}
+                              transition={{ repeat: Infinity, duration: 2 }}
+                              className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.3em] drop-shadow-lg"
+                            >
+                              Tap to place at real-world scale
+                            </motion.span>
                           )}
                         </div>
                       </div>
@@ -816,22 +840,6 @@ export default function ScenarioDetail() {
                 )}
               </AnimatePresence>
 
-              {/* Placement Hint (Legacy fallback, now replaced by HUD) */}
-              <AnimatePresence>
-                {pendingModel && !surfaceDetected && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="absolute top-32 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/10 shadow-2xl z-40"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
-                      <p className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Calibrating Environment...</p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               {/* Placed Models */}
               {placedModels.map((model, idx) => (
@@ -1360,7 +1368,19 @@ export default function ScenarioDetail() {
                     ? "bg-red-600 scale-110 ring-4 ring-red-500/30"
                     : "bg-gradient-to-br from-slate-800 to-black hover:from-slate-700 hover:to-slate-900"
                 )}
-                onClick={isListening ? stopListening : startListening}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  startListening();
+                }}
+                onPointerUp={(e) => {
+                  e.preventDefault();
+                  stopListening();
+                }}
+                onPointerLeave={(e) => {
+                  e.preventDefault();
+                  if (isListening) stopListening();
+                }}
+                onContextMenu={(e) => e.preventDefault()}
               >
                 {isListening ? (
                   <motion.div

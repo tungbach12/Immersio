@@ -51,9 +51,13 @@ export default function ScenarioDetail() {
   const [dragOrigin, setDragOrigin] = useState({ x: 0, y: 0 });
   const [initialOrientation, setInitialOrientation] = useState<{ alpha: number, beta: number, gamma: number } | null>(null);
   const [gyroOffset, setGyroOffset] = useState({ x: 0, y: 0 });
+  const [rotation, setRotation] = useState({ roll: 0 });
   const [gyroPermissionStatus, setGyroPermissionStatus] = useState<"prompt" | "granted" | "denied">("prompt");
 
-  // Gyroscope tracking for spatial anchoring
+  // Gyroscope tracking for spatial anchoring with EMA smoothing
+  const [smoothedGyroOffset, setSmoothedGyroOffset] = useState({ x: 0, y: 0 });
+  const smoothingFactor = 0.15; // Lower = smoother but more lag
+
   useEffect(() => {
     if (mode !== "ar") return;
 
@@ -69,22 +73,29 @@ export default function ScenarioDetail() {
       if (!arContainerRef.current) return;
       const rect = arContainerRef.current.getBoundingClientRect();
 
-      // Higher sensitivity for more responsive anchoring (Market Standard)
-      const sensitivityX = rect.width / 65; // FOV approx 65 degrees
-      const sensitivityY = rect.height / 65;
+      // Refined sensitivity based on typical camera FOV (~60-70deg)
+      const sensitivityX = rect.width / 60; 
+      const sensitivityY = rect.height / 60;
 
       let alphaDiff = e.alpha - initialOrientation.alpha;
       if (alphaDiff > 180) alphaDiff -= 360;
       if (alphaDiff < -180) alphaDiff += 360;
 
       const betaDiff = e.beta - initialOrientation.beta;
+      const gammaDiff = (e.gamma || 0) - initialOrientation.gamma;
+      
+      // Target offset to compensate for camera rotation
+      const targetX = -alphaDiff * sensitivityX;
+      const targetY = betaDiff * sensitivityY;
 
-      // Smoothly update offsets to compensate for camera rotation
-      setGyroOffset({
-        // Invert X to stay fixed in space as camera rotates
-        x: -alphaDiff * sensitivityX,
-        y: betaDiff * sensitivityY
-      });
+      // Apply Exponential Moving Average (EMA) to eliminate jitter
+      setSmoothedGyroOffset(prev => ({
+        x: prev.x + (targetX - prev.x) * smoothingFactor,
+        y: prev.y + (targetY - prev.y) * smoothingFactor
+      }));
+
+      // Store rotation for roll compensation
+      setRotation({ roll: gammaDiff });
     };
 
     const requestPermission = async () => {
@@ -380,7 +391,12 @@ export default function ScenarioDetail() {
     setShowModelPicker(false);
     setSelectedModelIndex(null);
     setIsScanning(true);
-    setSurfaceDetected(true); // Direct engagement
+    setSurfaceDetected(false); // Force scanning phase for realism
+    
+    // Simulate surface detection logic (e.g., after 2 seconds of "analysis")
+    setTimeout(() => {
+      setSurfaceDetected(true);
+    }, 2000);
   };
 
   const updateModelScale = (newScale: number) => {
@@ -815,17 +831,31 @@ export default function ScenarioDetail() {
                           <div className="flex items-center gap-3 bg-black/80 backdrop-blur-2xl px-4 py-2 rounded-full border border-white/20 shadow-[0_0_30px_rgba(34,211,238,0.2)]">
                             <div className={cn("w-2 h-2 rounded-full", surfaceDetected ? "bg-cyan-400" : "bg-amber-400 animate-pulse")} />
                             <span className="text-[10px] font-black text-white uppercase tracking-[0.2em] whitespace-nowrap">
-                              {surfaceDetected ? "Stabilized & Ready" : "Relocalizing Environment..."}
+                              {surfaceDetected ? "Environment Stabilized" : "Scanning Surface..."}
                             </span>
                           </div>
                           {surfaceDetected && (
-                            <motion.span 
-                              animate={{ opacity: [0.4, 1, 0.4] }}
-                              transition={{ repeat: Infinity, duration: 2 }}
-                              className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.3em] drop-shadow-lg"
+                            <motion.div 
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="flex flex-col items-center gap-1"
                             >
-                              Tap to place at real-world scale
-                            </motion.span>
+                              <motion.span 
+                                animate={{ opacity: [0.4, 1, 0.4] }}
+                                transition={{ repeat: Infinity, duration: 2 }}
+                                className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.3em] drop-shadow-lg"
+                              >
+                                Tap to Anchor Asset
+                              </motion.span>
+                              <div className="w-12 h-1 bg-cyan-400/30 rounded-full overflow-hidden">
+                                <motion.div 
+                                  initial={{ x: "-100%" }}
+                                  animate={{ x: "100%" }}
+                                  transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                                  className="w-full h-full bg-cyan-400"
+                                />
+                              </div>
+                            </motion.div>
                           )}
                         </div>
                       </div>
@@ -877,9 +907,10 @@ export default function ScenarioDetail() {
                   animate={{
                     scale: model.scale,
                     opacity: 1,
-                    // Apply gyro offset to maintain spatial anchoring
-                    x: gyroOffset.x,
-                    y: gyroOffset.y
+                    // Apply stabilized gyro offset to maintain spatial anchoring
+                    x: smoothedGyroOffset.x,
+                    y: smoothedGyroOffset.y,
+                    rotate: rotation.roll // Roll compensation
                   }}
                   style={{
                     left: `${model.x}%`,
@@ -895,16 +926,25 @@ export default function ScenarioDetail() {
                 >
                   <div className="relative group">
                     {/* Visual Grounding / Anchoring - Deep Presence */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-48 h-12 bg-black/60 blur-3xl rounded-full scale-125 pointer-events-none" />
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-32 h-8 bg-black/80 blur-xl rounded-full pointer-events-none" />
-                    <div className={cn(
-                      "absolute bottom-4 left-1/2 -translate-x-1/2 w-40 h-10 border-2 rounded-full pointer-events-none transition-all duration-500",
-                      selectedModelIndex === idx ? "border-cyan-400/80 opacity-100 scale-100" : "border-white/20 opacity-40 scale-95"
-                    )} />
+                    <motion.div 
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ repeat: Infinity, duration: 4 }}
+                      className="absolute bottom-4 left-1/2 -translate-x-1/2 w-48 h-12 bg-black/70 blur-3xl rounded-full pointer-events-none" 
+                      style={{ scale: model.scale * 1.5 }}
+                    />
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-32 h-8 bg-black/90 blur-xl rounded-full pointer-events-none" style={{ scale: model.scale }} />
+                    <motion.div 
+                      animate={{ 
+                        borderColor: selectedModelIndex === idx ? ["rgba(34,211,238,0.8)", "rgba(34,211,238,0.4)", "rgba(34,211,238,0.8)"] : "rgba(255,255,255,0.2)"
+                      }}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                      className="absolute bottom-4 left-1/2 -translate-x-1/2 w-40 h-10 border-2 rounded-full pointer-events-none transition-all duration-500" 
+                      style={{ scale: model.scale }}
+                    />
 
                     {/* Base Glow for Selected State */}
                     {selectedModelIndex === idx && (
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-40 h-10 bg-cyan-400/20 blur-lg rounded-full animate-pulse pointer-events-none" />
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-40 h-10 bg-cyan-400/30 blur-2xl rounded-full animate-pulse pointer-events-none" style={{ scale: model.scale }} />
                     )}
 
                     {/* @ts-ignore */}

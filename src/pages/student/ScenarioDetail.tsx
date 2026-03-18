@@ -51,7 +51,6 @@ export default function ScenarioDetail() {
   const [dragOrigin, setDragOrigin] = useState({ x: 0, y: 0 });
   const [initialOrientation, setInitialOrientation] = useState<{ alpha: number, beta: number, gamma: number } | null>(null);
   const [gyroOffset, setGyroOffset] = useState({ x: 0, y: 0 });
-  const [rotation, setRotation] = useState({ roll: 0 });
   const [gyroPermissionStatus, setGyroPermissionStatus] = useState<"prompt" | "granted" | "denied">("prompt");
 
   // Gyroscope tracking for spatial anchoring with EMA smoothing
@@ -69,33 +68,27 @@ export default function ScenarioDetail() {
         return;
       }
 
-      // Calculate relative movement
+      // Calculated movement based on user feedback/screenshot perspective (~55deg)
       if (!arContainerRef.current) return;
       const rect = arContainerRef.current.getBoundingClientRect();
-
-      // Refined sensitivity based on typical camera FOV (~60-70deg)
-      const sensitivityX = rect.width / 60; 
-      const sensitivityY = rect.height / 60;
+      const sensitivityX = rect.width / 55;
+      const sensitivityY = rect.height / 55;
 
       let alphaDiff = e.alpha - initialOrientation.alpha;
       if (alphaDiff > 180) alphaDiff -= 360;
       if (alphaDiff < -180) alphaDiff += 360;
 
       const betaDiff = e.beta - initialOrientation.beta;
-      const gammaDiff = (e.gamma || 0) - initialOrientation.gamma;
-      
+
       // Target offset to compensate for camera rotation
       const targetX = -alphaDiff * sensitivityX;
       const targetY = betaDiff * sensitivityY;
 
-      // Apply Exponential Moving Average (EMA) to eliminate jitter
+      // Increased smoothing (0.12) to further eliminate micro-jitters
       setSmoothedGyroOffset(prev => ({
-        x: prev.x + (targetX - prev.x) * smoothingFactor,
-        y: prev.y + (targetY - prev.y) * smoothingFactor
+        x: prev.x + (targetX - prev.x) * 0.12,
+        y: prev.y + (targetY - prev.y) * 0.12
       }));
-
-      // Store rotation for roll compensation
-      setRotation({ roll: gammaDiff });
     };
 
     const requestPermission = async () => {
@@ -392,7 +385,7 @@ export default function ScenarioDetail() {
     setSelectedModelIndex(null);
     setIsScanning(true);
     setSurfaceDetected(false); // Force scanning phase for realism
-    
+
     // Simulate surface detection logic (e.g., after 2 seconds of "analysis")
     setTimeout(() => {
       setSurfaceDetected(true);
@@ -835,12 +828,12 @@ export default function ScenarioDetail() {
                             </span>
                           </div>
                           {surfaceDetected && (
-                            <motion.div 
+                            <motion.div
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                               className="flex flex-col items-center gap-1"
                             >
-                              <motion.span 
+                              <motion.span
                                 animate={{ opacity: [0.4, 1, 0.4] }}
                                 transition={{ repeat: Infinity, duration: 2 }}
                                 className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.3em] drop-shadow-lg"
@@ -848,7 +841,7 @@ export default function ScenarioDetail() {
                                 Tap to Anchor Asset
                               </motion.span>
                               <div className="w-12 h-1 bg-cyan-400/30 rounded-full overflow-hidden">
-                                <motion.div 
+                                <motion.div
                                   initial={{ x: "-100%" }}
                                   animate={{ x: "100%" }}
                                   transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
@@ -909,8 +902,7 @@ export default function ScenarioDetail() {
                     opacity: 1,
                     // Apply stabilized gyro offset to maintain spatial anchoring
                     x: smoothedGyroOffset.x,
-                    y: smoothedGyroOffset.y,
-                    rotate: rotation.roll // Roll compensation
+                    y: smoothedGyroOffset.y
                   }}
                   style={{
                     left: `${model.x}%`,
@@ -926,19 +918,19 @@ export default function ScenarioDetail() {
                 >
                   <div className="relative group">
                     {/* Visual Grounding / Anchoring - Deep Presence */}
-                    <motion.div 
+                    <motion.div
                       animate={{ scale: [1, 1.05, 1] }}
                       transition={{ repeat: Infinity, duration: 4 }}
-                      className="absolute bottom-4 left-1/2 -translate-x-1/2 w-48 h-12 bg-black/70 blur-3xl rounded-full pointer-events-none" 
+                      className="absolute bottom-4 left-1/2 -translate-x-1/2 w-48 h-12 bg-black/70 blur-3xl rounded-full pointer-events-none"
                       style={{ scale: model.scale * 1.5 }}
                     />
                     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-32 h-8 bg-black/90 blur-xl rounded-full pointer-events-none" style={{ scale: model.scale }} />
-                    <motion.div 
-                      animate={{ 
+                    <motion.div
+                      animate={{
                         borderColor: selectedModelIndex === idx ? ["rgba(34,211,238,0.8)", "rgba(34,211,238,0.4)", "rgba(34,211,238,0.8)"] : "rgba(255,255,255,0.2)"
                       }}
                       transition={{ repeat: Infinity, duration: 2 }}
-                      className="absolute bottom-4 left-1/2 -translate-x-1/2 w-40 h-10 border-2 rounded-full pointer-events-none transition-all duration-500" 
+                      className="absolute bottom-4 left-1/2 -translate-x-1/2 w-40 h-10 border-2 rounded-full pointer-events-none transition-all duration-500"
                       style={{ scale: model.scale }}
                     />
 
@@ -1103,6 +1095,18 @@ export default function ScenarioDetail() {
               >
                 <Box size={16} className="sm:mr-2" />
                 <span className="hidden sm:inline">Place Asset</span>
+              </Button>
+              <Button
+                variant="glass"
+                size="sm"
+                className="rounded-full h-10 w-10 sm:w-auto px-0 sm:px-4 bg-white/10 border-white/20 text-white font-bold text-[10px] sm:text-xs"
+                onClick={() => {
+                  setInitialOrientation(null);
+                  setSmoothedGyroOffset({ x: 0, y: 0 });
+                }}
+              >
+                <Target size={16} className="sm:mr-2" />
+                <span className="hidden sm:inline">Recenter AR</span>
               </Button>
             </>
           )}

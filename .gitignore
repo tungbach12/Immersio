@@ -1,9 +1,36 @@
+## Ignore Visual Studio & .NET build artifacts
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.sln.docstates
+
+## Ignore IDE configuration
+.vs/
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.docstates
+
+## Ignore OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+## Ignore Frontend artifacts
 node_modules/
-build/
 dist/
-coverage/
-.DS_Store
-*.log
-.env*
-!.env.example
-.env.example
+dist-ssr/
+*.local
+.env
+.env.production
+.env.development
+
+## Ignore custom application settings with secrets
+src/Immersio.WebApi/appsettings.json
+src/Immersio.WebApi/appsettings.Development.json
+src/Immersio.WebApi/appsettings.Production.json

@@ -16,6 +16,7 @@ namespace Immersio.Infrastructure.Persistence
         public DbSet<ScenarioItem> ScenarioItems => Set<ScenarioItem>();
         public DbSet<ScenarioSession> ScenarioSessions => Set<ScenarioSession>();
         public DbSet<SessionMessage> SessionMessages => Set<SessionMessage>();
+        public DbSet<UserPronunciationLog> UserPronunciationLogs => Set<UserPronunciationLog>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

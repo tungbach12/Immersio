@@ -32,6 +32,30 @@ namespace Immersio.Infrastructure.Persistence.Configurations
             builder.Property(u => u.CreatedAt)
                 .IsRequired();
 
+            builder.Property(u => u.SubscriptionTier)
+                .IsRequired()
+                .HasMaxLength(50)
+                .HasDefaultValue("Basic");
+
+            builder.Property(u => u.SubscriptionExpiresAt);
+
+            builder.Property(u => u.StreakCount)
+                .IsRequired()
+                .HasDefaultValue(12);
+
+            builder.Property(u => u.ExperiencePoints)
+                .IsRequired()
+                .HasDefaultValue(2400);
+
+            builder.Property(u => u.LearningHours)
+                .IsRequired()
+                .HasDefaultValue(48.0);
+
+            builder.Property(u => u.CurrentLanguageLevel)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasDefaultValue("B2 Upper");
+
             builder.HasQueryFilter(u => !u.IsDeleted);
 
             builder.HasMany(u => u.RefreshTokens)

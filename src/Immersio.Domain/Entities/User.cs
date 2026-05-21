@@ -16,6 +16,21 @@ namespace Immersio.Domain.Entities
 
         public bool IsDeleted { get; private set; }
 
+        public string SubscriptionTier { get; private set; } = "Basic";
+
+        public DateTime? SubscriptionExpiresAt { get; private set; }
+
+        public string ActiveSubscriptionTier => 
+            (SubscriptionExpiresAt == null || SubscriptionExpiresAt > DateTime.UtcNow) ? SubscriptionTier : "Basic";
+
+        public int StreakCount { get; private set; } = 12;
+
+        public int ExperiencePoints { get; private set; } = 2400;
+
+        public double LearningHours { get; private set; } = 48.0;
+
+        public string CurrentLanguageLevel { get; private set; } = "B2 Upper";
+
         private readonly List<RefreshToken> _refreshTokens = new();
         public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
 
@@ -37,6 +52,40 @@ namespace Immersio.Domain.Entities
         public void SoftDelete()
         {
             IsDeleted = true;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void UpdateSubscription(string tier, DateTime? expiresAt)
+        {
+            SubscriptionTier = tier;
+            SubscriptionExpiresAt = expiresAt;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void AddExperience(int exp)
+        {
+            if (exp < 0) return;
+            ExperiencePoints += exp;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void IncrementStreak()
+        {
+            StreakCount++;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void AddLearningHours(double hours)
+        {
+            if (hours < 0) return;
+            LearningHours += hours;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void SetLanguageLevel(string level)
+        {
+            if (string.IsNullOrWhiteSpace(level)) return;
+            CurrentLanguageLevel = level;
             UpdatedAt = DateTime.UtcNow;
         }
     }

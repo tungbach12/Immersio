@@ -4,6 +4,7 @@ import { BookOpen, Mic, ChevronLeft, ChevronRight, Check, X, RefreshCw, Volume2,
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { getDecks, getReviewCards, reviewCard, Deck, Flashcard } from "@/services/decks";
+import { practiceService } from "@/services/practice";
 
 const PRONUNCIATION_PHRASES = [
   "The quick brown fox jumps over the lazy dog.",
@@ -403,6 +404,7 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [feedback, setFeedback] = useState<{ score: number; message: string } | null>(null);
+  const [isLogging, setIsLogging] = useState(false);
 
   const recognitionRef = useRef<any>(null);
 
@@ -438,7 +440,8 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
     if (isRecording) {
       recognitionRef.current?.stop();
       setIsRecording(false);
-      evaluatePronunciation();
+      // evaluatePronunciation is now async; call without awaiting to keep UI responsive
+      void evaluatePronunciation();
     } else {
       setTranscript("");
       setFeedback(null);
@@ -452,7 +455,7 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
     }
   };
 
-  const evaluatePronunciation = () => {
+  const evaluatePronunciation = async () => {
     if (!transcript) return;
 
     const targetWords = currentPhrase.toLowerCase().replace(/[.,?]/g, '').split(' ');
@@ -472,6 +475,16 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
     else message = "Listen to the guide and try again.";
 
     setFeedback({ score, message });
+
+    // Log to backend (async, non-blocking for UX)
+    try {
+      setIsLogging(true);
+      await practiceService.logPronunciation(currentPhrase, transcript, score);
+    } catch (err) {
+      console.error("Failed to log pronunciation to backend:", err);
+    } finally {
+      setIsLogging(false);
+    }
   };
 
   const playTTS = () => {
@@ -544,7 +557,13 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
                 <span className="text-4xl font-black italic tracking-tighter">{feedback.score}%</span>
               </div>
               <p className="text-sm font-black uppercase tracking-widest">{feedback.message}</p>
+              {isLogging && (
+                <p className="text-[10px] font-bold opacity-60 mt-3 uppercase tracking-widest animate-pulse">
+                  ✦ Saving to profile...
+                </p>
+              )}
             </motion.div>
+
           )}
         </div>
       </div>

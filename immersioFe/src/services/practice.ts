@@ -1,0 +1,74 @@
+import { authService } from "./auth";
+
+const BASE_URL = "http://localhost:5249/api/practice";
+
+export interface PronunciationLogDto {
+  id: string;
+  phrase: string;
+  transcript: string;
+  score: number;
+  practicedAt: string;
+}
+
+export interface SkillScoreDto {
+  name: string;
+  score: number;
+  description: string;
+}
+
+export interface CefrAnalysisDto {
+  currentLevel: string;
+  overallScore: number;
+  colorTheme: string;
+  statusMessage: string;
+  skills: SkillScoreDto[];
+  suggestions: string[];
+}
+
+export const practiceService = {
+  async logPronunciation(
+    phrase: string,
+    transcript: string,
+    score: number
+  ): Promise<PronunciationLogDto> {
+    const response = await authService.fetchWithAuth(
+      `${BASE_URL}/pronunciation-log`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phrase, transcript, score }),
+      }
+    );
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Log failed" }));
+      throw new Error(err.detail || "Failed to log pronunciation");
+    }
+
+    return response.json();
+  },
+
+  async getPronunciationHistory(): Promise<PronunciationLogDto[]> {
+    const response = await authService.fetchWithAuth(
+      `${BASE_URL}/pronunciation-history`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch pronunciation history");
+    }
+
+    return response.json();
+  },
+
+  async getCefrAnalysis(): Promise<CefrAnalysisDto> {
+    const response = await authService.fetchWithAuth(
+      `${BASE_URL}/cefr-analysis`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch CEFR analysis");
+    }
+
+    return response.json();
+  },
+};

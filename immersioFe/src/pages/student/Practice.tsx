@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useNavigate, Link } from "react-router-dom";
 import { BookOpen, Mic, ChevronLeft, ChevronRight, Check, X, RefreshCw, Volume2, Target, Square, SkipBack, SkipForward, Plus, ArrowRight, Monitor, Video } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { getDecks, getReviewCards, reviewCard, Deck, Flashcard } from "@/services/decks";
+import { practiceService } from "@/services/practice";
 
 const PRONUNCIATION_PHRASES = [
   "The quick brown fox jumps over the lazy dog.",
@@ -33,6 +35,8 @@ export default function Practice() {
 }
 
 function MainMenu({ onSelect }: { onSelect: (view: ViewState) => void, key?: string }) {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -54,7 +58,7 @@ function MainMenu({ onSelect }: { onSelect: (view: ViewState) => void, key?: str
       <div className="grid gap-5">
         <div
           className="glass-card bg-white rounded-[2.2rem] p-7 md:p-10 flex items-center gap-5 md:gap-8 cursor-pointer group border border-slate-100 shadow-xl shadow-slate-200/20 hover:border-indigo-100"
-          onClick={() => onSelect("decks")}
+          onClick={() => navigate("/student/flashcards")}
         >
           <div className="w-14 h-14 md:w-16 md:h-16 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500 border border-indigo-100/50">
             <BookOpen className="w-7 h-7 md:w-8 md:h-8 text-indigo-600" />
@@ -403,6 +407,7 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [feedback, setFeedback] = useState<{ score: number; message: string } | null>(null);
+  const [isLogging, setIsLogging] = useState(false);
 
   const recognitionRef = useRef<any>(null);
 
@@ -438,7 +443,8 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
     if (isRecording) {
       recognitionRef.current?.stop();
       setIsRecording(false);
-      evaluatePronunciation();
+      // evaluatePronunciation is now async; call without awaiting to keep UI responsive
+      void evaluatePronunciation();
     } else {
       setTranscript("");
       setFeedback(null);
@@ -452,7 +458,7 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
     }
   };
 
-  const evaluatePronunciation = () => {
+  const evaluatePronunciation = async () => {
     if (!transcript) return;
 
     const targetWords = currentPhrase.toLowerCase().replace(/[.,?]/g, '').split(' ');
@@ -472,6 +478,16 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
     else message = "Listen to the guide and try again.";
 
     setFeedback({ score, message });
+
+    // Log to backend (async, non-blocking for UX)
+    try {
+      setIsLogging(true);
+      await practiceService.logPronunciation(currentPhrase, transcript, score);
+    } catch (err) {
+      console.error("Failed to log pronunciation to backend:", err);
+    } finally {
+      setIsLogging(false);
+    }
   };
 
   const playTTS = () => {
@@ -544,7 +560,13 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
                 <span className="text-4xl font-black italic tracking-tighter">{feedback.score}%</span>
               </div>
               <p className="text-sm font-black uppercase tracking-widest">{feedback.message}</p>
+              {isLogging && (
+                <p className="text-[10px] font-bold opacity-60 mt-3 uppercase tracking-widest animate-pulse">
+                  ✦ Saving to profile...
+                </p>
+              )}
             </motion.div>
+
           )}
         </div>
       </div>

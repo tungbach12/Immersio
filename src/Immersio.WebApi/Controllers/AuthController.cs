@@ -56,13 +56,17 @@ namespace Immersio.WebApi.Controllers
 
         [HttpGet("me")]
         [Authorize]
-        public IActionResult Me()
+        public async Task<IActionResult> Me(CancellationToken cancellationToken)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var email = User.FindFirstValue(ClaimTypes.Email);
-            var username = User.FindFirstValue(ClaimTypes.Name);
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized();
 
-            return Ok(new { id = userId, email, username });
+            var user = await _authService.GetUserByIdAsync(userId, cancellationToken);
+            if (user is null)
+                return NotFound();
+
+            return Ok(user);
         }
     }
 }

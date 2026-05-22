@@ -49,13 +49,31 @@ namespace Immersio.Application.Services
 
         public async Task<Guid> StartSessionAsync(Guid userId, Guid scenarioId, CancellationToken cancellationToken)
         {
-            var userExists = await _context.Users.AnyAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken);
-            if (!userExists)
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken);
+            if (user == null)
                 throw new NotFoundException("User", userId);
 
             var scenario = await _context.Scenarios.FirstOrDefaultAsync(s => s.Id == scenarioId && !s.IsDeleted, cancellationToken);
             if (scenario == null)
                 throw new NotFoundException("Scenario", scenarioId);
+
+            // Subscription/daily-limit checks temporarily disabled for development.
+            /*
+            // Enforce daily scenario limit based on subscription tier
+            var today = DateTime.UtcNow.Date;
+            var sessionCountToday = await _context.ScenarioSessions
+                .CountAsync(s => s.UserId == userId && s.StartedAt >= today, cancellationToken);
+
+            var tier = user.ActiveSubscriptionTier;
+            if (string.Equals(tier, "Basic", StringComparison.OrdinalIgnoreCase) && sessionCountToday >= 5)
+            {
+                throw new ConflictException("You have reached your daily scenario limit of 5. Please upgrade your subscription to get more scenarios.");
+            }
+            else if (string.Equals(tier, "Plus", StringComparison.OrdinalIgnoreCase) && sessionCountToday >= 20)
+            {
+                throw new ConflictException("You have reached your daily scenario limit of 20. Please upgrade your subscription to get unlimited scenarios.");
+            }
+            */
 
             // Create new session
             var session = new ScenarioSession(userId, scenarioId);

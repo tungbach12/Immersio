@@ -74,6 +74,10 @@ export const scenarioService = {
     });
 
     if (!response.ok) {
+      if (response.status === 409) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Conflict: You might have reached your daily scenario limit. Please check your subscription.");
+      }
       throw new Error("Failed to start roleplay session");
     }
 

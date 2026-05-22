@@ -29,6 +29,14 @@ export default function Profile() {
     // Attempt to read the user from stored session
     const currentUser = authService.getUser();
     setUser(currentUser);
+
+    // Sync latest user details from server
+    authService.getMe()
+      .then((latest) => {
+        authService.updateUser(latest);
+        setUser(latest);
+      })
+      .catch((err) => console.error("Could not sync user profile:", err));
   }, []);
 
   const handleSignOut = async () => {
@@ -71,9 +79,9 @@ export default function Profile() {
            />
           <div className="relative w-36 h-36 rounded-[3.5rem] bg-slate-950 flex items-center justify-center text-white text-5xl font-black shadow-3xl border-[6px] border-white overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-blue-700 to-slate-900 opacity-90" />
-            <span className="relative z-10 italic tracking-tighter">
-              {user ? getInitials(user.username) : "JD"}
-            </span>
+              <span className="relative z-10 italic tracking-tighter">
+                {user ? getInitials(user.username) : "—"}
+              </span>
           </div>
           <button className="absolute bottom-1 right-1 w-12 h-12 bg-white rounded-2xl shadow-2xl flex items-center justify-center text-slate-950 border border-slate-100 hover:bg-slate-50 hover:text-indigo-600 transition-all active:scale-90 z-20">
             <Camera size={22} strokeWidth={2.5} />
@@ -81,13 +89,13 @@ export default function Profile() {
         </div>
 
         <div className="relative z-10">
-          <motion.h1 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-display font-black text-slate-950 italic tracking-tight leading-tight"
-          >
-            {user ? user.username : "John Doe"}
-          </motion.h1>
+      <motion.h1 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-4xl font-display font-black text-slate-950 italic tracking-tight leading-tight"
+            >
+              {user ? user.username : "—"}
+            </motion.h1>
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -105,9 +113,31 @@ export default function Profile() {
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { icon: Zap, label: "Streak", value: "12", color: "text-orange-500", bg: "bg-orange-50/50" },
-          { icon: Award, label: "Exp", value: "2.4k", color: "text-indigo-600", bg: "bg-indigo-50/50" },
-          { icon: Clock, label: "Hours", value: "48", color: "text-emerald-500", bg: "bg-emerald-50/50" },
+          {
+            icon: Zap,
+            label: "Streak",
+            value: String(user?.streakCount ?? 0),
+            color: "text-orange-500",
+            bg: "bg-orange-50/50",
+          },
+          {
+            icon: Award,
+            label: "Exp",
+            value: user?.experiencePoints
+              ? user.experiencePoints >= 1000
+                ? `${(user.experiencePoints / 1000).toFixed(1)}k`
+                : String(user.experiencePoints)
+              : "0",
+            color: "text-indigo-600",
+            bg: "bg-indigo-50/50",
+          },
+          {
+            icon: Clock,
+            label: "Hours",
+            value: Math.round(user?.learningHours ?? 0).toString(),
+            color: "text-emerald-500",
+            bg: "bg-emerald-50/50",
+          },
         ].map((stat, i) => (
           <motion.div 
             key={i} 
@@ -138,15 +168,25 @@ export default function Profile() {
           <CardContent className="p-10 relative z-10">
             <div className="flex items-center justify-between mb-8">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/20 backdrop-blur-3xl border border-white/20">
-                <Crown size={20} className="text-amber-300 fill-amber-300" />
-                <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Immersio Pro</span>
+                <Crown size={20} className={cn("text-amber-300 fill-amber-300", (user?.subscriptionTier || "Basic").toLowerCase() === "basic" && "text-slate-300 fill-slate-300")} />
+                <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">
+                  Immersio {user?.subscriptionTier || "Basic"}
+                </span>
               </div>
             </div>
-            <h3 className="text-3xl font-black text-white italic tracking-tight mb-4 leading-tight">Master Everything. <br/>Own the Metaverse.</h3>
-            <p className="text-white/70 text-sm font-medium mb-10 leading-relaxed max-w-[240px]">Unlimited real-time AI accent correction, and exclusive 3D scenario collections.</p>
+            <h3 className="text-3xl font-black text-white italic tracking-tight mb-4 leading-tight">
+              {(user?.subscriptionTier || "Basic").toLowerCase() === "basic" 
+                ? <>Master Everything. <br/>Own the Metaverse.</>
+                : <>You are a Pro. <br/>Unlimited Potential.</>}
+            </h3>
+            <p className="text-white/70 text-sm font-medium mb-10 leading-relaxed max-w-[240px]">
+              {(user?.subscriptionTier || "Basic").toLowerCase() === "basic"
+                ? "Unlimited real-time AI accent correction, and exclusive 3D scenario collections."
+                : `Enjoy your premium ${user?.subscriptionTier} access with increased scenario sessions and flashcard generation.`}
+            </p>
             <Link to="/student/subscription">
               <Button className="w-full rounded-[1.25rem] bg-white hover:bg-slate-50 text-slate-950 font-black uppercase tracking-widest text-[10px] h-16 shadow-2xl transition-transform active:scale-95 group/btn">
-                Manage Membership <ArrowRight size={14} className="ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                {(user?.subscriptionTier || "Basic").toLowerCase() === "basic" ? "Manage Membership" : "Manage Subscription"} <ArrowRight size={14} className="ml-2 group-hover/btn:translate-x-1 transition-transform" />
               </Button>
             </Link>
           </CardContent>

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { authService, UserDto } from "@/services/auth";
 
 const NM_RAISED = { boxShadow: '6px 6px 12px #D5C9B8, -6px -6px 12px #FFFFFF' } as const;
 const NM_RAISED_SM = { boxShadow: '4px 4px 8px #D5C9B8, -4px -4px 8px #FFFFFF' } as const;
@@ -16,6 +17,25 @@ export default function AppLayout() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
   const isScenarioDetail = location.pathname.includes("/scenarios/") && !location.pathname.endsWith("/scenarios");
+
+  const [user, setUser] = useState<UserDto | null>(null);
+
+  useEffect(() => {
+    // Load user from localStorage immediately to avoid stale placeholder on initial paint
+    setUser(authService.getUser());
+
+    // Snapshot the latest from the server
+    authService.getMe()
+      .then((latest) => {
+        authService.updateUser(latest);
+        setUser(latest);
+      })
+      .catch(() => {
+        // If the token is stale or /me is unreachable, keep the localStorage value
+        const stored = authService.getUser();
+        if (stored) setUser(stored);
+      });
+  }, []);
 
   const studentLinks = [
     { icon: Home, label: "Home", path: "/student/dashboard" },
@@ -33,6 +53,13 @@ export default function AppLayout() {
   ];
 
   const links = isAdmin ? adminLinks : studentLinks;
+
+  const getInitials = (name: string) => {
+    if (!name) return "?";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+  };
 
   return (
     <div className="min-h-screen bg-[#FDF6EC] flex flex-col md:flex-row overflow-hidden text-[#3E2723] relative" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
@@ -99,11 +126,11 @@ export default function AppLayout() {
                   className="w-12 h-12 rounded-xl bg-gradient-vibrant flex items-center justify-center text-white font-semibold text-sm"
                   style={NM_RAISED_SM}
                 >
-                  JD
+                  {user ? getInitials(user.username) : "?"}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[#3E2723] truncate" style={{ fontFamily: "'Noto Serif Display', serif" }}>John Doe</p>
-                  <p className="text-[10px] font-semibold text-[#C4956A] uppercase tracking-widest mt-0.5">Premium Learner</p>
+                  <p className="text-sm font-semibold text-[#3E2723] truncate" style={{ fontFamily: "'Noto Serif Display', serif" }}>{user?.username ?? "—"}</p>
+                  <p className="text-[10px] font-semibold text-[#C4956A] uppercase tracking-widest mt-0.5">{user?.subscriptionTier ? `${user.subscriptionTier} Learner` : "—"}</p>
                 </div>
               </div>
               <Link to="/student/subscription">
@@ -143,7 +170,7 @@ export default function AppLayout() {
             </button>
             <Link to="/student/profile">
               <div className="w-9 h-9 rounded-xl bg-gradient-vibrant flex items-center justify-center text-white font-semibold text-[10px]" style={NM_RAISED_SM}>
-                JD
+                {user ? getInitials(user.username) : "?"}
               </div>
             </Link>
           </div>

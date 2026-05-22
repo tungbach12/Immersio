@@ -80,9 +80,30 @@ namespace Immersio.Application.Services
 
         public async Task<CardDto> AddCardAsync(Guid deckId, AddCardDto cardDto, CancellationToken cancellationToken)
         {
-            var deckExists = await _context.Decks.AnyAsync(d => d.Id == deckId && !d.IsDeleted, cancellationToken);
-            if (!deckExists)
+            var deck = await _context.Decks
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(d => d.Id == deckId && !d.IsDeleted, cancellationToken);
+
+            if (deck == null)
                 throw new NotFoundException("Deck", deckId);
+
+            var user = deck.User;
+            if (user == null)
+                throw new NotFoundException("User for this deck not found", deck.UserId);
+
+            // Enforce flashcard limit for Basic tier
+            var tier = user.ActiveSubscriptionTier;
+            if (string.Equals(tier, "Basic", StringComparison.OrdinalIgnoreCase))
+            {
+                var today = DateTime.UtcNow.Date;
+                var cardsCreatedToday = await _context.Cards
+                    .CountAsync(c => c.Deck.UserId == user.Id && c.CreatedAt >= today && !c.IsDeleted, cancellationToken);
+
+                if (cardsCreatedToday >= 10)
+                {
+                    throw new ConflictException("You have reached your daily flashcard limit of 10. Please upgrade your subscription to add more flashcards.");
+                }
+            }
 
             var card = new Card(deckId, cardDto.Front, cardDto.Back, cardDto.Explanation);
             _context.Cards.Add(card);
@@ -104,13 +125,34 @@ namespace Immersio.Application.Services
 
         public async Task<int> AddCardsAsync(Guid deckId, IEnumerable<AddCardDto> cardDtos, CancellationToken cancellationToken)
         {
-            var deckExists = await _context.Decks.AnyAsync(d => d.Id == deckId && !d.IsDeleted, cancellationToken);
-            if (!deckExists)
+            var deck = await _context.Decks
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(d => d.Id == deckId && !d.IsDeleted, cancellationToken);
+
+            if (deck == null)
                 throw new NotFoundException("Deck", deckId);
+
+            var user = deck.User;
+            if (user == null)
+                throw new NotFoundException("User for this deck not found", deck.UserId);
+
+            var tier = user.ActiveSubscriptionTier;
+            int cardsCreatedToday = 0;
+            if (string.Equals(tier, "Basic", StringComparison.OrdinalIgnoreCase))
+            {
+                var today = DateTime.UtcNow.Date;
+                cardsCreatedToday = await _context.Cards
+                    .CountAsync(c => c.Deck.UserId == user.Id && c.CreatedAt >= today && !c.IsDeleted, cancellationToken);
+            }
 
             var addedCount = 0;
             foreach (var cardDto in cardDtos)
             {
+                if (string.Equals(tier, "Basic", StringComparison.OrdinalIgnoreCase) && (cardsCreatedToday + addedCount) >= 10)
+                {
+                    throw new ConflictException("You have reached your daily flashcard limit of 10. Please upgrade your subscription to add more flashcards.");
+                }
+
                 var card = new Card(deckId, cardDto.Front, cardDto.Back, cardDto.Explanation);
                 _context.Cards.Add(card);
                 addedCount++;

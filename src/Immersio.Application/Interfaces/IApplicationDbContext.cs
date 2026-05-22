@@ -13,6 +13,7 @@ namespace Immersio.Application.Interfaces
         DbSet<ScenarioItem> ScenarioItems { get; }
         DbSet<ScenarioSession> ScenarioSessions { get; }
         DbSet<SessionMessage> SessionMessages { get; }
+        DbSet<UserPronunciationLog> UserPronunciationLogs { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }

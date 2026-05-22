@@ -1,9 +1,10 @@
 import { motion } from "motion/react";
-import { ShoppingBag, Box, Star, Filter, Search, ArrowRight, Zap, Sparkles } from "lucide-react";
+import { ShoppingBag, Box, Star, Filter, Search, ArrowRight, Zap, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { authService } from "@/services/auth";
 
 const models = [
   {
@@ -38,9 +39,16 @@ const categories = ["All", "Characters", "Environments", "Creatures", "Props"];
 
 export default function Store() {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [user, setUser] = useState<any>(null);
 
-  const filteredModels = activeCategory === "All" 
-    ? models 
+  useEffect(() => {
+    authService.getMe()
+      .then((latest: any) => { setUser(latest); })
+      .catch(() => {});
+  }, []);
+
+  const filteredModels = activeCategory === "All"
+    ? models
     : models.filter(m => m.category === activeCategory);
 
   return (

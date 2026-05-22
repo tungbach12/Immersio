@@ -5,19 +5,22 @@ import { motion } from "motion/react";
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & { glass?: boolean; hoverEffect?: boolean }
->(({ className, glass, hoverEffect, ...props }, ref) => (
-  <motion.div
-    initial={hoverEffect ? { y: 0 } : undefined}
-    whileHover={hoverEffect ? { y: -5, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" } : undefined}
-    ref={ref}
-    className={cn(
-      "rounded-2xl border bg-card text-card-foreground shadow-sm transition-all duration-300",
-      glass && "bg-white/70 backdrop-blur-lg border-white/40 shadow-xl",
-      className
-    )}
-    {...props}
-  />
-));
+>(({ className, glass, hoverEffect, ...props }, ref) => {
+  const motionProps = props as any;
+  return (
+    <motion.div
+      initial={hoverEffect ? { y: 0 } : undefined}
+      whileHover={hoverEffect ? { y: -5, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" } : undefined}
+      ref={ref}
+      className={cn(
+        "rounded-2xl border bg-card text-card-foreground shadow-sm transition-all duration-300",
+        glass && "bg-white/70 backdrop-blur-lg border-white/40 shadow-xl",
+        className
+      )}
+      {...motionProps}
+    />
+  );
+});
 Card.displayName = "Card";
 
 const CardHeader = React.forwardRef<

@@ -1,9 +1,10 @@
-import { motion } from "motion/react";
-import { Check, Sparkles, Zap, Shield, Star, Crown, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Check, Sparkles, Zap, Shield, Star, Crown, ArrowRight, X, CreditCard, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { authService, UserDto } from "@/services/auth";
 
 const plans = [
   {
@@ -108,11 +109,155 @@ const comparisonData = [
 
 export default function Subscription() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [user, setUser] = useState<UserDto | null>(null);
+  const [syncing, setSyncing] = useState(true);
+  
+  // Checkout Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvc, setCardCvc] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    // Initial load from session cache
+    const cached = authService.getUser();
+    setUser(cached);
+
+    // Sync latest user details from server
+    authService.getMe()
+      .then((latest) => {
+        authService.updateUser(latest);
+        setUser(latest);
+      })
+      .catch((err) => console.error("Could not sync user profile:", err))
+      .finally(() => setSyncing(false));
+  }, []);
+
+  const getPriceValue = (plan: typeof plans[0]) => {
+    if (plan.price === "Free") return 0;
+    const rawVal = parseInt(plan.price.replace(/\D/g, ""));
+    return billingCycle === "yearly" ? Math.round(rawVal * 0.8) : rawVal;
+  };
+
+  const formatPrice = (plan: typeof plans[0]) => {
+    if (plan.price === "Free") return "Free";
+    const val = getPriceValue(plan);
+    return `${(val / 1000).toFixed(3)}.000đ`;
+  };
+
+  const handlePlanSelect = (plan: typeof plans[0]) => {
+    const activeTier = user?.subscriptionTier || "Basic";
+    if (plan.name.toLowerCase() === activeTier.toLowerCase()) {
+      return; // Already subscribed
+    }
+    
+    // For free basic plan, directly invoke upgrade API without modal
+    if (plan.name === "Basic") {
+      processDirectUpgrade("Basic", "free");
+      return;
+    }
+
+    setSelectedPlan(plan);
+    setIsModalOpen(true);
+    setCardNumber("");
+    setCardExpiry("");
+    setCardCvc("");
+    setCardName("");
+    setPaymentSuccess(false);
+    setProcessingPayment(false);
+    setErrorMessage("");
+  };
+
+  const processDirectUpgrade = async (tier: string, cycle: string) => {
+    setSyncing(true);
+    try {
+      const response = await authService.fetchWithAuth("http://localhost:5249/api/subscription/upgrade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier, billingCycle: cycle })
+      });
+
+      if (!response.ok) {
+        throw new Error("Upgrade failed on server.");
+      }
+
+      const updatedUser: UserDto = await response.json();
+      authService.updateUser(updatedUser);
+      setUser(updatedUser);
+    } catch (e: any) {
+      console.error(e);
+      alert(e.message || "Failed to switch plan.");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handlePaymentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPlan) return;
+
+    if (cardNumber.replace(/\s/g, "").length < 16) {
+      setErrorMessage("Please enter a valid 16-digit card number.");
+      return;
+    }
+    if (cardExpiry.length < 5) {
+      setErrorMessage("Please enter a valid expiry date (MM/YY).");
+      return;
+    }
+    if (cardCvc.length < 3) {
+      setErrorMessage("Please enter a valid 3-digit security code.");
+      return;
+    }
+    if (!cardName.trim()) {
+      setErrorMessage("Please enter the cardholder's name.");
+      return;
+    }
+
+    setProcessingPayment(true);
+    setErrorMessage("");
+
+    try {
+      // Simulated secure 1.5s gateway delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const response = await authService.fetchWithAuth("http://localhost:5249/api/subscription/upgrade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier: selectedPlan.name, billingCycle })
+      });
+
+      if (!response.ok) {
+        throw new Error("Payment went through but account sync failed. Please contact support.");
+      }
+
+      const updatedUser: UserDto = await response.json();
+      authService.updateUser(updatedUser);
+      setUser(updatedUser);
+      setPaymentSuccess(true);
+    } catch (err: any) {
+      setErrorMessage(err.message || "An unexpected error occurred during transaction processing.");
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const activeTier = user?.subscriptionTier || "Basic";
 
   return (
     <div className="max-w-6xl mx-auto py-8 md:py-12 px-4 pb-24 overflow-x-hidden relative">
       <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full -z-10" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full -z-10" />
+
+      {syncing && (
+        <div className="absolute top-4 right-4 bg-white/80 backdrop-blur border border-slate-100 px-3 py-1.5 rounded-full flex items-center gap-2 text-xs font-semibold text-slate-500 shadow-sm z-50">
+          <Loader2 className="animate-spin text-indigo-600" size={14} /> Syncing subscription...
+        </div>
+      )}
 
       <div className="text-center mb-12 md:mb-20">
         <motion.div
@@ -148,75 +293,88 @@ export default function Subscription() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24 relative z-10">
-        {plans.map((plan, idx) => (
-          <motion.div
-            key={plan.name}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className={cn(plan.popular && "md:scale-105")}
-          >
-            <Card 
-              className={cn(
-                "h-full flex flex-col relative overflow-hidden border-2 transition-all duration-700 rounded-[3rem] bg-white group",
-                plan.popular 
-                  ? "border-indigo-600 shadow-[0_30px_60px_-15px_rgba(79,70,229,0.25)]" 
-                  : "border-slate-100 hover:border-indigo-200 shadow-xl shadow-slate-200/50"
-              )}
+        {plans.map((plan, idx) => {
+          const isCurrent = plan.name.toLowerCase() === activeTier.toLowerCase();
+          return (
+            <motion.div
+              key={plan.name}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              className={cn(plan.popular && "md:scale-105")}
             >
-              {plan.popular && (
-                <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-black px-6 py-2.5 rounded-bl-[2rem] uppercase tracking-[0.2em] z-20">
-                  Popular
-                </div>
-              )}
-              
-              <CardContent className="p-8 md:p-10 flex-1 flex flex-col relative overflow-hidden">
-                {plan.popular && <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl -mr-16 -mt-16" />}
+              <Card 
+                className={cn(
+                  "h-full flex flex-col relative overflow-hidden border-2 transition-all duration-700 rounded-[3rem] bg-white group",
+                  plan.popular 
+                    ? "border-indigo-600 shadow-[0_30px_60px_-15px_rgba(79,70,229,0.25)]" 
+                    : "border-slate-100 hover:border-indigo-200 shadow-xl shadow-slate-200/50",
+                  isCurrent && "border-emerald-500/80 shadow-[0_30px_60px_-15px_rgba(16,185,129,0.15)]"
+                )}
+              >
+                {plan.popular && !isCurrent && (
+                  <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-black px-6 py-2.5 rounded-bl-[2rem] uppercase tracking-[0.2em] z-20">
+                    Popular
+                  </div>
+                )}
+
+                {isCurrent && (
+                  <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black px-6 py-2.5 rounded-bl-[2rem] uppercase tracking-[0.2em] z-20 flex items-center gap-1.5">
+                    <Check size={10} strokeWidth={4} /> Current
+                  </div>
+                )}
                 
-                <div className={cn(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center mb-8 shadow-xl transition-transform group-hover:rotate-12",
-                  plan.color === "indigo" ? "bg-slate-950 text-white" : 
-                  plan.color === "amber" ? "bg-amber-100 text-amber-600" : "bg-slate-50 text-slate-400"
-                )}>
-                  <plan.icon size={24} strokeWidth={2.5} />
-                </div>
-                
-                <h3 className="text-2xl font-black text-slate-900 mb-2 italic tracking-tight">{plan.name}</h3>
-                <div className="flex items-baseline gap-2 mb-4">
-                  <span className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter">
-                    {billingCycle === "yearly" && plan.price !== "Free" 
-                      ? `${(parseInt(plan.price.replace(/\D/g, '')) * 0.8 / 1000).toFixed(3)}.000đ` 
-                      : plan.price}
-                  </span>
-                  {plan.price !== "Free" && <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">{plan.period}</span>}
-                </div>
-                <p className="text-slate-500 text-xs font-medium mb-10 leading-relaxed opacity-80">{plan.description}</p>
-                
-                <div className="space-y-4 mb-12 flex-1">
-                  {plan.features.map((feature) => (
-                    <div key={feature} className="flex items-start gap-4 group/item">
-                      <div className="mt-1 bg-emerald-500 rounded-full p-1 shadow-sm shrink-0 group-hover/item:scale-125 transition-transform">
-                        <Check size={8} className="text-white" strokeWidth={5} />
+                <CardContent className="p-8 md:p-10 flex-1 flex flex-col relative overflow-hidden">
+                  {(plan.popular || isCurrent) && <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl -mr-16 -mt-16" />}
+                  
+                  <div className={cn(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center mb-8 shadow-xl transition-transform group-hover:rotate-12",
+                    isCurrent ? "bg-emerald-500 text-white" :
+                    plan.color === "indigo" ? "bg-slate-950 text-white" : 
+                    plan.color === "amber" ? "bg-amber-100 text-amber-600" : "bg-slate-50 text-slate-400"
+                  )}>
+                    <plan.icon size={24} strokeWidth={2.5} />
+                  </div>
+                  
+                  <h3 className="text-2xl font-black text-slate-900 mb-2 italic tracking-tight">{plan.name}</h3>
+                  <div className="flex items-baseline gap-2 mb-4">
+                    <span className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter">
+                      {formatPrice(plan)}
+                    </span>
+                    {plan.price !== "Free" && <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">{plan.period}</span>}
+                  </div>
+                  <p className="text-slate-500 text-xs font-medium mb-10 leading-relaxed opacity-80">{plan.description}</p>
+                  
+                  <div className="space-y-4 mb-12 flex-1">
+                    {plan.features.map((feature) => (
+                      <div key={feature} className="flex items-start gap-4 group/item">
+                        <div className={cn("mt-1 rounded-full p-1 shadow-sm shrink-0 group-hover/item:scale-125 transition-transform", isCurrent ? "bg-emerald-500" : "bg-emerald-500")}>
+                          <Check size={8} className="text-white" strokeWidth={5} />
+                        </div>
+                        <span className="text-xs text-slate-700 font-bold leading-tight group-hover/item:text-slate-950 transition-colors uppercase tracking-tight">{feature}</span>
                       </div>
-                      <span className="text-xs text-slate-700 font-bold leading-tight group-hover/item:text-slate-950 transition-colors uppercase tracking-tight">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-                
-                <Button 
-                  className={cn(
-                    "w-full h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-300 shadow-2xl active:scale-95",
-                    plan.popular 
-                      ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200" 
-                      : "bg-slate-900 hover:bg-black text-white"
-                  )}
-                >
-                  {plan.buttonText}
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
+                    ))}
+                  </div>
+                  
+                  <Button 
+                    onClick={() => handlePlanSelect(plan)}
+                    disabled={isCurrent}
+                    className={cn(
+                      "w-full h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-300 shadow-2xl active:scale-95",
+                      isCurrent
+                        ? "bg-slate-100 hover:bg-slate-100 text-slate-400 shadow-none border border-slate-200 cursor-not-allowed"
+                        : plan.popular 
+                          ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200" 
+                          : "bg-slate-900 hover:bg-black text-white"
+                    )}
+                  >
+                    {isCurrent ? "Active Plan" : plan.buttonText}
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Detailed Comparison Table - Ultra Clean App Look */}
@@ -294,6 +452,220 @@ export default function Subscription() {
           </div>
         ))}
       </div>
+
+      {/* RETAIL PRESET CHECKOUT MODAL - VERY PREMIUM */}
+      <AnimatePresence>
+        {isModalOpen && selectedPlan && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { if (!processingPayment && !paymentSuccess) setIsModalOpen(false); }}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
+            />
+
+            {/* Modal Body */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="bg-white rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border border-slate-100 w-full max-w-xl overflow-hidden relative z-10"
+            >
+              {/* Close Button */}
+              {(!processingPayment && !paymentSuccess) && (
+                <button 
+                  onClick={() => setIsModalOpen(false)}
+                  className="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors z-20"
+                >
+                  <X size={18} strokeWidth={2.5} />
+                </button>
+              )}
+
+              {paymentSuccess ? (
+                /* Success Screen */
+                <div className="p-10 text-center flex flex-col items-center">
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", damping: 12, delay: 0.1 }}
+                    className="w-24 h-24 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 mb-8 border border-emerald-100"
+                  >
+                    <Check size={48} strokeWidth={4} className="animate-pulse" />
+                  </motion.div>
+
+                  <h3 className="text-3xl font-black text-slate-900 italic tracking-tight mb-4">Payment Approved!</h3>
+                  <p className="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-8 bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-100/50 text-emerald-700">
+                    Welcome to Immersio {selectedPlan.name}
+                  </p>
+                  
+                  <div className="w-full bg-slate-50 rounded-3xl p-6 border border-slate-100 text-left mb-8 space-y-3">
+                    <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      <span>Subscribed Tier</span>
+                      <span className="text-slate-900 font-extrabold">{selectedPlan.name}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      <span>Billing Frequency</span>
+                      <span className="text-slate-900 font-extrabold capitalize">{billingCycle}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-wider border-t border-slate-200 pt-3">
+                      <span>Charged Amount</span>
+                      <span className="text-indigo-600 font-black">{formatPrice(selectedPlan)}</span>
+                    </div>
+                  </div>
+
+                  <Button 
+                    onClick={() => setIsModalOpen(false)}
+                    className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-xl shadow-indigo-100"
+                  >
+                    Start Learning Now
+                  </Button>
+                </div>
+              ) : (
+                /* Checkout Form Screen */
+                <form onSubmit={handlePaymentSubmit} className="p-8 md:p-10 flex flex-col gap-6">
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-900 italic tracking-tight leading-none mb-2">Upgrade to {selectedPlan.name}</h3>
+                    <p className="text-slate-400 text-xs font-medium">Billed {billingCycle} at <span className="text-indigo-600 font-bold">{formatPrice(selectedPlan)}</span></p>
+                  </div>
+
+                  {/* Simulated Debit Card - Super Sleek Glassmorphism */}
+                  <div className="w-full h-48 rounded-[2rem] bg-gradient-to-tr from-indigo-700 via-indigo-600 to-indigo-900 p-6 flex flex-col justify-between text-white shadow-xl shadow-indigo-900/30 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl" />
+                    
+                    <div className="flex justify-between items-start">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Card Member</span>
+                        <span className="text-sm font-bold tracking-widest uppercase truncate max-w-[200px]">
+                          {cardName || "YOUR NAME"}
+                        </span>
+                      </div>
+                      <Crown className="text-white/40 fill-white/10" size={32} />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <span className="text-lg font-black tracking-[0.25em] font-mono leading-none">
+                        {cardNumber.padEnd(16, "•").replace(/(.{4})/g, "$1 ").trim().slice(0, 23) || "•••• •••• •••• ••••"}
+                      </span>
+                      <div className="flex justify-between items-end">
+                        <div className="flex gap-6">
+                          <div className="flex flex-col">
+                            <span className="text-[7px] font-black uppercase tracking-widest opacity-60">Expires</span>
+                            <span className="text-xs font-bold font-mono">{cardExpiry || "MM/YY"}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[7px] font-black uppercase tracking-widest opacity-60">CVC</span>
+                            <span className="text-xs font-bold font-mono">{cardCvc || "•••"}</span>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black tracking-[0.2em] opacity-40 uppercase">VISA</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {errorMessage && (
+                    <div className="bg-red-50 text-red-500 border border-red-100 text-xs font-bold px-5 py-3 rounded-2xl leading-relaxed">
+                      {errorMessage}
+                    </div>
+                  )}
+
+                  {/* Form fields */}
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Cardholder Name</label>
+                      <input 
+                        type="text" 
+                        placeholder="John Doe" 
+                        required
+                        value={cardName}
+                        onChange={(e) => setCardName(e.target.value.toUpperCase())}
+                        disabled={processingPayment}
+                        className="h-12 px-4 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-600 transition-colors text-sm font-semibold uppercase tracking-wider text-slate-800 disabled:bg-slate-50"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Card Number</label>
+                      <div className="relative">
+                        <input 
+                          type="text" 
+                          maxLength={19}
+                          placeholder="4111 2222 3333 4444" 
+                          required
+                          value={cardNumber}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "");
+                            setCardNumber(val);
+                          }}
+                          disabled={processingPayment}
+                          className="h-12 pl-12 pr-4 w-full rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-600 transition-colors text-sm font-bold font-mono text-slate-800 disabled:bg-slate-50"
+                        />
+                        <CreditCard size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Expiry Date</label>
+                        <input 
+                          type="text" 
+                          maxLength={5}
+                          placeholder="MM/YY" 
+                          required
+                          value={cardExpiry}
+                          onChange={(e) => {
+                            let val = e.target.value.replace(/\D/g, "");
+                            if (val.length > 2) {
+                              val = `${val.slice(0, 2)}/${val.slice(2, 4)}`;
+                            }
+                            setCardExpiry(val);
+                          }}
+                          disabled={processingPayment}
+                          className="h-12 px-4 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-600 transition-colors text-sm font-bold font-mono text-slate-800 disabled:bg-slate-50"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">CVC Code</label>
+                        <input 
+                          type="password" 
+                          maxLength={3}
+                          placeholder="•••" 
+                          required
+                          value={cardCvc}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "");
+                            setCardCvc(val);
+                          }}
+                          disabled={processingPayment}
+                          className="h-12 px-4 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-600 transition-colors text-sm font-bold font-mono text-slate-800 disabled:bg-slate-50"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button 
+                    type="submit"
+                    disabled={processingPayment}
+                    className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-xl shadow-indigo-100 flex items-center justify-center gap-2 mt-4"
+                  >
+                    {processingPayment ? (
+                      <>
+                        <Loader2 className="animate-spin text-white" size={16} /> Authenticating...
+                      </>
+                    ) : (
+                      <>
+                        Pay & Upgrade Now <ArrowRight size={14} />
+                      </>
+                    )}
+                  </Button>
+                </form>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

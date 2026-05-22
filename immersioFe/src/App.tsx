@@ -9,6 +9,7 @@ import StudentDashboard from "@/pages/student/Dashboard";
 import Scenarios from "@/pages/student/Scenarios";
 import ScenarioDetail from "@/pages/student/ScenarioDetail";
 import Practice from "@/pages/student/Practice";
+import FlashcardsPage from "@/pages/student/FlashcardsPage";
 import Profile from "@/pages/student/Profile";
 import Subscription from "@/pages/student/Subscription";
 import Store from "@/pages/student/Store";
@@ -31,6 +32,8 @@ export default function App() {
           <Route path="scenarios" element={<Scenarios />} />
           <Route path="scenarios/:id" element={<ScenarioDetail />} />
           <Route path="practice" element={<Practice />} />
+          <Route path="flashcards" element={<FlashcardsPage />} />
+          <Route path="flashcards/:deckId" element={<FlashcardsPage />} />
           <Route path="profile" element={<Profile />} />
           <Route path="subscription" element={<Subscription />} />
           <Route path="store" element={<Store />} />

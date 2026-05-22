@@ -2,6 +2,12 @@ export interface UserDto {
   id: string;
   username: string;
   email: string;
+  subscriptionTier?: string;
+  subscriptionExpiresAt?: string | null;
+  streakCount?: number;
+  experiencePoints?: number;
+  learningHours?: number;
+  currentLanguageLevel?: string;
 }
 
 export interface AuthResponse {
@@ -24,6 +30,10 @@ export const authService = {
   getUser(): UserDto | null {
     const userStr = localStorage.getItem("user");
     return userStr ? JSON.parse(userStr) : null;
+  },
+
+  updateUser(user: UserDto) {
+    localStorage.setItem("user", JSON.stringify(user));
   },
 
   setSession(accessToken: string, refreshToken: string, user: UserDto) {

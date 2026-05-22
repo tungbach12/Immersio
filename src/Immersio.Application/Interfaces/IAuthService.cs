@@ -8,5 +8,7 @@ namespace Immersio.Application.Interfaces
         Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
         Task<AuthResponse> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);
         Task RevokeTokenAsync(RevokeTokenRequest request, CancellationToken cancellationToken = default);
+        Task<UserDto?> GetUserByIdAsync(Guid userId, CancellationToken cancellationToken = default);
+        Task<UserDto> UpgradeSubscriptionAsync(Guid userId, string tier, string billingCycle, CancellationToken cancellationToken = default);
     }
 }

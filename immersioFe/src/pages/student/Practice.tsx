@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useNavigate, Link } from "react-router-dom";
 import { BookOpen, Mic, ChevronLeft, ChevronRight, Check, X, RefreshCw, Volume2, Target, Square, SkipBack, SkipForward, Plus, ArrowRight, Monitor, Video } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,8 @@ export default function Practice() {
 }
 
 function MainMenu({ onSelect }: { onSelect: (view: ViewState) => void, key?: string }) {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -55,7 +58,7 @@ function MainMenu({ onSelect }: { onSelect: (view: ViewState) => void, key?: str
       <div className="grid gap-5">
         <div
           className="glass-card bg-white rounded-[2.2rem] p-7 md:p-10 flex items-center gap-5 md:gap-8 cursor-pointer group border border-slate-100 shadow-xl shadow-slate-200/20 hover:border-indigo-100"
-          onClick={() => onSelect("decks")}
+          onClick={() => navigate("/student/flashcards")}
         >
           <div className="w-14 h-14 md:w-16 md:h-16 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500 border border-indigo-100/50">
             <BookOpen className="w-7 h-7 md:w-8 md:h-8 text-indigo-600" />

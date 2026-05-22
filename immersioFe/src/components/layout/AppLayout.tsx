@@ -19,11 +19,31 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { authService, UserDto } from "@/services/auth";
 
 export default function AppLayout() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
   const isScenarioDetail = location.pathname.includes("/scenarios/") && !location.pathname.endsWith("/scenarios");
+
+  const [user, setUser] = useState<UserDto | null>(null);
+
+  useEffect(() => {
+    // Load user from localStorage immediately to avoid stale placeholder on initial paint
+    setUser(authService.getUser());
+
+    // Snapshot the latest from the server
+    authService.getMe()
+      .then((latest) => {
+        authService.updateUser(latest);
+        setUser(latest);
+      })
+      .catch(() => {
+        // If the token is stale or /me is unreachable, keep the localStorage value
+        const stored = authService.getUser();
+        if (stored) setUser(stored);
+      });
+  }, []);
 
   const studentLinks = [
     { icon: Home, label: "Home", path: "/student/dashboard" },
@@ -41,6 +61,13 @@ export default function AppLayout() {
   ];
 
   const links = isAdmin ? adminLinks : studentLinks;
+
+  const getInitials = (name: string) => {
+    if (!name) return "?";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+  };
 
   return (
     <div className="min-h-screen bg-white flex flex-col md:flex-row overflow-hidden font-body text-slate-900 relative">
@@ -133,12 +160,12 @@ export default function AppLayout() {
           <div className="p-8">
             <div className="bg-slate-50 rounded-[2.5rem] p-8 mb-6 border border-slate-100 shadow-sm">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-vibrant flex items-center justify-center text-white font-black text-sm shadow-xl shadow-indigo-100">
-                  JD
+                 <div className="w-14 h-14 rounded-2xl bg-gradient-vibrant flex items-center justify-center text-white font-black text-sm shadow-xl shadow-indigo-100">
+                  {user ? getInitials(user.username) : "?"}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-black text-slate-900 truncate">John Doe</p>
-                  <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Premium Learner</p>
+                  <p className="text-sm font-black text-slate-900 truncate">{user?.username ?? "—"}</p>
+                  <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">{user?.subscriptionTier ? `${user.subscriptionTier} Learner` : "—"}</p>
                 </div>
               </div>
               <Link to="/student/subscription">
@@ -170,7 +197,7 @@ export default function AppLayout() {
             </button>
             <Link to="/student/profile">
               <div className="w-9 h-9 rounded-xl bg-gradient-vibrant flex items-center justify-center text-white font-black text-[10px] shadow-lg shadow-indigo-200/50">
-                JD
+                {user ? getInitials(user.username) : "?"}
               </div>
             </Link>
           </div>

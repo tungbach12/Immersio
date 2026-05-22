@@ -27,6 +27,13 @@ const CEFR_CONFIG: Record<
   string,
   { gradient: string; glow: string; ring: string; label: string; emoji: string }
 > = {
+  "Unassigned": {
+    gradient: "from-slate-400 via-slate-500 to-slate-600",
+    glow: "shadow-slate-400/40",
+    ring: "ring-slate-400/60",
+    label: "Not yet assessed",
+    emoji: "❓",
+  },
   A1: {
     gradient: "from-slate-700 via-slate-600 to-slate-800",
     glow: "shadow-slate-400/40",
@@ -115,11 +122,11 @@ export default function StudentDashboard() {
     setShowCefrBreakdown(true);
   };
 
-  const level = user?.currentLanguageLevel?.split(" ")[0] ?? "B2";
-  const cefrConfig = CEFR_CONFIG[level] ?? CEFR_CONFIG["B2"];
-  const streak = user?.streakCount ?? 12;
-  const exp = user?.experiencePoints ?? 2400;
-  const hours = user?.learningHours ?? 48;
+  const level = user?.currentLanguageLevel?.split(" ")[0] ?? "Unassigned";
+  const cefrConfig = CEFR_CONFIG[level] ?? CEFR_CONFIG["Unassigned"];
+  const streak = user?.streakCount ?? 0;
+  const exp = user?.experiencePoints ?? 0;
+  const hours = user?.learningHours ?? 0;
 
   return (
     <div className="space-y-8 pb-10">
@@ -182,7 +189,7 @@ export default function StudentDashboard() {
                 </p>
                 <div className="flex items-end gap-4">
                   <h3 className="text-4xl md:text-5xl font-black font-display italic tracking-tighter">
-                    {user?.currentLanguageLevel ?? "B2 Upper"}
+                    {user?.currentLanguageLevel ?? "Unassigned"}
                   </h3>
                   <span className="text-3xl mb-1">{cefrConfig.emoji}</span>
                 </div>

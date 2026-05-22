@@ -41,20 +41,20 @@ namespace Immersio.Infrastructure.Persistence.Configurations
 
             builder.Property(u => u.StreakCount)
                 .IsRequired()
-                .HasDefaultValue(12);
+                .HasDefaultValue(0);
 
             builder.Property(u => u.ExperiencePoints)
                 .IsRequired()
-                .HasDefaultValue(2400);
+                .HasDefaultValue(0);
 
             builder.Property(u => u.LearningHours)
                 .IsRequired()
-                .HasDefaultValue(48.0);
+                .HasDefaultValue(0.0);
 
             builder.Property(u => u.CurrentLanguageLevel)
                 .IsRequired()
                 .HasMaxLength(100)
-                .HasDefaultValue("B2 Upper");
+                .HasDefaultValue("Unassigned");
 
             builder.HasQueryFilter(u => !u.IsDeleted);
 

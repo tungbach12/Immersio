@@ -23,13 +23,13 @@ namespace Immersio.Domain.Entities
         public string ActiveSubscriptionTier => 
             (SubscriptionExpiresAt == null || SubscriptionExpiresAt > DateTime.UtcNow) ? SubscriptionTier : "Basic";
 
-        public int StreakCount { get; private set; } = 12;
+        public int StreakCount { get; private set; } = 0;
 
-        public int ExperiencePoints { get; private set; } = 2400;
+        public int ExperiencePoints { get; private set; } = 0;
 
-        public double LearningHours { get; private set; } = 48.0;
+        public double LearningHours { get; private set; } = 0.0;
 
-        public string CurrentLanguageLevel { get; private set; } = "B2 Upper";
+        public string CurrentLanguageLevel { get; private set; } = "Unassigned";
 
         private readonly List<RefreshToken> _refreshTokens = new();
         public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();

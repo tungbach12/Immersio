@@ -79,9 +79,9 @@ export default function Profile() {
            />
           <div className="relative w-36 h-36 rounded-[3.5rem] bg-slate-950 flex items-center justify-center text-white text-5xl font-black shadow-3xl border-[6px] border-white overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-blue-700 to-slate-900 opacity-90" />
-            <span className="relative z-10 italic tracking-tighter">
-              {user ? getInitials(user.username) : "JD"}
-            </span>
+              <span className="relative z-10 italic tracking-tighter">
+                {user ? getInitials(user.username) : "—"}
+              </span>
           </div>
           <button className="absolute bottom-1 right-1 w-12 h-12 bg-white rounded-2xl shadow-2xl flex items-center justify-center text-slate-950 border border-slate-100 hover:bg-slate-50 hover:text-indigo-600 transition-all active:scale-90 z-20">
             <Camera size={22} strokeWidth={2.5} />
@@ -89,13 +89,13 @@ export default function Profile() {
         </div>
 
         <div className="relative z-10">
-          <motion.h1 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-display font-black text-slate-950 italic tracking-tight leading-tight"
-          >
-            {user ? user.username : "John Doe"}
-          </motion.h1>
+      <motion.h1 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-4xl font-display font-black text-slate-950 italic tracking-tight leading-tight"
+            >
+              {user ? user.username : "—"}
+            </motion.h1>
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -116,7 +116,7 @@ export default function Profile() {
           {
             icon: Zap,
             label: "Streak",
-            value: String(user?.streakCount ?? 12),
+            value: String(user?.streakCount ?? 0),
             color: "text-orange-500",
             bg: "bg-orange-50/50",
           },
@@ -127,14 +127,14 @@ export default function Profile() {
               ? user.experiencePoints >= 1000
                 ? `${(user.experiencePoints / 1000).toFixed(1)}k`
                 : String(user.experiencePoints)
-              : "2.4k",
+              : "0",
             color: "text-indigo-600",
             bg: "bg-indigo-50/50",
           },
           {
             icon: Clock,
             label: "Hours",
-            value: Math.round(user?.learningHours ?? 48).toString(),
+            value: Math.round(user?.learningHours ?? 0).toString(),
             color: "text-emerald-500",
             bg: "bg-emerald-50/50",
           },

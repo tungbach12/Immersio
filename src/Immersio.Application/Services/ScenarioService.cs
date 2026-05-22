@@ -57,6 +57,8 @@ namespace Immersio.Application.Services
             if (scenario == null)
                 throw new NotFoundException("Scenario", scenarioId);
 
+            // Subscription/daily-limit checks temporarily disabled for development.
+            /*
             // Enforce daily scenario limit based on subscription tier
             var today = DateTime.UtcNow.Date;
             var sessionCountToday = await _context.ScenarioSessions
@@ -71,6 +73,7 @@ namespace Immersio.Application.Services
             {
                 throw new ConflictException("You have reached your daily scenario limit of 20. Please upgrade your subscription to get unlimited scenarios.");
             }
+            */
 
             // Create new session
             var session = new ScenarioSession(userId, scenarioId);

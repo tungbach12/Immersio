@@ -154,8 +154,9 @@ export default function ScenarioDetail() {
           setSessionId(sid);
           setMessages([{ role: "model", text: data.initialMessage }]);
           playTextToSpeech(data.initialMessage);
-        } catch (err) {
+        } catch (err: any) {
           console.error("Failed to start session on backend:", err);
+          if (err.message) alert(err.message);
         }
       })
       .catch(err => {
@@ -1492,19 +1493,14 @@ export default function ScenarioDetail() {
                     ? "bg-red-600 scale-110 ring-4 ring-red-500/30"
                     : "bg-gradient-to-br from-slate-800 to-black hover:from-slate-700 hover:to-slate-900"
                 )}
-                onPointerDown={(e) => {
+                onClick={(e) => {
                   e.preventDefault();
-                  startListening();
+                  if (isListening) {
+                    stopListening();
+                  } else {
+                    startListening();
+                  }
                 }}
-                onPointerUp={(e) => {
-                  e.preventDefault();
-                  stopListening();
-                }}
-                onPointerLeave={(e) => {
-                  e.preventDefault();
-                  if (isListening) stopListening();
-                }}
-                onContextMenu={(e) => e.preventDefault()}
               >
                 {isListening ? (
                   <motion.div

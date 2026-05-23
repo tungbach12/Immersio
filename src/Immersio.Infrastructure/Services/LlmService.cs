@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Immersio.Application.DTOs.Scenario;
 using Immersio.Application.DTOs.Srs;
+using Immersio.Application.DTOs.Practice;
 using Immersio.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
 
@@ -319,6 +320,151 @@ namespace Immersio.Infrastructure.Services
 
             return flashcards;
         }
+
+        public async Task<AiCefrFeedbackDto> GenerateCefrFeedbackAsync(
+            string currentLevel,
+            int overallScore,
+            List<string> completedScenarios,
+            List<int> recentSpeechScores,
+            int activeWordsCount,
+            CancellationToken cancellationToken)
+        {
+            var completedScenariosCsv = completedScenarios.Any() 
+                ? string.Join(", ", completedScenarios) 
+                : "None";
+            var speechScoresCsv = recentSpeechScores.Any() 
+                ? string.Join(", ", recentSpeechScores.Select(s => $"{s}%")) 
+                : "None";
+
+            var systemPrompt = "You are a professional, premium CEFR language assessment advisor.\n" +
+                               "Your task is to analyze the learner's study data and provide a highly personalized, encouraging CEFR evaluation report.\n\n" +
+                               "Return a JSON object containing:\n" +
+                               "- \"statusMessage\": A professional one-sentence diagnostic overview of their current language level and conversational fluency (in Vietnamese or mixed English/Vietnamese like 'Upper Intermediate - ...').\n" +
+                               "- \"suggestions\": A list of exactly 3 or 4 personalized suggestions/bullet points in Tiếng Việt. The bullet points MUST follow this exact structure:\n" +
+                               "  1. **Điểm mạnh**: [Analysis of their strengths, e.g. stable pronunciation at 85%+ or brave scenario attempts]\n" +
+                               "  2. **Điểm cần cải thiện**: [Analysis of pronunciation fluctuations or grammar complexity needed]\n" +
+                               "  3. **Hành động tiếp theo**: [Concrete learning recommendation, e.g. practice advanced scenarios or speak louder]\n\n" +
+                               "The output MUST be strictly valid JSON. Example:\n" +
+                               "{\n" +
+                               "  \"statusMessage\": \"Upper Intermediate - Khả năng phản xạ hội thoại tự nhiên và phát âm có độ chuẩn xác ổn định.\",\n" +
+                               "  \"suggestions\": [\n" +
+                               "    \"**Điểm mạnh**: Bạn phát âm rất rõ ràng và chuẩn xác trong các bài Vocal Lab (đạt trung bình trên 80%).\",\n" +
+                               "    \"**Điểm cần cải thiện**: Nên thử sức thêm ở các scenario có độ phức tạp cao hơn (C1/C2) để mở rộng cấu trúc câu.\",\n" +
+                               "    \"**Hành động tiếp theo**: Hãy luyện nói tối thiểu 3 bài nói tự do khác nhau để tăng cường vốn từ vựng chủ động.\"\n" +
+                               "  ]\n" +
+                               "}";
+
+            var userPrompt = $"Student Current CEFR Level: {currentLevel}\n" +
+                             $"Overall Score (out of 100): {overallScore}\n" +
+                             $"Completed Scenarios: [{completedScenariosCsv}]\n" +
+                             $"Recent Pronunciation Scores: [{speechScoresCsv}]\n" +
+                             $"Active Vocabulary Count: {activeWordsCount} words\n";
+
+            var requestBody = new
+            {
+                model = DefaultModel,
+                messages = new[]
+                {
+                    new { role = "system", content = systemPrompt },
+                    new { role = "user", content = userPrompt }
+                },
+                temperature = 0.5,
+                response_format = new { type = "json_object" },
+                stream = false
+            };
+
+            var defaultSuggestions = new List<string>
+            {
+                "**Điểm mạnh**: Bạn đang có tiến trình học tập rất tốt, hãy duy trì nhịp độ này nhé!",
+                "**Điểm cần cải thiện**: Chú ý thực hành đều đặn cả phần phát âm và hội thoại để nâng cao phản xạ.",
+                "**Hành động tiếp theo**: Luyện tập tối thiểu 1 scenario hội thoại mới và luyện phát âm thêm 5 câu mỗi ngày."
+            };
+            var defaultStatus = $"{currentLevel} - Khởi đầu rất tốt, hãy duy trì để nâng cao khả năng giao tiếp.";
+
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, GroqEndpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+                request.Content = JsonContent.Create(requestBody);
+
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                response.EnsureSuccessStatusCode();
+
+                var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
+                var contentJson = chatResponse?.Choices?.FirstOrDefault()?.Message?.Content;
+
+                if (!string.IsNullOrWhiteSpace(contentJson))
+                {
+                    using var doc = JsonDocument.Parse(contentJson);
+                    var root = doc.RootElement;
+                    var status = root.TryGetProperty("statusMessage", out var statusProp) ? statusProp.GetString() : defaultStatus;
+                    
+                    var suggestionsList = new List<string>();
+                    if (root.TryGetProperty("suggestions", out var sugProp) && sugProp.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var item in sugProp.EnumerateArray())
+                        {
+                            var sugText = item.GetString();
+                            if (!string.IsNullOrWhiteSpace(sugText))
+                            {
+                                suggestionsList.Add(sugText);
+                            }
+                        }
+                    }
+
+                    if (suggestionsList.Any())
+                    {
+                        return new AiCefrFeedbackDto(status ?? defaultStatus, suggestionsList);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"AI CEFR diagnostic analysis failed: {ex.Message}");
+            }
+
+            return new AiCefrFeedbackDto(defaultStatus, defaultSuggestions);
+        }
+
+        public async Task<string> TranscribeAudioAsync(
+            byte[] audioBytes,
+            string filename,
+            CancellationToken cancellationToken)
+        {
+            const string GroqAudioEndpoint = "https://api.groq.com/openai/v1/audio/transcriptions";
+
+            using var form = new MultipartFormDataContent();
+            
+            // Add file content
+            var fileContent = new ByteArrayContent(audioBytes);
+            var contentType = filename.EndsWith(".webm") ? "audio/webm" 
+                            : filename.EndsWith(".wav") ? "audio/wav" 
+                            : "application/octet-stream";
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+            form.Add(fileContent, "file", filename);
+
+            // Add model parameter
+            form.Add(new StringContent("whisper-large-v3"), "model");
+            form.Add(new StringContent("en"), "language");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, GroqAudioEndpoint);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+            request.Content = form;
+
+            try
+            {
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                response.EnsureSuccessStatusCode();
+
+                var jsonResult = await response.Content.ReadFromJsonAsync<GroqTranscriptionResponse>(cancellationToken: cancellationToken);
+                return jsonResult?.Text ?? string.Empty;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Groq Audio Transcription failed: {ex.Message}");
+                throw;
+            }
+        }
     }
 
     // Helper classes for standard OpenAI / Groq JSON serialization
@@ -341,5 +487,11 @@ namespace Immersio.Infrastructure.Services
 
         [JsonPropertyName("content")]
         public string? Content { get; set; }
+    }
+
+    public class GroqTranscriptionResponse
+    {
+        [JsonPropertyName("text")]
+        public string? Text { get; set; }
     }
 }

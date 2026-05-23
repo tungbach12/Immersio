@@ -31,4 +31,15 @@ namespace Immersio.Application.DTOs.Practice
         List<SkillScoreDto> Skills,
         List<string> Suggestions
     );
+
+    public sealed record AiCefrFeedbackDto(
+        string StatusMessage,
+        List<string> Suggestions
+    );
+
+    public sealed record PronunciationAssessmentResultDto(
+        string Transcript,
+        int Score,
+        string Message
+    );
 }

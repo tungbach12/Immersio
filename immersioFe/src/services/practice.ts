@@ -71,4 +71,28 @@ export const practiceService = {
 
     return response.json();
   },
+
+  async assessPronunciation(
+    audioBlob: Blob,
+    phrase: string
+  ): Promise<{ transcript: string; score: number; message: string }> {
+    const formData = new FormData();
+    formData.append("audio", audioBlob, "pronunciation.webm");
+    formData.append("phrase", phrase);
+
+    const response = await authService.fetchWithAuth(
+      `${BASE_URL}/assess-pronunciation`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Assessment failed" }));
+      throw new Error(err.detail || "Failed to assess pronunciation");
+    }
+
+    return response.json();
+  },
 };

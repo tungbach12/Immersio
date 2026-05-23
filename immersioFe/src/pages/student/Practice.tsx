@@ -409,80 +409,80 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
   const [feedback, setFeedback] = useState<{ score: number; message: string } | null>(null);
   const [isLogging, setIsLogging] = useState(false);
 
-  const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const currentPhrase = PRONUNCIATION_PHRASES[phraseIndex];
 
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = true;
-      recognitionRef.current.lang = 'en-US';
-
-      recognitionRef.current.onresult = (event: any) => {
-        const current = event.resultIndex;
-        const transcriptText = event.results[current][0].transcript;
-        setTranscript(transcriptText);
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsRecording(false);
-      };
-    }
-
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
   }, []);
 
-  const toggleRecording = () => {
-    if (isRecording) {
-      recognitionRef.current?.stop();
+  const startRecording = async () => {
+    setTranscript("");
+    setFeedback(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        await handleAudioStopped(audioBlob);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Failed to start recording:", err);
+      alert("Không thể truy cập microphone. Vui lòng cấp quyền truy cập mic.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
       setIsRecording(false);
-      void evaluatePronunciation();
-    } else {
-      setTranscript("");
-      setFeedback(null);
-      try {
-        recognitionRef.current?.start();
-        setIsRecording(true);
-      } catch (e) {
-        console.error("Speech recognition error:", e);
-        alert("Speech recognition is not supported in this browser or requires permissions.");
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
     }
   };
 
-  const evaluatePronunciation = async () => {
-    if (!transcript) return;
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      void startRecording();
+    }
+  };
 
-    const targetWords = currentPhrase.toLowerCase().replace(/[.,?]/g, '').split(' ');
-    const spokenWords = transcript.toLowerCase().replace(/[.,?]/g, '').split(' ');
-
-    let matches = 0;
-    spokenWords.forEach(word => {
-      if (targetWords.includes(word)) matches++;
-    });
-
-    const score = Math.min(100, Math.round((matches / targetWords.length) * 100));
-
-    let message = "";
-    if (score >= 90) message = "Linguistic Precision! Perfect accent.";
-    else if (score >= 70) message = "Great flow, keep refining those vowels.";
-    else if (score >= 40) message = "A bit muffled. Try enunciating more clearly.";
-    else message = "Listen to the guide and try again.";
-
-    setFeedback({ score, message });
-
+  const handleAudioStopped = async (audioBlob: Blob) => {
     try {
       setIsLogging(true);
-      await practiceService.logPronunciation(currentPhrase, transcript, score);
+      setTranscript("Analyzing audio...");
+      const result = await practiceService.assessPronunciation(audioBlob, currentPhrase);
+      setTranscript(result.transcript);
+      setFeedback({ score: result.score, message: result.message });
     } catch (err) {
-      console.error("Failed to log pronunciation to backend:", err);
+      console.error("Pronunciation assessment failed:", err);
+      setTranscript("Failed to analyze audio.");
+      setFeedback({ score: 0, message: "Lỗi kết nối máy chủ. Vui lòng thử lại." });
     } finally {
       setIsLogging(false);
     }

@@ -56,5 +56,35 @@ namespace Immersio.WebApi.Controllers
             var analysis = await _pronunciationService.AnalyzeCefrLevelAsync(userId, cancellationToken);
             return Ok(ApiResponse<object>.SuccessResult(analysis));
         }
+
+        [HttpPost("assess-pronunciation")]
+        public async Task<IActionResult> AssessPronunciation(
+            [FromForm] Microsoft.AspNetCore.Http.IFormFile audio,
+            [FromForm] string phrase,
+            CancellationToken cancellationToken)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized(ApiResponse.FailureResult("Invalid user identity."));
+
+            if (audio == null || audio.Length == 0)
+                return BadRequest(ApiResponse.FailureResult("No audio file was uploaded."));
+
+            if (string.IsNullOrWhiteSpace(phrase))
+                return BadRequest(ApiResponse.FailureResult("Target phrase is required."));
+
+            using var memoryStream = new System.IO.MemoryStream();
+            await audio.CopyToAsync(memoryStream, cancellationToken);
+            var audioBytes = memoryStream.ToArray();
+
+            var result = await _pronunciationService.AssessPronunciationAsync(
+                userId,
+                audioBytes,
+                audio.FileName,
+                phrase,
+                cancellationToken);
+
+            return Ok(ApiResponse<object>.SuccessResult(result));
+        }
     }
 }

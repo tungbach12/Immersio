@@ -262,6 +262,83 @@ namespace Immersio.Application.Services
             await _context.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task<ScenarioDto> CreateScenarioAsync(CreateScenarioDto dto, CancellationToken cancellationToken)
+        {
+            var scenario = new Scenario(
+                dto.Title,
+                dto.Language,
+                dto.Level,
+                dto.Category,
+                dto.Description,
+                dto.Rating,
+                dto.Duration,
+                dto.ImageUrl,
+                dto.ContextPrompt,
+                dto.InitialMessage,
+                dto.AvatarUrl,
+                dto.IsNavigation
+            );
+
+            _context.Scenarios.Add(scenario);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return MapToDto(scenario);
+        }
+
+        public async Task<ScenarioDto> UpdateScenarioAsync(Guid id, CreateScenarioDto dto, CancellationToken cancellationToken)
+        {
+            var scenario = await _context.Scenarios
+                .Include(s => s.Items)
+                .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted, cancellationToken);
+
+            if (scenario == null)
+                throw new NotFoundException("Scenario", id);
+
+            scenario.Update(
+                dto.Title,
+                dto.Language,
+                dto.Level,
+                dto.Category,
+                dto.Description,
+                dto.Rating,
+                dto.Duration,
+                dto.ImageUrl,
+                dto.ContextPrompt,
+                dto.InitialMessage,
+                dto.AvatarUrl,
+                dto.IsNavigation
+            );
+
+            await _context.SaveChangesAsync(cancellationToken);
+            return MapToDto(scenario);
+        }
+
+        public async Task<bool> DeleteScenarioAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var scenario = await _context.Scenarios.FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted, cancellationToken);
+            if (scenario == null) return false;
+
+            scenario.Delete();
+            await _context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+
+        public async Task<ScenarioItemDto> AddScenarioItemAsync(Guid scenarioId, CreateScenarioItemDto dto, CancellationToken cancellationToken)
+        {
+            var scenario = await _context.Scenarios
+                .Include(s => s.Items)
+                .FirstOrDefaultAsync(s => s.Id == scenarioId && !s.IsDeleted, cancellationToken);
+
+            if (scenario == null)
+                throw new NotFoundException("Scenario", scenarioId);
+
+            scenario.AddItem(dto.Name, dto.Price, dto.ImageUrl, dto.Icon);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            var item = scenario.Items.Last();
+            return new ScenarioItemDto(item.Id, item.Name, item.Price, item.ImageUrl, item.Icon);
+        }
+
         private ScenarioDto MapToDto(Scenario s)
         {
             return new ScenarioDto(

@@ -14,8 +14,7 @@ import {
   Bell,
   LogOut,
   Sparkles,
-  Crown,
-  ShoppingBag
+  Crown
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -49,7 +48,6 @@ export default function AppLayout() {
     { icon: Home, label: "Home", path: "/student/dashboard" },
     { icon: BookOpen, label: "Learn", path: "/student/scenarios" },
     { icon: Sparkles, label: "Practice", path: "/student/practice" },
-    { icon: ShoppingBag, label: "Store", path: "/student/store" },
     { icon: User, label: "Profile", path: "/student/profile" },
   ];
 
@@ -70,9 +68,9 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col md:flex-row overflow-hidden font-body text-slate-900 relative">
+    <div className="min-h-screen bg-[#030712] flex flex-col md:flex-row overflow-hidden font-body text-slate-100 relative">
       {/* Background Decorative Blobs */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-slate-50">
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-[#030712]">
         <motion.div
           animate={{ x: [0, 60, 0], y: [0, -40, 0], rotate: [0, 45, 0] }}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -118,10 +116,10 @@ export default function AppLayout() {
       </div>
       {/* Desktop Sidebar */}
       {!isScenarioDetail && (
-        <aside className="hidden md:flex w-80 flex-col bg-white/70 backdrop-blur-3xl border-r border-slate-100 z-20">
+        <aside className="hidden md:flex w-80 flex-col bg-slate-950/80 backdrop-blur-3xl border-r border-white/5 z-20">
           <div className="p-10 flex items-center gap-4">
             <img src="/logo.png" alt="IMMERSIO Logo" className="h-12 w-auto object-contain" />
-            <span className="text-xl font-black italic tracking-tighter text-slate-900">IMMERSIO</span>
+            <span className="text-xl font-black italic tracking-tighter text-white">IMMERSIO</span>
           </div>
 
           <nav className="flex-1 px-6 py-4 space-y-3">
@@ -131,17 +129,17 @@ export default function AppLayout() {
                 <Link to={link.path} key={link.path}>
                   <div
                     className={cn(
-                      "flex items-center gap-4 px-6 py-5 rounded-[1.5rem] transition-all duration-500 group relative overflow-hidden",
+                      "flex items-center gap-4 px-6 py-5 rounded-[1.5rem] transition-all duration-500 group relative overflow-hidden border border-transparent",
                       isActive
-                        ? "bg-slate-950 text-white shadow-2xl shadow-slate-200"
-                        : "text-slate-500 hover:bg-slate-50"
+                        ? "bg-white/10 text-white shadow-lg border-white/10"
+                        : "text-slate-400 hover:bg-white/5 hover:text-white"
                     )}
                   >
                     <link.icon
                       size={20}
                       className={cn(
                         "transition-all duration-500",
-                        isActive ? "text-indigo-400 scale-110" : "text-slate-400 group-hover:text-slate-900"
+                        isActive ? "text-indigo-400 scale-110" : "text-slate-400 group-hover:text-white"
                       )}
                     />
                     <span className="font-bold text-sm tracking-tight">{link.label}</span>
@@ -158,24 +156,9 @@ export default function AppLayout() {
           </nav>
 
           <div className="p-8">
-            <div className="bg-slate-50 rounded-[2.5rem] p-8 mb-6 border border-slate-100 shadow-sm">
-              <div className="flex items-center gap-4 mb-6">
-                 <div className="w-14 h-14 rounded-2xl bg-gradient-vibrant flex items-center justify-center text-white font-black text-sm shadow-xl shadow-indigo-100">
-                  {user ? getInitials(user.username) : "?"}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-black text-slate-900 truncate">{user?.username ?? "—"}</p>
-                  <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">{user?.subscriptionTier ? `${user.subscriptionTier} Learner` : "—"}</p>
-                </div>
-              </div>
-              <Link to="/student/subscription">
-                <Button size="sm" className="w-full rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-100 text-[10px] font-black uppercase tracking-widest h-11">
-                  View Plans
-                </Button>
-              </Link>
-            </div>
+
             <Link to="/">
-              <Button variant="ghost" className="w-full justify-start text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl font-bold text-sm h-12">
+              <Button variant="ghost" className="w-full justify-start text-slate-400 hover:text-red-400 hover:bg-red-950/20 rounded-2xl font-bold text-sm h-12">
                 <LogOut size={18} className="mr-3" />
                 Log Out
               </Button>
@@ -186,13 +169,13 @@ export default function AppLayout() {
 
       {/* Mobile Top Header */}
       {!isScenarioDetail && (
-        <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-3xl border-b border-slate-100/50 z-40 flex items-center justify-between px-6 transition-all duration-300">
+        <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-3xl border-b border-white/5 z-40 flex items-center justify-between px-6 transition-all duration-300">
           <div className="flex items-center gap-3">
              <img src="/logo.png" alt="IMMERSIO Logo" className="h-9 w-auto object-contain" />
-             <span className="text-base font-black italic tracking-tighter text-slate-900">IMMERSIO</span>
+             <span className="text-base font-black italic tracking-tighter text-white">IMMERSIO</span>
           </div>
           <div className="flex items-center gap-3">
-            <button className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors">
+            <button className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:text-indigo-400 hover:bg-white/10 transition-all">
               <Bell size={18} />
             </button>
             <Link to="/student/profile">

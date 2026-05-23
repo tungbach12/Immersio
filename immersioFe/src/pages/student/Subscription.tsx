@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Check, Sparkles, Zap, Shield, Star, Crown, ArrowRight, X, CreditCard, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { authService, UserDto } from "@/services/auth";
 
@@ -33,7 +33,7 @@ const plans = [
       "20 Scenarios per day",
       "Pronunciation scoring & analysis",
       "Unlimited Flashcards (Vocab, Grammar)",
-      "Interactive AR Experience",
+      "Interactive 2D Roleplay Experience",
       "5 Storylines + 7 Custom Outfits",
     ],
     icon: Zap,
@@ -52,7 +52,7 @@ const plans = [
       "AI Coach: Native-like expressions",
       "Auto-generate cards from mistakes",
       "Long-term NPC Memory (Full history)",
-      "Optimized AR + Smooth animations",
+      "Optimized graphics & smooth transitions",
       "All Storylines + Limited Outfits",
     ],
     icon: Crown,
@@ -92,12 +92,6 @@ const comparisonData = [
     basic: "Resets after each session",
     plus: "Remembers your profile",
     premium: "Long-term: Full chat history",
-  },
-  {
-    category: "AR Experience",
-    basic: "Not supported",
-    plus: "Interactive AR in real space",
-    premium: "Optimized AR + Smooth animations",
   },
   {
     category: "Content & Graphics",
@@ -252,10 +246,9 @@ export default function Subscription() {
     <div className="max-w-6xl mx-auto py-8 md:py-12 px-4 pb-24 overflow-x-hidden relative">
       <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full -z-10" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full -z-10" />
-
       {syncing && (
-        <div className="absolute top-4 right-4 bg-white/80 backdrop-blur border border-slate-100 px-3 py-1.5 rounded-full flex items-center gap-2 text-xs font-semibold text-slate-500 shadow-sm z-50">
-          <Loader2 className="animate-spin text-indigo-600" size={14} /> Syncing subscription...
+        <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur border border-white/10 px-3 py-1.5 rounded-full flex items-center gap-2 text-xs font-semibold text-slate-300 shadow-sm z-50">
+          <Loader2 className="animate-spin text-indigo-400" size={14} /> Syncing subscription...
         </div>
       )}
 
@@ -263,31 +256,31 @@ export default function Subscription() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-5 py-2 rounded-full text-[10px] md:text-sm font-black border border-indigo-100 mb-8 uppercase tracking-[0.2em]"
+          className="inline-flex items-center gap-2 bg-indigo-500/10 text-indigo-300 px-5 py-2 rounded-full text-[10px] md:text-sm font-black border border-indigo-500/20 mb-8 uppercase tracking-[0.2em]"
         >
           <Sparkles size={14} className="animate-pulse text-amber-400" /> Premium Learning Experience
         </motion.div>
-        <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter mb-6 italic leading-none">
-          Choose Your <span className="text-indigo-600">Path.</span>
+        <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-6 italic leading-none">
+          Choose Your <span className="text-indigo-400">Path.</span>
         </h1>
-        <p className="text-slate-500 max-w-2xl mx-auto text-base md:text-lg font-medium px-4 opacity-80">
-          Unlock the full potential of IMMERSIO. Master languages faster with our most advanced AI models and immersive AR environments.
+        <p className="text-slate-400 max-w-2xl mx-auto text-base md:text-lg font-medium px-4 opacity-80">
+          Unlock the full potential of IMMERSIO. Master languages faster with our most advanced AI models and fully immersive roleplay scenarios.
         </p>
 
         {/* Billing Toggle - Refined */}
         <div className="mt-12 flex items-center justify-center gap-6">
-          <span className={cn("text-[10px] md:text-xs font-black uppercase tracking-[0.2em] transition-colors", billingCycle === "monthly" ? "text-slate-900" : "text-slate-400")}>Monthly</span>
+          <span className={cn("text-[10px] md:text-xs font-black uppercase tracking-[0.2em] transition-colors", billingCycle === "monthly" ? "text-white" : "text-slate-500")}>Monthly</span>
           <button 
             onClick={() => setBillingCycle(billingCycle === "monthly" ? "yearly" : "monthly")}
-            className="w-16 h-8 bg-slate-200 rounded-full relative p-1 transition-all hover:bg-slate-300 shadow-inner group"
+            className="w-16 h-8 bg-slate-800 rounded-full relative p-1 transition-all hover:bg-slate-700 shadow-inner group"
           >
             <motion.div 
               animate={{ x: billingCycle === "monthly" ? 0 : 32 }}
-              className="w-6 h-6 bg-white rounded-full shadow-lg group-hover:scale-110 transition-transform"
+              className="w-6 h-6 bg-indigo-500 rounded-full shadow-lg group-hover:scale-110 transition-transform"
             />
           </button>
-          <span className={cn("text-[10px] md:text-xs font-black uppercase tracking-[0.2em] transition-colors", billingCycle === "yearly" ? "text-slate-900" : "text-slate-400")}>
-            Yearly <span className="text-emerald-500 ml-2 bg-emerald-50 px-2.5 py-1 rounded-lg text-[9px] font-black border border-emerald-100">-20% OFF</span>
+          <span className={cn("text-[10px] md:text-xs font-black uppercase tracking-[0.2em] transition-colors", billingCycle === "yearly" ? "text-white" : "text-slate-500")}>
+            Yearly <span className="text-emerald-400 ml-2 bg-emerald-500/10 px-2.5 py-1 rounded-lg text-[9px] font-black border border-emerald-500/20">-20% OFF</span>
           </span>
         </div>
       </div>
@@ -305,11 +298,11 @@ export default function Subscription() {
             >
               <Card 
                 className={cn(
-                  "h-full flex flex-col relative overflow-hidden border-2 transition-all duration-700 rounded-[3rem] bg-white group",
+                  "h-full flex flex-col relative overflow-hidden border transition-all duration-700 rounded-[3rem] bg-slate-950/45 backdrop-blur-2xl group",
                   plan.popular 
-                    ? "border-indigo-600 shadow-[0_30px_60px_-15px_rgba(79,70,229,0.25)]" 
-                    : "border-slate-100 hover:border-indigo-200 shadow-xl shadow-slate-200/50",
-                  isCurrent && "border-emerald-500/80 shadow-[0_30px_60px_-15px_rgba(16,185,129,0.15)]"
+                    ? "border-indigo-500/60 shadow-glow" 
+                    : "border-white/5 hover:border-indigo-500/20 shadow-2xl shadow-black/40",
+                  isCurrent && "border-emerald-500/80 shadow-[0_0_30px_rgba(16,185,129,0.2)]"
                 )}
               >
                 {plan.popular && !isCurrent && (
@@ -329,21 +322,21 @@ export default function Subscription() {
                   
                   <div className={cn(
                     "w-12 h-12 rounded-2xl flex items-center justify-center mb-8 shadow-xl transition-transform group-hover:rotate-12",
-                    isCurrent ? "bg-emerald-500 text-white" :
-                    plan.color === "indigo" ? "bg-slate-950 text-white" : 
-                    plan.color === "amber" ? "bg-amber-100 text-amber-600" : "bg-slate-50 text-slate-400"
+                    isCurrent ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" :
+                    plan.color === "indigo" ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30" : 
+                    plan.color === "amber" ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "bg-slate-800 text-slate-400"
                   )}>
                     <plan.icon size={24} strokeWidth={2.5} />
                   </div>
                   
-                  <h3 className="text-2xl font-black text-slate-900 mb-2 italic tracking-tight">{plan.name}</h3>
+                  <h3 className="text-2xl font-black text-white mb-2 italic tracking-tight">{plan.name}</h3>
                   <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter">
+                    <span className="text-3xl md:text-4xl font-black text-white tracking-tighter">
                       {formatPrice(plan)}
                     </span>
                     {plan.price !== "Free" && <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">{plan.period}</span>}
                   </div>
-                  <p className="text-slate-500 text-xs font-medium mb-10 leading-relaxed opacity-80">{plan.description}</p>
+                  <p className="text-slate-400 text-xs font-medium mb-10 leading-relaxed opacity-80">{plan.description}</p>
                   
                   <div className="space-y-4 mb-12 flex-1">
                     {plan.features.map((feature) => (
@@ -351,7 +344,7 @@ export default function Subscription() {
                         <div className={cn("mt-1 rounded-full p-1 shadow-sm shrink-0 group-hover/item:scale-125 transition-transform", isCurrent ? "bg-emerald-500" : "bg-emerald-500")}>
                           <Check size={8} className="text-white" strokeWidth={5} />
                         </div>
-                        <span className="text-xs text-slate-700 font-bold leading-tight group-hover/item:text-slate-950 transition-colors uppercase tracking-tight">{feature}</span>
+                        <span className="text-xs text-slate-300 font-bold leading-tight group-hover/item:text-white transition-colors uppercase tracking-tight">{feature}</span>
                       </div>
                     ))}
                   </div>
@@ -362,10 +355,10 @@ export default function Subscription() {
                     className={cn(
                       "w-full h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-300 shadow-2xl active:scale-95",
                       isCurrent
-                        ? "bg-slate-100 hover:bg-slate-100 text-slate-400 shadow-none border border-slate-200 cursor-not-allowed"
+                        ? "bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed"
                         : plan.popular 
-                          ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200" 
-                          : "bg-slate-900 hover:bg-black text-white"
+                          ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-glow" 
+                          : "bg-white hover:bg-slate-100 text-slate-950"
                     )}
                   >
                     {isCurrent ? "Active Plan" : plan.buttonText}
@@ -375,48 +368,46 @@ export default function Subscription() {
             </motion.div>
           );
         })}
-      </div>
-
-      {/* Detailed Comparison Table - Ultra Clean App Look */}
+      </div>      {/* Detailed Comparison Table - Ultra Clean App Look */}
       <div className="mt-24 md:mt-36 relative">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-black text-slate-900 italic tracking-tight mb-4">Deep Comparison</h2>
-          <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">Every detail matters for your mastery</p>
+          <h2 className="text-3xl font-black text-white italic tracking-tight mb-4">Deep Comparison</h2>
+          <p className="text-slate-500 font-black text-[10px] uppercase tracking-[0.2em]">Every detail matters for your mastery</p>
         </div>
 
-        <div className="bg-white rounded-[3rem] border border-slate-100 shadow-3xl overflow-hidden relative">
+        <div className="glass-card rounded-[3rem] shadow-2xl overflow-hidden relative">
           <div className="overflow-x-auto scrollbar-hide px-4 md:px-0">
             <table className="w-full text-left border-collapse min-w-[700px] md:min-w-full">
               <thead>
-                <tr className="bg-slate-50/50">
-                  <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-slate-100">Feature</th>
-                  <th className="p-8 text-xl font-black italic text-slate-900 border-b border-slate-100">Basic</th>
-                  <th className="p-8 text-xl font-black italic text-indigo-600 border-b border-slate-100 relative">
+                <tr className="bg-white/5">
+                  <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-white/5">Feature</th>
+                  <th className="p-8 text-xl font-black italic text-white border-b border-white/5">Basic</th>
+                  <th className="p-8 text-xl font-black italic text-indigo-400 border-b border-white/5 relative">
                     Plus
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600" />
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-500" />
                   </th>
-                  <th className="p-8 text-xl font-black italic text-amber-600 border-b border-slate-100">Premium</th>
+                  <th className="p-8 text-xl font-black italic text-amber-400 border-b border-white/5">Premium</th>
                 </tr>
               </thead>
               <tbody>
                 {comparisonData.map((row, i) => (
-                  <tr key={i} className="group hover:bg-slate-50/30 transition-colors">
-                    <td className="p-8 border-b border-slate-50">
-                      <span className="text-xs md:text-sm font-black text-slate-950 uppercase tracking-tight">{row.category}</span>
+                  <tr key={i} className="group hover:bg-white/5 transition-colors">
+                    <td className="p-8 border-b border-white/5">
+                      <span className="text-xs md:text-sm font-black text-white uppercase tracking-tight">{row.category}</span>
                     </td>
-                    <td className="p-8 border-b border-slate-50">
-                      <div className="text-xs md:text-sm text-slate-500 font-medium flex items-center gap-2">
+                    <td className="p-8 border-b border-white/5">
+                      <div className="text-xs md:text-sm text-slate-400 font-medium flex items-center gap-2">
                         {row.basic}
                       </div>
                     </td>
-                    <td className="p-8 border-b border-slate-50 bg-indigo-50/10">
-                      <div className="text-xs md:text-sm text-indigo-900 font-bold flex items-center gap-2">
+                    <td className="p-8 border-b border-white/5 bg-indigo-500/5">
+                      <div className="text-xs md:text-sm text-indigo-200 font-bold flex items-center gap-2">
                         {row.plus}
                       </div>
                     </td>
-                    <td className="p-8 border-b border-slate-50 bg-amber-50/10">
-                      <div className="text-xs md:text-sm text-slate-900 font-black flex items-center gap-2">
-                         <Crown size={12} className="text-amber-500 shrink-0" /> {row.premium}
+                    <td className="p-8 border-b border-white/5 bg-amber-500/5">
+                      <div className="text-xs md:text-sm text-amber-200 font-black flex items-center gap-2">
+                         <Crown size={12} className="text-amber-400 shrink-0" /> {row.premium}
                       </div>
                     </td>
                   </tr>
@@ -425,16 +416,14 @@ export default function Subscription() {
             </table>
           </div>
           {/* Mobile Swipe Hint */}
-          <div className="md:hidden p-4 bg-slate-50 text-center border-t border-slate-100">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center justify-center gap-3">
+          <div className="md:hidden p-4 bg-slate-950 text-center border-t border-white/5">
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center justify-center gap-3">
               <ArrowRight size={12} /> Swipe left to see full details <ArrowRight size={12} />
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Trust Badges - Modern Layout */}
-      <div className="mt-24 md:mt-40 grid grid-cols-2 lg:grid-cols-4 gap-12 border-t border-slate-100 pt-20">
+      </div>iv      {/* Trust Badges - Modern Layout */}
+      <div className="mt-24 md:mt-40 grid grid-cols-2 lg:grid-cols-4 gap-12 border-t border-white/5 pt-20">
         {[
           { icon: Shield, title: "Guaranteed", desc: "Stripe Secured" },
           { icon: Zap, title: "Instant Access", desc: "Unlock now" },
@@ -442,11 +431,11 @@ export default function Subscription() {
           { icon: Crown, title: "No Commits", desc: "Cancel anytime" },
         ].map((badge, i) => (
           <div key={i} className="flex flex-col items-center text-center gap-5 group">
-            <div className="w-16 h-16 rounded-[2rem] bg-slate-50 flex items-center justify-center text-indigo-600 transition-all group-hover:scale-110 group-hover:bg-indigo-50 shadow-sm border border-slate-100/50">
+            <div className="w-16 h-16 rounded-[2rem] bg-slate-900/60 border border-white/5 flex items-center justify-center text-indigo-400 transition-all group-hover:scale-110 group-hover:bg-indigo-500/20 shadow-sm">
               <badge.icon size={28} strokeWidth={2.5} />
             </div>
             <div>
-              <h4 className="font-black text-slate-950 italic tracking-tight text-base mb-1">{badge.title}</h4>
+              <h4 className="font-black text-white italic tracking-tight text-base mb-1">{badge.title}</h4>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{badge.desc}</p>
             </div>
           </div>
@@ -472,13 +461,13 @@ export default function Subscription() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: "spring", duration: 0.5 }}
-              className="bg-white rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border border-slate-100 w-full max-w-xl overflow-hidden relative z-10"
+              className="bg-slate-950 rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/10 w-full max-w-xl overflow-hidden relative z-10"
             >
               {/* Close Button */}
               {(!processingPayment && !paymentSuccess) && (
                 <button 
                   onClick={() => setIsModalOpen(false)}
-                  className="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors z-20"
+                  className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors z-20"
                 >
                   <X size={18} strokeWidth={2.5} />
                 </button>
@@ -491,34 +480,34 @@ export default function Subscription() {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", damping: 12, delay: 0.1 }}
-                    className="w-24 h-24 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 mb-8 border border-emerald-100"
+                    className="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-8 border border-emerald-500/30"
                   >
                     <Check size={48} strokeWidth={4} className="animate-pulse" />
                   </motion.div>
 
-                  <h3 className="text-3xl font-black text-slate-900 italic tracking-tight mb-4">Payment Approved!</h3>
-                  <p className="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-8 bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-100/50 text-emerald-700">
+                  <h3 className="text-3xl font-black text-white italic tracking-tight mb-4">Payment Approved!</h3>
+                  <p className="text-slate-300 text-sm font-semibold uppercase tracking-wider mb-8 bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20 text-emerald-300">
                     Welcome to Immersio {selectedPlan.name}
                   </p>
                   
-                  <div className="w-full bg-slate-50 rounded-3xl p-6 border border-slate-100 text-left mb-8 space-y-3">
+                  <div className="w-full bg-slate-900/60 rounded-3xl p-6 border border-white/5 text-left mb-8 space-y-3">
                     <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
                       <span>Subscribed Tier</span>
-                      <span className="text-slate-900 font-extrabold">{selectedPlan.name}</span>
+                      <span className="text-white font-extrabold">{selectedPlan.name}</span>
                     </div>
                     <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
                       <span>Billing Frequency</span>
-                      <span className="text-slate-900 font-extrabold capitalize">{billingCycle}</span>
+                      <span className="text-white font-extrabold capitalize">{billingCycle}</span>
                     </div>
-                    <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-wider border-t border-slate-200 pt-3">
+                    <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-wider border-t border-white/5 pt-3">
                       <span>Charged Amount</span>
-                      <span className="text-indigo-600 font-black">{formatPrice(selectedPlan)}</span>
+                      <span className="text-indigo-400 font-black">{formatPrice(selectedPlan)}</span>
                     </div>
                   </div>
 
                   <Button 
                     onClick={() => setIsModalOpen(false)}
-                    className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-xl shadow-indigo-100"
+                    className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-glow"
                   >
                     Start Learning Now
                   </Button>
@@ -527,8 +516,8 @@ export default function Subscription() {
                 /* Checkout Form Screen */
                 <form onSubmit={handlePaymentSubmit} className="p-8 md:p-10 flex flex-col gap-6">
                   <div>
-                    <h3 className="text-2xl font-black text-slate-900 italic tracking-tight leading-none mb-2">Upgrade to {selectedPlan.name}</h3>
-                    <p className="text-slate-400 text-xs font-medium">Billed {billingCycle} at <span className="text-indigo-600 font-bold">{formatPrice(selectedPlan)}</span></p>
+                    <h3 className="text-2xl font-black text-white italic tracking-tight leading-none mb-2">Upgrade to {selectedPlan.name}</h3>
+                    <p className="text-slate-400 text-xs font-medium">Billed {billingCycle} at <span className="text-indigo-400 font-bold">{formatPrice(selectedPlan)}</span></p>
                   </div>
 
                   {/* Simulated Debit Card - Super Sleek Glassmorphism */}
@@ -566,7 +555,7 @@ export default function Subscription() {
                   </div>
 
                   {errorMessage && (
-                    <div className="bg-red-50 text-red-500 border border-red-100 text-xs font-bold px-5 py-3 rounded-2xl leading-relaxed">
+                    <div className="bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-bold px-5 py-3 rounded-2xl leading-relaxed">
                       {errorMessage}
                     </div>
                   )}
@@ -582,7 +571,7 @@ export default function Subscription() {
                         value={cardName}
                         onChange={(e) => setCardName(e.target.value.toUpperCase())}
                         disabled={processingPayment}
-                        className="h-12 px-4 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-600 transition-colors text-sm font-semibold uppercase tracking-wider text-slate-800 disabled:bg-slate-50"
+                        className="h-12 px-4 rounded-xl border border-white/10 bg-slate-900/60 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-semibold uppercase tracking-wider text-white disabled:bg-slate-950/80 placeholder:text-slate-600"
                       />
                     </div>
 
@@ -600,7 +589,7 @@ export default function Subscription() {
                             setCardNumber(val);
                           }}
                           disabled={processingPayment}
-                          className="h-12 pl-12 pr-4 w-full rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-600 transition-colors text-sm font-bold font-mono text-slate-800 disabled:bg-slate-50"
+                          className="h-12 pl-12 pr-4 w-full rounded-xl border border-white/10 bg-slate-900/60 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-bold font-mono text-white disabled:bg-slate-950/80 placeholder:text-slate-600"
                         />
                         <CreditCard size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                       </div>
@@ -623,7 +612,7 @@ export default function Subscription() {
                             setCardExpiry(val);
                           }}
                           disabled={processingPayment}
-                          className="h-12 px-4 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-600 transition-colors text-sm font-bold font-mono text-slate-800 disabled:bg-slate-50"
+                          className="h-12 px-4 rounded-xl border border-white/10 bg-slate-900/60 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-bold font-mono text-white disabled:bg-slate-950/80 placeholder:text-slate-600"
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
@@ -639,7 +628,7 @@ export default function Subscription() {
                             setCardCvc(val);
                           }}
                           disabled={processingPayment}
-                          className="h-12 px-4 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-600 transition-colors text-sm font-bold font-mono text-slate-800 disabled:bg-slate-50"
+                          className="h-12 px-4 rounded-xl border border-white/10 bg-slate-900/60 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-bold font-mono text-white disabled:bg-slate-950/80 placeholder:text-slate-600"
                         />
                       </div>
                     </div>
@@ -648,7 +637,7 @@ export default function Subscription() {
                   <Button 
                     type="submit"
                     disabled={processingPayment}
-                    className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-xl shadow-indigo-100 flex items-center justify-center gap-2 mt-4"
+                    className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-glow flex items-center justify-center gap-2 mt-4"
                   >
                     {processingPayment ? (
                       <>

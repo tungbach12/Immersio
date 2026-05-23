@@ -59,10 +59,10 @@ export default function Profile() {
   };
 
   const menuItems = [
-    { icon: Bell, label: "Notifications", color: "text-blue-500", bg: "bg-blue-50" },
-    { icon: Shield, label: "Privacy & Security", color: "text-emerald-500", bg: "bg-emerald-50" },
-    { icon: CreditCard, label: "Subscription", color: "text-purple-500", bg: "bg-purple-50", path: "/student/subscription" },
-    { icon: HelpCircle, label: "Help Center", color: "text-amber-500", bg: "bg-amber-50" },
+    { icon: Bell, label: "Notifications", color: "text-blue-400", bg: "bg-blue-500/10 border border-blue-500/20" },
+    { icon: Shield, label: "Privacy & Security", color: "text-emerald-400", bg: "bg-emerald-500/10 border border-emerald-500/20" },
+    { icon: CreditCard, label: "Subscription", color: "text-purple-400", bg: "bg-purple-500/10 border border-purple-500/20", path: "/student/subscription" },
+    { icon: HelpCircle, label: "Help Center", color: "text-amber-400", bg: "bg-amber-500/10 border border-amber-500/20" },
   ];
 
   return (
@@ -77,33 +77,33 @@ export default function Profile() {
              animate={{ scale: 1, opacity: 1 }}
              className="absolute -inset-4 bg-gradient-vibrant opacity-30 blur-3xl rounded-full group-hover:opacity-50 transition-opacity duration-1000" 
            />
-          <div className="relative w-36 h-36 rounded-[3.5rem] bg-slate-950 flex items-center justify-center text-white text-5xl font-black shadow-3xl border-[6px] border-white overflow-hidden">
+          <div className="relative w-36 h-36 rounded-[3.5rem] bg-slate-950 flex items-center justify-center text-white text-5xl font-black shadow-3xl border-[6px] border-white/10 overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-blue-700 to-slate-900 opacity-90" />
               <span className="relative z-10 italic tracking-tighter">
                 {user ? getInitials(user.username) : "—"}
               </span>
           </div>
-          <button className="absolute bottom-1 right-1 w-12 h-12 bg-white rounded-2xl shadow-2xl flex items-center justify-center text-slate-950 border border-slate-100 hover:bg-slate-50 hover:text-indigo-600 transition-all active:scale-90 z-20">
+          <button className="absolute bottom-1 right-1 w-12 h-12 bg-slate-900/80 rounded-2xl shadow-2xl flex items-center justify-center text-white border border-white/10 hover:bg-indigo-650 hover:text-indigo-200 transition-all active:scale-90 z-20 backdrop-blur-md">
             <Camera size={22} strokeWidth={2.5} />
           </button>
         </div>
 
         <div className="relative z-10">
-      <motion.h1 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-4xl font-display font-black text-slate-950 italic tracking-tight leading-tight"
-            >
-              {user ? user.username : "—"}
-            </motion.h1>
+          <motion.h1 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl font-display font-black text-white italic tracking-tight leading-tight"
+          >
+            {user ? user.username : "—"}
+          </motion.h1>
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="flex items-center gap-2 mt-4 px-4 py-1.5 bg-white border border-slate-100 rounded-full shadow-sm mx-auto w-fit"
+            className="flex items-center gap-2 mt-4 px-4 py-1.5 bg-slate-900/40 border border-white/5 rounded-full shadow-lg mx-auto w-fit backdrop-blur-md"
           >
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <p className="text-slate-400 font-black text-[9px] uppercase tracking-[0.2em]">
+            <p className="text-slate-300 font-black text-[9px] uppercase tracking-[0.2em]">
               {user ? user.email : "Elite Member since Jan 2024"}
             </p>
           </motion.div>
@@ -117,8 +117,8 @@ export default function Profile() {
             icon: Zap,
             label: "Streak",
             value: String(user?.streakCount ?? 0),
-            color: "text-orange-500",
-            bg: "bg-orange-50/50",
+            color: "text-orange-400",
+            bg: "bg-orange-500/10 border border-orange-500/20",
           },
           {
             icon: Award,
@@ -128,15 +128,15 @@ export default function Profile() {
                 ? `${(user.experiencePoints / 1000).toFixed(1)}k`
                 : String(user.experiencePoints)
               : "0",
-            color: "text-indigo-600",
-            bg: "bg-indigo-50/50",
+            color: "text-indigo-400",
+            bg: "bg-indigo-500/10 border border-indigo-500/20",
           },
           {
             icon: Clock,
             label: "Hours",
             value: Math.round(user?.learningHours ?? 0).toString(),
-            color: "text-emerald-500",
-            bg: "bg-emerald-50/50",
+            color: "text-emerald-400",
+            bg: "bg-emerald-500/10 border border-emerald-500/20",
           },
         ].map((stat, i) => (
           <motion.div 
@@ -144,13 +144,13 @@ export default function Profile() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 + i * 0.1 }}
-            className="glass-card rounded-[2rem] p-5 flex flex-col items-center justify-center gap-2 border-white shadow-xl shadow-slate-200/20 relative z-10 overflow-hidden group hover:scale-105 transition-transform"
+            className="glass-card rounded-[2rem] p-5 flex flex-col items-center justify-center gap-2 shadow-2xl relative z-10 overflow-hidden group hover:scale-105 transition-transform"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-slate-50/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:rotate-12", stat.bg, stat.color)}>
                <stat.icon size={18} strokeWidth={3} />
             </div>
-            <span className="text-2xl font-black text-slate-950 italic tracking-tighter mt-1">{stat.value}</span>
+            <span className="text-2xl font-black text-white italic tracking-tighter mt-1">{stat.value}</span>
             <span className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-400">{stat.label}</span>
           </motion.div>
         ))}
@@ -199,24 +199,24 @@ export default function Profile() {
            <Settings size={14} className="text-slate-400" />
            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Account Ecosystem</h2>
         </div>
-        <div className="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-2xl shadow-slate-200/20 relative z-10">
+        <div className="glass-card rounded-[2.5rem] overflow-hidden relative z-10">
           {menuItems.map((item, i) => (
             <Link 
               to={item.path || "#"} 
               key={i} 
               className={cn(
-                "flex items-center justify-between px-8 py-7 hover:bg-slate-50/50 transition-all group",
-                i !== menuItems.length - 1 && "border-b border-slate-50"
+                "flex items-center justify-between px-8 py-7 hover:bg-white/5 transition-all group",
+                i !== menuItems.length - 1 && "border-b border-white/5"
               )}
             >
               <div className="flex items-center gap-5">
                 <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110", item.bg, item.color)}>
                   <item.icon size={20} strokeWidth={2.5} />
                 </div>
-                <span className="font-black text-slate-950 text-base tracking-tight">{item.label}</span>
+                <span className="font-black text-white text-base tracking-tight">{item.label}</span>
               </div>
-              <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:translate-x-1 transition-transform group-hover:bg-indigo-50">
-                <ChevronRight size={18} className="text-slate-300 group-hover:text-indigo-600 transition-colors" />
+              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:translate-x-1 transition-transform group-hover:bg-indigo-500/20">
+                <ChevronRight size={18} className="text-slate-300 group-hover:text-indigo-400 transition-colors" />
               </div>
             </Link>
           ))}
@@ -228,12 +228,12 @@ export default function Profile() {
         <Button 
           onClick={handleSignOut}
           variant="ghost" 
-          className="w-full h-16 rounded-[2rem] text-red-500 hover:bg-red-50 hover:text-red-600 font-black uppercase tracking-widest text-[10px] gap-2 border border-transparent hover:border-red-100 transition-all"
+          className="w-full h-16 rounded-[2rem] text-red-400 hover:bg-red-500/10 hover:text-red-300 font-black uppercase tracking-widest text-[10px] gap-2 border border-transparent hover:border-red-500/20 transition-all"
         >
           <LogOut size={18} strokeWidth={3} />
           Sign Out Forever
         </Button>
-        <p className="text-center text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-6">Version 2.0.4 Premium</p>
+        <p className="text-center text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-6">Version 2.0.4 Premium</p>
       </div>
     </div>
   );

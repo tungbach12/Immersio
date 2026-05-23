@@ -24,25 +24,27 @@
   --color-warning: #f59e0b;
   --color-destructive: #ef4444;
 
-  --color-background: #f8fafc;
-  --color-surface: #ffffff;
-  --color-surface-hover: #f1f5f9;
+  --color-background: #030712; /* slate-950 */
+  --color-surface: #0b0f19; /* dark blue-slate */
+  --color-surface-hover: #1e293b; /* slate-800 */
+  --color-card: #0b0f19;
+  --color-card-foreground: #f8fafc;
   
   --radius-xl: 1.25rem;
   --radius-2xl: 1.75rem;
   --radius-3xl: 2.5rem;
 
   /* Custom Shadow Intensity */
-  --shadow-premium: 0 20px 50px -12px rgba(0, 0, 0, 0.08);
-  --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.15);
+  --shadow-premium: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.35);
 }
 
 /* Custom Utilities for Glassmorphism */
 .glass {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(11, 15, 25, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: var(--shadow-premium);
 }
 
@@ -55,18 +57,18 @@
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(15, 23, 42, 0.45);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
-  border-color: rgba(99, 102, 241, 0.1);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+  border-color: rgba(99, 102, 241, 0.25);
 }
 
 /* Hide scrollbar utility */
@@ -135,7 +137,7 @@ input[type="range"].modern-slider:focus::-webkit-slider-runnable-track {
 body {
   font-family: var(--font-body);
   background-color: var(--color-background);
-  color: #1e293b;
+  color: #f8fafc;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -165,7 +167,7 @@ h1, h2, h3, h4, h5, h6 {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   }
   .bg-gradient-soft {
-    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+    background: linear-gradient(135deg, #090d16 0%, #030712 100%);
   }
 
   .accent-glow {

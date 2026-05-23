@@ -134,9 +134,9 @@ export default function StudentDashboard() {
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-black text-slate-900 italic tracking-tight leading-tight">
+            <h1 className="text-2xl md:text-3xl font-display font-black text-slate-100 italic tracking-tight leading-tight">
               Hello,{" "}
-              <span className="text-indigo-600">
+              <span className="text-indigo-400">
                 {user?.username ?? "Learner"}!
               </span>{" "}
               👋
@@ -147,10 +147,10 @@ export default function StudentDashboard() {
           </div>
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-2xl border border-slate-100 shadow-sm"
+            className="flex items-center gap-2 bg-white/5 px-4 py-2.5 rounded-2xl border border-white/5 shadow-sm"
           >
             <Flame className="text-orange-500 fill-orange-500" size={18} />
-            <span className="font-black text-slate-950 text-sm">{streak}</span>
+            <span className="font-black text-white text-sm">{streak}</span>
           </motion.div>
         </div>
       </div>
@@ -242,10 +242,10 @@ export default function StudentDashboard() {
             <Target size={24} strokeWidth={2.5} />
           </div>
           <div>
-            <h3 className="text-2xl font-black text-slate-950 tracking-tighter italic">
+            <h3 className="text-2xl font-black text-slate-100 tracking-tighter italic">
               {formatExp(exp)}
             </h3>
-            <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mt-0.5">
+            <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mt-0.5">
               Experience
             </p>
           </div>
@@ -256,10 +256,10 @@ export default function StudentDashboard() {
             <BookOpen size={24} strokeWidth={2.5} />
           </div>
           <div>
-            <h3 className="text-2xl font-black text-slate-950 tracking-tighter italic">
+            <h3 className="text-2xl font-black text-slate-100 tracking-tighter italic">
               {Math.round(hours)}h
             </h3>
-            <p className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mt-0.5">
+            <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mt-0.5">
               Learning
             </p>
           </div>
@@ -276,14 +276,14 @@ export default function StudentDashboard() {
             transition={{ type: "spring", damping: 30, stiffness: 250 }}
             className="overflow-hidden"
           >
-            <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 space-y-6 shadow-xl shadow-slate-200/30">
+            <div className="bg-slate-900/60 border border-white/5 rounded-[2.5rem] p-8 space-y-6 shadow-xl shadow-black/30 backdrop-blur-2xl">
               {/* Header */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-slate-950 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center border border-white/5">
                   <Brain size={18} className="text-indigo-400" />
                 </div>
                 <div>
-                  <h3 className="font-black text-slate-950 text-lg tracking-tight italic">
+                  <h3 className="font-black text-slate-100 text-lg tracking-tight italic">
                     CEFR Analysis
                   </h3>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em]">
@@ -291,7 +291,7 @@ export default function StudentDashboard() {
                   </p>
                 </div>
                 <div className="ml-auto text-right">
-                  <span className="text-3xl font-black text-slate-950 italic tracking-tighter">
+                  <span className="text-3xl font-black text-slate-100 italic tracking-tighter">
                     {cefrData.overallScore}
                   </span>
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
@@ -307,21 +307,21 @@ export default function StudentDashboard() {
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
                         {i === 0 ? (
-                          <Monitor size={13} className="text-indigo-500" />
+                          <Monitor size={13} className="text-indigo-400" />
                         ) : i === 1 ? (
-                          <Mic size={13} className="text-emerald-500" />
+                          <Mic size={13} className="text-emerald-400" />
                         ) : (
-                          <BookOpen size={13} className="text-amber-500" />
+                          <BookOpen size={13} className="text-amber-400" />
                         )}
-                        <span className="text-[11px] font-black text-slate-700 uppercase tracking-widest">
+                        <span className="text-[11px] font-black text-slate-300 uppercase tracking-widest">
                           {skill.name}
                         </span>
                       </div>
-                      <span className="text-sm font-black text-slate-950 italic">
+                      <span className="text-sm font-black text-slate-100 italic">
                         {skill.score}%
                       </span>
                     </div>
-                    <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100 p-0.5">
+                    <div className="h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5 p-0.5">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${skill.score}%` }}
@@ -349,14 +349,14 @@ export default function StudentDashboard() {
 
               {/* Study Suggestions */}
               {cefrData.suggestions.length > 0 && (
-                <div className="bg-slate-50 rounded-2xl p-5 space-y-2 border border-slate-100">
+                <div className="bg-white/5 rounded-2xl p-5 space-y-2 border border-white/5">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3">
                     💡 Study Suggestions
                   </p>
                   {cefrData.suggestions.map((s, i) => (
                     <div key={i} className="flex items-start gap-2.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0 mt-1.5" />
-                      <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0 mt-1.5" />
+                      <p className="text-xs text-slate-300 font-medium leading-relaxed">
                         {s}
                       </p>
                     </div>
@@ -365,7 +365,7 @@ export default function StudentDashboard() {
               )}
 
               <Link to="/student/practice">
-                <Button className="w-full h-12 rounded-2xl bg-slate-950 hover:bg-slate-800 text-white font-black uppercase tracking-widest text-[10px] gap-2 transition-transform active:scale-95">
+                <Button className="w-full h-12 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-black uppercase tracking-widest text-[10px] border border-white/10 gap-2 transition-transform active:scale-95">
                   <Zap size={14} className="text-indigo-400" />
                   Practice Now to Level Up
                   <ArrowRight size={13} />
@@ -376,28 +376,26 @@ export default function StudentDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Active Scenario */}
+          {/* Active Scenario */}
       <section>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-black text-slate-900 italic tracking-tight">
+          <h2 className="text-lg font-black text-slate-100 italic tracking-tight">
             Active Lesson
           </h2>
           <Link
             to="/student/scenarios"
-            className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline"
+            className="text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:underline hover:text-indigo-300 transition-colors"
           >
             View All
           </Link>
         </div>
         <Link
-          to={`/student/scenarios/${featuredScenario.id}?mode=${
-            featuredScenario.modes.includes("2d") ? "2d" : "ar"
-          }`}
+          to={`/student/scenarios/${featuredScenario.id}`}
           className="block"
         >
-          <Card className="group border-slate-100 rounded-[2.5rem] shadow-lg shadow-slate-200/50 hover:shadow-2xl transition-all cursor-pointer overflow-hidden bg-white">
+          <Card className="group border-white/5 rounded-[2.5rem] shadow-lg shadow-black/30 hover:shadow-2xl transition-all cursor-pointer overflow-hidden bg-slate-900/60 backdrop-blur-xl">
             <div className="flex flex-col lg:flex-row">
-              <div className="w-full lg:w-56 h-44 lg:h-auto bg-slate-100 relative overflow-hidden">
+              <div className="w-full lg:w-56 h-44 lg:h-auto bg-slate-800 relative overflow-hidden">
                 <img
                   src={featuredScenario.image}
                   alt="Scenario"
@@ -405,14 +403,14 @@ export default function StudentDashboard() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                 <div className="absolute bottom-4 left-4">
-                  <span className="px-3 py-1 rounded-lg bg-white/20 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest border border-white/20">
+                  <span className="px-3 py-1 rounded-lg bg-black/40 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest border border-white/10">
                     {featuredScenario.language}
                   </span>
                 </div>
               </div>
               <div className="flex-1 p-8 lg:p-10 flex flex-col justify-center">
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase tracking-[0.2em] border border-indigo-100/50">
+                  <span className="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 text-[9px] font-black uppercase tracking-[0.2em] border border-indigo-500/20">
                     {featuredScenario.category}
                   </span>
                   <span className="text-slate-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5">
@@ -420,7 +418,7 @@ export default function StudentDashboard() {
                     15 min left
                   </span>
                 </div>
-                <h3 className="text-2xl font-black text-slate-950 mb-6 tracking-tight leading-tight group-hover:text-indigo-600 transition-colors">
+                <h3 className="text-2xl font-black text-slate-100 mb-6 tracking-tight leading-tight group-hover:text-indigo-400 transition-colors">
                   {featuredScenario.title}
                 </h3>
 
@@ -429,11 +427,11 @@ export default function StudentDashboard() {
                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                       Progress
                     </span>
-                    <span className="text-sm font-black text-indigo-600 italic">
+                    <span className="text-sm font-black text-indigo-400 italic">
                       65%
                     </span>
                   </div>
-                  <div className="h-3 bg-slate-50 rounded-full overflow-hidden border border-slate-100 p-0.5">
+                  <div className="h-3 bg-white/5 rounded-full overflow-hidden border border-white/5 p-0.5">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: "65%" }}
@@ -443,10 +441,10 @@ export default function StudentDashboard() {
                   </div>
                 </div>
               </div>
-              <div className="p-6 lg:p-8 flex items-center justify-center bg-slate-50/30 border-t lg:border-t-0 lg:border-l border-slate-100">
+              <div className="p-6 lg:p-8 flex items-center justify-center bg-white/5 border-t lg:border-t-0 lg:border-l border-white/5">
                 <Button
                   size="icon"
-                  className="rounded-2xl w-14 h-14 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-100 group-hover:scale-110 transition-transform"
+                  className="rounded-2xl w-14 h-14 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-900/30 group-hover:scale-110 transition-transform"
                 >
                   <Play className="ml-1 fill-white" size={20} />
                 </Button>
@@ -459,12 +457,12 @@ export default function StudentDashboard() {
       {/* Recommendations */}
       <section>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-black text-slate-900 italic tracking-tight">
+          <h2 className="text-lg font-black text-slate-100 italic tracking-tight">
             Daily Picks
           </h2>
           <Button
             variant="ghost"
-            className="text-[10px] font-black text-slate-400 uppercase tracking-widest rounded-xl px-0 hover:bg-transparent hover:text-indigo-600"
+            className="text-[10px] font-black text-slate-400 uppercase tracking-widest rounded-xl px-0 hover:bg-transparent hover:text-indigo-400 transition-colors"
           >
             Refresh
           </Button>
@@ -472,35 +470,35 @@ export default function StudentDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {recommendedScenarios.map((scenario) => (
             <Link
-              to={`/student/scenarios/${scenario.id}?mode=2d`}
+              to={`/student/scenarios/${scenario.id}`}
               key={scenario.id}
               className="block group"
             >
-              <div className="glass-card rounded-[2.5rem] overflow-hidden bg-white h-full flex flex-col border border-slate-100 hover:border-indigo-100 transition-all duration-500">
-                <div className="h-48 bg-slate-100 relative overflow-hidden">
+              <div className="glass-card rounded-[2.5rem] overflow-hidden h-full flex flex-col border border-white/5 hover:border-indigo-500/20 transition-all duration-500">
+                <div className="h-48 bg-slate-800 relative overflow-hidden">
                   <img
                     src={scenario.image}
                     alt={scenario.title}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                   />
-                  <div className="absolute top-4 left-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-md text-indigo-600 text-[9px] font-black uppercase tracking-widest shadow-xl border border-white">
+                  <div className="absolute top-4 left-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md text-indigo-300 text-[9px] font-black uppercase tracking-widest shadow-xl border border-white/10">
                     {scenario.level}
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <div className="p-7 flex-1 flex flex-col">
                   <div className="flex justify-between items-start mb-3 gap-2">
-                    <h3 className="font-black text-lg text-slate-950 tracking-tight line-clamp-1 group-hover:text-indigo-600 transition-colors uppercase leading-none">
+                    <h3 className="font-black text-lg text-slate-100 tracking-tight line-clamp-1 group-hover:text-indigo-400 transition-colors uppercase leading-none">
                       {scenario.title}
                     </h3>
-                    <div className="flex items-center gap-1 text-amber-500 bg-amber-50 px-2 rounded-lg text-[9px] font-black border border-amber-100/30 flex-shrink-0">
+                    <div className="flex items-center gap-1 text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-lg text-[9px] font-black border border-amber-500/20 flex-shrink-0">
                       <Star size={10} fill="currentColor" /> {scenario.rating}
                     </div>
                   </div>
-                  <p className="text-slate-500 text-xs font-medium mb-6 line-clamp-2 flex-1 leading-relaxed">
+                  <p className="text-slate-400 text-xs font-medium mb-6 line-clamp-2 flex-1 leading-relaxed">
                     {scenario.description}
                   </p>
-                  <Button className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-[9px] h-12 shadow-lg shadow-indigo-50 transition-all group-hover:shadow-indigo-200">
+                  <Button className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-[9px] h-12 shadow-lg shadow-indigo-950/20 transition-all group-hover:shadow-indigo-500/10">
                     Continue
                   </Button>
                 </div>

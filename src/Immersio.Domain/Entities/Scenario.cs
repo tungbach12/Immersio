@@ -67,6 +67,34 @@ namespace Immersio.Domain.Entities
             Items.Add(new ScenarioItem(Id, name, price, imageUrl, icon));
         }
 
+        public void Update(
+            string title, 
+            string language, 
+            string level, 
+            string category, 
+            string description, 
+            double rating, 
+            string duration, 
+            string imageUrl, 
+            string contextPrompt, 
+            string initialMessage, 
+            string avatarUrl, 
+            bool isNavigation)
+        {
+            Title = title;
+            Language = language;
+            Level = level;
+            Category = category;
+            Description = description;
+            Rating = rating;
+            Duration = duration;
+            ImageUrl = imageUrl;
+            ContextPrompt = contextPrompt;
+            InitialMessage = initialMessage;
+            AvatarUrl = avatarUrl;
+            IsNavigation = isNavigation;
+        }
+
         public void Delete()
         {
             IsDeleted = true;

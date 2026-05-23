@@ -12,9 +12,10 @@ import Practice from "@/pages/student/Practice";
 import FlashcardsPage from "@/pages/student/FlashcardsPage";
 import Profile from "@/pages/student/Profile";
 import Subscription from "@/pages/student/Subscription";
-import Store from "@/pages/student/Store";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AITuning from "@/pages/admin/AITuning";
+import UsersManagement from "@/pages/admin/UsersManagement";
+import ScenarioBuilder from "@/pages/admin/ScenarioBuilder";
 
 export default function App() {
   return (
@@ -36,15 +37,14 @@ export default function App() {
           <Route path="flashcards/:deckId" element={<FlashcardsPage />} />
           <Route path="profile" element={<Profile />} />
           <Route path="subscription" element={<Subscription />} />
-          <Route path="store" element={<Store />} />
           <Route index element={<Navigate to="dashboard" replace />} />
         </Route>
 
         {/* Admin Routes */}
         <Route path="/admin" element={<AppLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="users" element={<div>Users Management</div>} />
-          <Route path="scenarios" element={<div>Scenario Builder</div>} />
+          <Route path="users" element={<UsersManagement />} />
+          <Route path="scenarios" element={<ScenarioBuilder />} />
           <Route path="ai-tuning" element={<AITuning />} />
           <Route index element={<Navigate to="dashboard" replace />} />
         </Route>

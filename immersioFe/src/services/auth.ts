@@ -62,7 +62,8 @@ export const authService = {
       throw new Error(err.detail || "Registration failed");
     }
 
-    const data: AuthResponse = await response.json();
+    const res = await response.json();
+    const data: AuthResponse = res.data;
     this.setSession(data.accessToken, data.refreshToken, data.user);
     return data;
   },
@@ -81,7 +82,8 @@ export const authService = {
       throw new Error(err.detail || "Login failed");
     }
 
-    const data: AuthResponse = await response.json();
+    const res = await response.json();
+    const data: AuthResponse = res.data;
     this.setSession(data.accessToken, data.refreshToken, data.user);
     return data;
   },
@@ -107,7 +109,8 @@ export const authService = {
       throw new Error("Session expired, please login again");
     }
 
-    const data: AuthResponse = await response.json();
+    const res = await response.json();
+    const data: AuthResponse = res.data;
     this.setSession(data.accessToken, data.refreshToken, data.user);
     return data.accessToken;
   },
@@ -159,6 +162,18 @@ export const authService = {
         window.location.href = "/login";
         throw refreshErr;
       }
+    }
+
+    // Intercept response.json() to unwrap success responses automatically
+    if (response.ok) {
+      const originalJson = response.json.bind(response);
+      response.json = async () => {
+        const jsonVal = await originalJson();
+        if (jsonVal && typeof jsonVal === "object" && jsonVal.success === true && "data" in jsonVal) {
+          return jsonVal.data;
+        }
+        return jsonVal;
+      };
     }
 
     return response;

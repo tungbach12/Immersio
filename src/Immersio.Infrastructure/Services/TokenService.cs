@@ -30,6 +30,7 @@ namespace Immersio.Infrastructure.Services
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(ClaimTypes.Email, user.Email),
                 new(ClaimTypes.Name, user.Username),
+                new(ClaimTypes.Role, user.Role),
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

@@ -23,7 +23,7 @@ export default function Practice() {
   const [selectedDeck, setSelectedDeck] = useState<Deck | null>(null);
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full bg-[#030712]">
       <AnimatePresence mode="wait">
         {view === "menu" && <MainMenu key="menu" onSelect={setView} />}
         {view === "decks" && <DeckSelection key="decks" onBack={() => setView("menu")} onSelectDeck={(deck) => { setSelectedDeck(deck); setView("cards"); }} />}
@@ -45,46 +45,46 @@ function MainMenu({ onSelect }: { onSelect: (view: ViewState) => void, key?: str
       className="px-5 md:px-6 py-8 pb-32 md:pb-10 flex flex-col gap-8 md:gap-10 max-w-2xl mx-auto"
     >
       <div className="flex items-center gap-5">
-        <div className="w-14 h-14 bg-slate-950 rounded-2xl flex items-center justify-center shrink-0 shadow-2xl relative group">
+        <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center shrink-0 shadow-2xl relative group border border-white/5">
            <div className="absolute inset-0 bg-indigo-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
            <Target className="w-7 h-7 text-indigo-400 relative z-10" />
         </div>
         <div>
-          <h1 className="text-3xl md:text-4xl font-display font-black text-slate-950 italic tracking-tight leading-tight uppercase">Skill <span className="text-indigo-600">Lab</span></h1>
+          <h1 className="text-3xl md:text-4xl font-display font-black text-white italic tracking-tight leading-tight uppercase">Skill <span className="text-indigo-500">Lab</span></h1>
           <p className="text-slate-400 font-bold text-[9px] uppercase tracking-[0.3em] mt-1">Sharpen your instincts</p>
         </div>
       </div>
 
       <div className="grid gap-5">
         <div
-          className="glass-card bg-white rounded-[2.2rem] p-7 md:p-10 flex items-center gap-5 md:gap-8 cursor-pointer group border border-slate-100 shadow-xl shadow-slate-200/20 hover:border-indigo-100"
+          className="glass-card bg-slate-900/40 backdrop-blur-md rounded-[2.2rem] p-7 md:p-10 flex items-center gap-5 md:gap-8 cursor-pointer group border border-white/5 shadow-2xl hover:border-indigo-500/30 hover:bg-slate-900/60 transition-all duration-300"
           onClick={() => navigate("/student/flashcards")}
         >
-          <div className="w-14 h-14 md:w-16 md:h-16 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500 border border-indigo-100/50">
-            <BookOpen className="w-7 h-7 md:w-8 md:h-8 text-indigo-600" />
+          <div className="w-14 h-14 md:w-16 md:h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500 border border-indigo-500/20">
+            <BookOpen className="w-7 h-7 md:w-8 md:h-8 text-indigo-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-black text-xl md:text-2xl text-slate-950 leading-tight tracking-tight uppercase group-hover:text-indigo-600 transition-colors">Smart Cards</h3>
+            <h3 className="font-black text-xl md:text-2xl text-slate-100 leading-tight tracking-tight uppercase group-hover:text-indigo-400 transition-colors">Smart Cards</h3>
             <p className="text-[11px] md:text-sm font-medium text-slate-400 mt-1 md:mt-2 leading-relaxed">Master vocabulary via adaptive drilling</p>
           </div>
-          <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center shrink-0 ml-auto group-hover:translate-x-1 transition-transform group-hover:bg-indigo-50">
-            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-indigo-600" />
+          <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 ml-auto group-hover:translate-x-1 transition-transform group-hover:bg-indigo-500/20 group-hover:text-indigo-300">
+            <ChevronRight className="w-5 h-5 text-slate-400" />
           </div>
         </div>
 
         <div
-          className="glass-card bg-white rounded-[2.2rem] p-7 md:p-10 flex items-center gap-5 md:gap-8 cursor-pointer group border border-slate-100 shadow-xl shadow-slate-200/20 hover:border-emerald-100"
+          className="glass-card bg-slate-900/40 backdrop-blur-md rounded-[2.2rem] p-7 md:p-10 flex items-center gap-5 md:gap-8 cursor-pointer group border border-white/5 shadow-2xl hover:border-emerald-500/30 hover:bg-slate-900/60 transition-all duration-300"
           onClick={() => onSelect("pronunciation")}
         >
-          <div className="w-14 h-14 md:w-16 md:h-16 bg-emerald-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500 border border-emerald-100/50">
-            <Mic className="w-7 h-7 md:w-8 md:h-8 text-emerald-600" />
+          <div className="w-14 h-14 md:w-16 md:h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500 border border-emerald-500/20">
+            <Mic className="w-7 h-7 md:w-8 md:h-8 text-emerald-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-black text-xl md:text-2xl text-slate-950 leading-tight tracking-tight uppercase group-hover:text-emerald-600 transition-colors">Vocal Lab</h3>
+            <h3 className="font-black text-xl md:text-2xl text-slate-100 leading-tight tracking-tight uppercase group-hover:text-emerald-400 transition-colors">Vocal Lab</h3>
             <p className="text-[11px] md:text-sm font-medium text-slate-400 mt-1 md:mt-2 leading-relaxed">AI-powered feedback for perfect accent mastery</p>
           </div>
-          <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center shrink-0 ml-auto group-hover:translate-x-1 transition-transform group-hover:bg-emerald-50">
-            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-600" />
+          <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 ml-auto group-hover:translate-x-1 transition-transform group-hover:bg-emerald-500/20 group-hover:text-emerald-300">
+            <ChevronRight className="w-5 h-5 text-slate-400" />
           </div>
         </div>
       </div>
@@ -105,44 +105,44 @@ function DeckSelection({ onBack, onSelectDeck }: { onBack: () => void, onSelectD
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
-      className="fixed inset-0 z-[100] bg-white flex flex-col pt-16 pb-28"
+      className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-xl flex flex-col pt-16 pb-28"
     >
-      <div className="h-24 bg-white/80 backdrop-blur-3xl border-b border-slate-100 flex items-center px-6 shrink-0 justify-between">
-        <button onClick={onBack} className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors">
+      <div className="h-24 bg-slate-950/40 backdrop-blur-md border-b border-white/5 flex items-center px-6 shrink-0 justify-between">
+        <button onClick={onBack} className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-300 hover:bg-white/10 hover:text-white transition-colors">
           <ChevronLeft className="w-6 h-6" />
         </button>
-        <h2 className="font-black text-slate-950 text-xl tracking-tight italic">Select Deck</h2>
+        <h2 className="font-black text-white text-xl tracking-tight italic">Select Deck</h2>
         <div className="w-12" />
       </div>
 
       <div className="flex-1 overflow-y-auto p-10 flex flex-col gap-6 max-w-2xl mx-auto w-full">
         <div className="mb-4">
           <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.3em]">Ready to Drill?</p>
-          <h3 className="text-2xl font-black text-slate-950 mt-1">Available Decks</h3>
+          <h3 className="text-2xl font-black text-white mt-1">Available Decks</h3>
         </div>
 
         {decks.map(deck => (
           <div
             key={deck.id}
-            className="glass-card bg-white rounded-[2.5rem] p-8 flex items-center gap-6 cursor-pointer group border border-slate-100 shadow-lg shadow-slate-100/50"
+            className="glass-card bg-slate-900/40 backdrop-blur-md rounded-[2.5rem] p-8 flex items-center gap-6 cursor-pointer group border border-white/5 shadow-2xl hover:border-indigo-500/30 hover:bg-slate-900/60 transition-all duration-300"
             onClick={() => onSelectDeck(deck)}
           >
-            <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <BookOpen className="w-7 h-7 text-indigo-600" />
+            <div className="w-14 h-14 bg-indigo-500/10 rounded-2xl flex items-center justify-center shrink-0 border border-indigo-500/20 group-hover:scale-110 transition-transform">
+              <BookOpen className="w-7 h-7 text-indigo-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-black text-xl text-slate-950 leading-tight">{deck.name}</h3>
+              <h3 className="font-black text-xl text-slate-100 leading-tight">{deck.name}</h3>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{deck.totalCards || 0} Cards ({deck.dueCardsCount || 0} Due)</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform group-hover:bg-indigo-500/20 group-hover:text-indigo-300">
               <ChevronRight className="w-5 h-5 text-slate-400" />
             </div>
           </div>
         ))}
 
         {decks.length === 0 && (
-          <div className="text-center py-20 bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
-            <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <div className="text-center py-20 bg-slate-900/20 rounded-[3rem] border border-dashed border-white/5">
+            <BookOpen className="w-12 h-12 text-slate-600 mx-auto mb-4" />
             <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">No decks found yet</p>
           </div>
         )}
@@ -226,8 +226,8 @@ function SmartCards({ deck, onBack }: { deck: Deck, onBack: () => void, key?: st
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center pt-16 pb-28">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center pt-16 pb-28">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
         <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest mt-4">Loading due cards...</p>
       </div>
     );
@@ -239,79 +239,79 @@ function SmartCards({ deck, onBack }: { deck: Deck, onBack: () => void, key?: st
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
-      className="fixed inset-0 z-[100] bg-white flex flex-col pt-16 pb-28 md:pb-0"
+      className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-xl flex flex-col pt-16 pb-28 md:pb-0"
     >
-      <div className="h-24 bg-white/80 backdrop-blur-3xl border-b border-slate-100 flex items-center px-6 shrink-0 justify-between">
-        <button onClick={onBack} className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors">
+      <div className="h-24 bg-slate-950/40 backdrop-blur-md border-b border-white/5 flex items-center px-6 shrink-0 justify-between">
+        <button onClick={onBack} className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-300 hover:bg-white/10 hover:text-white transition-colors">
           <ChevronLeft className="w-6 h-6" />
         </button>
         <div className="text-center">
-          <h2 className="font-black text-slate-950 text-xl tracking-tight italic">Smart Cards</h2>
+          <h2 className="font-black text-white text-xl tracking-tight italic">Smart Cards</h2>
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mt-0.5">Session Progress</p>
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center font-black text-indigo-600 text-sm">
+        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center font-black text-indigo-400 text-sm">
           {Math.min(currentIndex + 1, cardList.length)}
         </div>
       </div>
 
-      <div className="h-1.5 bg-slate-50 w-full shrink-0">
+      <div className="h-1.5 bg-white/5 w-full shrink-0">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
-          className="h-full bg-gradient-vibrant shadow-lg shadow-indigo-100"
+          className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 shadow-lg shadow-indigo-500/20"
         />
       </div>
 
       <div className="flex-1 overflow-y-auto p-10 flex flex-col justify-center max-w-lg mx-auto w-full">
         {cardList.length === 0 ? (
-          <div className="glass-card bg-white rounded-[3rem] border border-slate-100 shadow-xl p-12 text-center">
-            <div className="w-24 h-24 bg-slate-50 text-slate-300 rounded-3xl flex items-center justify-center mx-auto mb-8">
-              <BookOpen className="w-12 h-12" />
+          <div className="glass-card bg-slate-900/40 backdrop-blur-md rounded-[3rem] border border-white/5 shadow-2xl p-12 text-center">
+            <div className="w-24 h-24 bg-white/5 text-slate-500 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-white/5">
+              <BookOpen className="w-12 h-12 text-indigo-400" />
             </div>
-            <h3 className="text-3xl font-black text-slate-950 mb-4 tracking-tight">Deck is Empty</h3>
-            <p className="text-slate-500 font-medium mb-12 leading-relaxed">
+            <h3 className="text-3xl font-black text-white mb-4 tracking-tight">Deck is Empty</h3>
+            <p className="text-slate-450 font-medium mb-12 leading-relaxed">
               Unlock vocabulary by completing scenarios and drills in the Library.
             </p>
             <Button
               onClick={onBack}
-              className="w-full h-16 bg-slate-950 hover:bg-black text-white rounded-[1.5rem] font-black uppercase tracking-widest text-xs shadow-2xl transition-transform active:scale-95"
+              className="w-full h-16 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-xs shadow-2xl transition-transform active:scale-95 border-none"
             >
               Back to Practice
             </Button>
           </div>
         ) : isComplete ? (
-          <div className="glass-card bg-white rounded-[3rem] border border-slate-100 shadow-xl p-12 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 font-black text-[10px] uppercase tracking-widest mb-6">
+          <div className="glass-card bg-slate-900/40 backdrop-blur-md rounded-[3rem] border border-white/5 shadow-2xl p-12 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black text-[10px] uppercase tracking-widest mb-6">
               <Check className="w-4 h-4" /> Goal Met
             </div>
-            <h3 className="text-4xl font-black text-slate-950 mb-4 tracking-tighter italic">Drill Complete!</h3>
-            <p className="text-slate-500 font-medium mb-12">
-              You mastered <span className="font-black text-slate-950 underline decoration-indigo-200 decoration-4">{knownWords.length} cards</span> this session.
+            <h3 className="text-4xl font-black text-white mb-4 tracking-tighter italic">Drill Complete!</h3>
+            <p className="text-slate-400 font-medium mb-12">
+              You mastered <span className="font-black text-indigo-400 underline decoration-indigo-500/30 decoration-4">{knownWords.length} cards</span> this session.
             </p>
 
-            <div className="bg-slate-50/50 rounded-[2.5rem] p-8 mb-12 border border-slate-100">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-12">Mastery Performance</h4>
+            <div className="bg-slate-900/20 rounded-[2.5rem] p-8 mb-12 border border-white/5">
+              <h4 className="text-[10px] font-black text-slate-450 uppercase tracking-[0.3em] mb-12">Mastery Performance</h4>
               <div className="flex items-end justify-between h-40 gap-4 px-2">
                 {[1, 2, 3, 4, 5].map((level, idx) => {
                   const count = masteryCounts[idx];
                   const percentage = (count / cardList.length) * 100;
                   return (
                     <div key={level} className="flex flex-col items-center flex-1 gap-4 h-full">
-                      <div className="w-full bg-slate-100 rounded-full relative flex items-end justify-center h-full">
+                      <div className="w-full bg-white/5 rounded-full relative flex items-end justify-center h-full">
                         <motion.div
                           initial={{ height: 0 }}
                           animate={{ height: `${Math.max(percentage, 5)}%` }}
                           transition={{ duration: 1, ease: "circOut", delay: idx * 0.1 }}
                           className={cn(
                             "w-full rounded-full shadow-lg",
-                            level <= 2 ? 'bg-gradient-soft' : level <= 4 ? 'bg-gradient-premium' : 'bg-gradient-vibrant'
+                            level <= 2 ? 'bg-gradient-to-t from-cyan-600 to-blue-500' : level <= 4 ? 'bg-gradient-to-t from-indigo-600 to-violet-500' : 'bg-gradient-to-t from-fuchsia-600 to-pink-500'
                           )}
                         />
                         {count > 0 && (
-                          <span className="absolute -top-10 text-[10px] font-black text-indigo-600 bg-white px-2 py-1.5 rounded-xl shadow-xl border border-slate-100">{count}</span>
+                          <span className="absolute -top-10 text-[10px] font-black text-indigo-400 bg-slate-900 px-2 py-1.5 rounded-xl shadow-2xl border border-white/5">{count}</span>
                         )}
                       </div>
-                      <span className="text-[10px] font-black text-slate-400">Lv {level}</span>
+                      <span className="text-[10px] font-black text-slate-450">Lv {level}</span>
                     </div>
                   );
                 })}
@@ -320,7 +320,7 @@ function SmartCards({ deck, onBack }: { deck: Deck, onBack: () => void, key?: st
 
             <Button
               onClick={handleRestart}
-              className="w-full h-16 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-xs shadow-2xl shadow-indigo-100 transition-transform active:scale-95"
+              className="w-full h-16 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-xs shadow-2xl transition-transform active:scale-95 border-none"
             >
               <RefreshCw className="w-5 h-5 mr-3" /> Retry Session
             </Button>
@@ -328,13 +328,13 @@ function SmartCards({ deck, onBack }: { deck: Deck, onBack: () => void, key?: st
         ) : (
           <div className="perspective-2000 w-full aspect-[3/4] cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
             <motion.div
-              className="w-full h-full relative preserve-3d transition-transform duration-700 h-full"
+              className="w-full h-full relative preserve-3d transition-transform duration-700"
               animate={{ rotateY: isFlipped ? 180 : 0 }}
             >
               {/* Front */}
-              <div className="absolute inset-0 backface-hidden rounded-[3rem] border border-slate-100 shadow-2xl flex flex-col items-center justify-center p-12 bg-white">
+              <div className="absolute inset-0 backface-hidden rounded-[3rem] border border-white/5 shadow-2xl flex flex-col items-center justify-center p-12 bg-slate-900/40 backdrop-blur-md">
                 <div className="absolute top-10 w-full px-12 flex flex-col items-center">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Mastery Rank</p>
+                  <p className="text-[10px] font-black text-slate-450 uppercase tracking-[0.3em] mb-4">Mastery Rank</p>
                   <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map(level => (
                       <div
@@ -342,24 +342,24 @@ function SmartCards({ deck, onBack }: { deck: Deck, onBack: () => void, key?: st
                         className={cn(
                           "h-2.5 w-10 rounded-full transition-all duration-500",
                           level <= (currentCard.mastery || 1)
-                            ? ((currentCard.mastery || 1) <= 2 ? 'bg-indigo-200' : (currentCard.mastery || 1) <= 4 ? 'bg-indigo-400' : 'bg-indigo-600 shadow-lg shadow-indigo-100')
-                            : 'bg-slate-50'
+                            ? ((currentCard.mastery || 1) <= 2 ? 'bg-indigo-500/30' : (currentCard.mastery || 1) <= 4 ? 'bg-indigo-500/60' : 'bg-indigo-500 shadow-lg shadow-indigo-500/30')
+                            : 'bg-white/5'
                         )}
                       />
                     ))}
                   </div>
                 </div>
 
-                <h3 className="text-4xl sm:text-5xl font-black text-slate-950 text-center tracking-tighter italic leading-tight mt-12">{currentCard.front}</h3>
+                <h3 className="text-4xl sm:text-5xl font-black text-white text-center tracking-tighter italic leading-tight mt-12">{currentCard.front}</h3>
 
-                <span className="absolute bottom-10 inline-flex items-center gap-2 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] bg-indigo-50/50 px-5 py-2.5 rounded-full border border-indigo-100/50">
+                <span className="absolute bottom-10 inline-flex items-center gap-2 text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] bg-indigo-500/10 px-5 py-2.5 rounded-full border border-indigo-500/20">
                   Tap to uncover <ArrowRight size={12} />
                 </span>
               </div>
 
               {/* Back */}
-              <div className="absolute inset-0 backface-hidden rounded-[3rem] border-none shadow-3xl flex flex-col items-center justify-center p-12 bg-slate-950 text-white [transform:rotateY(180deg)] overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-premium opacity-40 shrink-0" />
+              <div className="absolute inset-0 backface-hidden rounded-[3rem] border border-white/5 shadow-3xl flex flex-col items-center justify-center p-12 bg-slate-950 text-white [transform:rotateY(180deg)] overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-tr from-indigo-950/40 to-slate-950 opacity-40 shrink-0" />
                 <div className="relative z-10 w-full flex flex-col items-center text-center">
                   <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-8">Meaning & Context</p>
                   <h3 className="text-3xl font-black text-white mb-8 tracking-tighter italic">{currentCard.front}</h3>
@@ -367,7 +367,7 @@ function SmartCards({ deck, onBack }: { deck: Deck, onBack: () => void, key?: st
                   <p className="text-2xl font-bold text-white/90 leading-relaxed mb-10 px-4 italic">"{currentCard.back}"</p>
 
                   {currentCard.explanation && (
-                    <div className="bg-white/10 backdrop-blur-3xl p-8 rounded-[2rem] w-full border border-white/10">
+                    <div className="bg-slate-900/60 backdrop-blur-md p-8 rounded-[2rem] w-full border border-white/5">
                       <p className="text-indigo-200 text-sm font-medium leading-relaxed">"{currentCard.explanation}"</p>
                     </div>
                   )}
@@ -382,16 +382,16 @@ function SmartCards({ deck, onBack }: { deck: Deck, onBack: () => void, key?: st
       </div>
 
       {!isComplete && cardList.length > 0 && (
-        <div className="p-8 bg-white/80 backdrop-blur-3xl border-t border-slate-100 shrink-0 flex gap-5 max-w-lg mx-auto w-full">
+        <div className="p-8 bg-slate-950/40 backdrop-blur-md border-t border-white/5 shrink-0 flex gap-5 max-w-lg mx-auto w-full">
           <Button
             variant="outline"
-            className="flex-1 h-16 rounded-[1.5rem] border-2 border-slate-100 hover:bg-slate-50 text-slate-450 font-black text-xs uppercase tracking-widest flex items-center justify-center transition-all active:scale-95"
+            className="flex-1 h-16 rounded-[1.5rem] border border-white/10 hover:bg-white/5 text-slate-300 font-black text-xs uppercase tracking-widest flex items-center justify-center transition-all active:scale-95"
             onClick={(e) => { e.stopPropagation(); handleNext(false); }}
           >
             Learning
           </Button>
           <Button
-            className="flex-1 h-16 rounded-[1.5rem] bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center shadow-2xl shadow-indigo-100 transition-all active:scale-95"
+            className="flex-1 h-16 rounded-[1.5rem] bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center shadow-2xl shadow-indigo-600/20 transition-all active:scale-95 border-none"
             onClick={(e) => { e.stopPropagation(); handleNext(true); }}
           >
             Got It
@@ -443,7 +443,6 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
     if (isRecording) {
       recognitionRef.current?.stop();
       setIsRecording(false);
-      // evaluatePronunciation is now async; call without awaiting to keep UI responsive
       void evaluatePronunciation();
     } else {
       setTranscript("");
@@ -479,7 +478,6 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
 
     setFeedback({ score, message });
 
-    // Log to backend (async, non-blocking for UX)
     try {
       setIsLogging(true);
       await practiceService.logPronunciation(currentPhrase, transcript, score);
@@ -502,43 +500,44 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
-      className="fixed inset-0 z-[100] bg-white flex flex-col pt-16 pb-28 md:pb-0"
+      className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-xl flex flex-col pt-16 pb-28 md:pb-0"
     >
-      <div className="h-24 bg-white/80 backdrop-blur-3xl border-b border-slate-100 flex items-center px-6 shrink-0 justify-between">
-        <button onClick={onBack} className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors">
+      <div className="h-24 bg-slate-950/40 backdrop-blur-md border-b border-white/5 flex items-center px-6 shrink-0 justify-between">
+        <button onClick={onBack} className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-300 hover:bg-white/10 hover:text-white transition-colors">
           <ChevronLeft className="w-6 h-6" />
         </button>
         <div className="text-center">
-          <h2 className="font-black text-slate-950 text-xl tracking-tight italic">Pronunciation Lab</h2>
+          <h2 className="font-black text-white text-xl tracking-tight italic">Pronunciation Lab</h2>
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] leading-none mt-0.5">Vocal Feedback</p>
         </div>
         <div className="w-12" />
       </div>
 
       <div className="flex-1 overflow-y-auto p-8 flex flex-col max-w-xl mx-auto w-full gap-8">
-        <div className="glass-card bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-100/50 border border-slate-100 shrink-0">
-          <div className="flex justify-between items-center mb-8">
-            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em] bg-indigo-50 px-4 py-1.5 rounded-full border border-indigo-100/50">Guide Audio</span>
+        <div className="glass-card bg-slate-900/40 backdrop-blur-md rounded-[3rem] p-10 shadow-2xl border border-white/5 shrink-0 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+          <div className="flex justify-between items-center mb-8 relative z-10">
+            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] bg-indigo-500/10 px-4 py-1.5 rounded-full border border-indigo-500/20">Guide Audio</span>
             <Button
               size="icon"
               onClick={playTTS}
-              className="w-12 h-12 bg-slate-950 hover:bg-black rounded-2xl flex items-center justify-center text-white shadow-xl transition-transform active:scale-95"
+              className="w-12 h-12 bg-indigo-600 hover:bg-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-xl transition-transform active:scale-95 border-none"
             >
               <Volume2 className="w-6 h-6" />
             </Button>
           </div>
-          <h3 className="text-4xl font-black text-slate-950 leading-tight tracking-tighter italic">
+          <h3 className="text-4xl font-black text-white leading-tight tracking-tighter italic relative z-10">
             "{currentPhrase}"
           </h3>
         </div>
 
-        <div className="flex-1 bg-slate-50/50 rounded-[3rem] p-10 relative flex flex-col border border-slate-100/50 border-dashed">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Live Transcript</span>
+        <div className="flex-1 bg-slate-900/20 rounded-[3rem] p-10 relative flex flex-col border border-white/5 border-dashed">
+          <span className="text-[10px] font-black text-slate-450 uppercase tracking-[0.3em] mb-6">Live Transcript</span>
           <div className="flex-1 flex flex-col justify-center min-h-[160px]">
             {transcript ? (
-              <p className="text-3xl font-black text-slate-950 leading-tight tracking-tight italic text-center">{transcript}</p>
+              <p className="text-3xl font-black text-white leading-tight tracking-tight italic text-center">{transcript}</p>
             ) : (
-              <p className="text-xl text-slate-300 font-bold italic text-center leading-relaxed">
+              <p className="text-xl text-slate-500 font-bold italic text-center leading-relaxed">
                 {isRecording ? "Analyzing audio waves..." : "Engage the mic and start speaking..."}
               </p>
             )}
@@ -550,9 +549,9 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
               animate={{ opacity: 1, y: 0 }}
               className={cn(
                 "mt-8 p-8 rounded-[2rem] border shadow-2xl",
-                feedback.score >= 80 ? 'bg-emerald-500 text-white shadow-emerald-200 border-emerald-400' :
-                  feedback.score >= 50 ? 'bg-amber-400 text-white shadow-amber-100 border-amber-300' :
-                    'bg-slate-950 text-white border-slate-800'
+                feedback.score >= 80 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-emerald-500/5' :
+                  feedback.score >= 50 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-amber-500/5' :
+                    'bg-rose-500/10 text-rose-400 border-rose-500/20 shadow-rose-500/5'
               )}
             >
               <div className="flex items-center justify-between mb-4">
@@ -566,15 +565,14 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
                 </p>
               )}
             </motion.div>
-
           )}
         </div>
       </div>
 
-      <div className="p-10 bg-white/80 backdrop-blur-3xl border-t border-slate-100 shrink-0 flex items-center justify-between max-w-xl mx-auto w-full">
+      <div className="p-10 bg-slate-950/40 backdrop-blur-md border-t border-white/5 shrink-0 flex items-center justify-between max-w-xl mx-auto w-full">
         <Button
           variant="outline"
-          className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-100 active:text-slate-950 transition-all border-none"
+          className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all border-none"
           onClick={() => {
             setTranscript("");
             setFeedback(null);
@@ -588,14 +586,14 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
         <div className="relative group">
           <div className={cn(
             "absolute -inset-4 rounded-full blur-2xl transition-opacity duration-1000",
-            isRecording ? "bg-indigo-500/30 opacity-100 animate-pulse" : "opacity-0"
+            isRecording ? "bg-rose-500/30 opacity-100 animate-pulse" : "opacity-0"
           )} />
           <button
             className={cn(
               "w-24 h-24 rounded-full flex items-center justify-center shadow-3xl active:scale-95 transition-all duration-500 relative z-10",
               isRecording
-                ? 'bg-indigo-600 text-white'
-                : 'bg-slate-950 text-white'
+                ? 'bg-rose-600 text-white'
+                : 'bg-indigo-600 text-white hover:bg-indigo-700'
             )}
             onClick={toggleRecording}
           >
@@ -605,7 +603,7 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
 
         <Button
           variant="outline"
-          className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-100 active:text-slate-950 transition-all border-none"
+          className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all border-none"
           onClick={() => {
             setTranscript("");
             setFeedback(null);

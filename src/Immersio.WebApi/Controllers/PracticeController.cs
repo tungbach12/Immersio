@@ -1,4 +1,5 @@
 using Immersio.Application.DTOs.Practice;
+using Immersio.Application.DTOs.Common;
 using Immersio.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,10 +29,10 @@ namespace Immersio.WebApi.Controllers
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdStr, out var userId))
-                return Unauthorized();
+                return Unauthorized(ApiResponse.FailureResult("Invalid user identity."));
 
             var result = await _pronunciationService.LogPronunciationAsync(userId, request, cancellationToken);
-            return Ok(result);
+            return Ok(ApiResponse<object>.SuccessResult(result));
         }
 
         [HttpGet("pronunciation-history")]
@@ -39,10 +40,10 @@ namespace Immersio.WebApi.Controllers
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdStr, out var userId))
-                return Unauthorized();
+                return Unauthorized(ApiResponse.FailureResult("Invalid user identity."));
 
             var logs = await _pronunciationService.GetUserLogsAsync(userId, cancellationToken);
-            return Ok(logs);
+            return Ok(ApiResponse<object>.SuccessResult(logs));
         }
 
         [HttpGet("cefr-analysis")]
@@ -50,10 +51,10 @@ namespace Immersio.WebApi.Controllers
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdStr, out var userId))
-                return Unauthorized();
+                return Unauthorized(ApiResponse.FailureResult("Invalid user identity."));
 
             var analysis = await _pronunciationService.AnalyzeCefrLevelAsync(userId, cancellationToken);
-            return Ok(analysis);
+            return Ok(ApiResponse<object>.SuccessResult(analysis));
         }
     }
 }

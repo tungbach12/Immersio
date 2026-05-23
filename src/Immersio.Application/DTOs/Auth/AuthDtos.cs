@@ -10,5 +10,5 @@ namespace Immersio.Application.DTOs.Auth
 
     public sealed record AuthResponse(string AccessToken, string RefreshToken, UserDto User);
 
-    public sealed record UserDto(Guid Id, string Username, string Email, string SubscriptionTier, DateTime? SubscriptionExpiresAt, int StreakCount, int ExperiencePoints, double LearningHours, string CurrentLanguageLevel);
+    public sealed record UserDto(Guid Id, string Username, string Email, string SubscriptionTier, DateTime? SubscriptionExpiresAt, int StreakCount, int ExperiencePoints, double LearningHours, string CurrentLanguageLevel, string Role);
 }

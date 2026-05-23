@@ -43,6 +43,12 @@ namespace Immersio.Application.Services
             var passwordHash = _passwordHasher.Hash(request.Password);
             var user = new User(request.Username, request.Email, passwordHash);
 
+            var isFirstUser = !await _context.Users.AnyAsync(cancellationToken);
+            if (isFirstUser)
+            {
+                user.SetRole("Admin");
+            }
+
             var refreshTokenValue = _tokenService.GenerateRefreshToken();
             var refreshTokenExpiryDays = int.Parse(_configuration["Jwt:RefreshTokenExpiryDays"] ?? "7");
             var refreshToken = new RefreshToken(refreshTokenValue, user.Id, DateTime.UtcNow.AddDays(refreshTokenExpiryDays));
@@ -170,7 +176,8 @@ namespace Immersio.Application.Services
                 user.StreakCount,
                 user.ExperiencePoints,
                 user.LearningHours,
-                user.CurrentLanguageLevel);
+                user.CurrentLanguageLevel,
+                user.Role);
         }
     }
 }

@@ -48,5 +48,11 @@ namespace Immersio.Application.Interfaces
             byte[] audioBytes,
             string filename,
             CancellationToken cancellationToken);
+
+        Task<GeneratedPhraseDto> GeneratePronunciationPhraseAsync(
+            string language,
+            string level,
+            string topic,
+            CancellationToken cancellationToken);
     }
 }

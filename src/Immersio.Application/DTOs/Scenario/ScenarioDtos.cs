@@ -19,6 +19,7 @@ namespace Immersio.Application.DTOs.Scenario
         string InitialMessage,
         string AvatarUrl,
         bool IsNavigation,
+        string? VoiceId,
         IEnumerable<ScenarioItemDto> Items
     );
 
@@ -48,7 +49,8 @@ namespace Immersio.Application.DTOs.Scenario
         string ContextPrompt,
         string InitialMessage,
         string AvatarUrl,
-        bool IsNavigation
+        bool IsNavigation,
+        string? VoiceId
     );
 
     public sealed record CreateScenarioItemDto(string Name, decimal Price, string ImageUrl, string? Icon);

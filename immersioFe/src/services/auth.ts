@@ -8,6 +8,7 @@ export interface UserDto {
   experiencePoints?: number;
   learningHours?: number;
   currentLanguageLevel?: string;
+  role?: string;
 }
 
 export interface AuthResponse {
@@ -138,6 +139,8 @@ export const authService = {
   async fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
     let token = this.getAccessToken();
     if (!token) {
+      this.clearSession();
+      window.location.href = "/login";
       throw new Error("No active session");
     }
 

@@ -39,6 +39,7 @@ export default function ScenarioDetail() {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Feedback & Flashcards state
   const [feedbackText, setFeedbackText] = useState<string | null>(null);
@@ -84,18 +85,50 @@ export default function ScenarioDetail() {
   }, [messages]);
 
   const playTextToSpeech = async (text: string) => {
-    if (currentAudio) {
-      currentAudio.pause();
+    if (currentAudioRef.current) {
+      try {
+        currentAudioRef.current.pause();
+      } catch (e) {
+        // ignore
+      }
     }
 
-    const base64Audio = await generateGroqSpeech(text);
-    if (base64Audio) {
+    try {
+      const selectedVoice = scenario?.voiceId || "en-US-JennyNeural";
+      const token = localStorage.getItem("token") || "";
+      const response = await fetch("http://localhost:5249/api/practice/tts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          text: text,
+          voice: selectedVoice
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("TTS request failed");
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      currentAudioRef.current = audio;
+      setCurrentAudio(audio);
+      await audio.play();
+    } catch (e) {
+      console.error("Azure TTS Playback failed, falling back to browser SpeechSynthesis:", e);
       try {
-        const audio = new Audio(`data:audio/wav;base64,${base64Audio}`);
-        setCurrentAudio(audio);
-        await audio.play();
-      } catch (e) {
-        console.error("Audio play error:", e);
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = scenario?.language === "English" ? 'en-US' :
+                       scenario?.language === "Japanese" ? 'ja-JP' :
+                       scenario?.language === "Chinese" ? 'zh-CN' : 'en-US';
+        window.speechSynthesis.speak(utterance);
+      } catch (synthErr) {
+        console.error("SpeechSynthesis fallback failed:", synthErr);
       }
     }
   };

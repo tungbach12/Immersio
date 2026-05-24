@@ -5,15 +5,8 @@ import { BookOpen, Mic, ChevronLeft, ChevronRight, Check, X, RefreshCw, Volume2,
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { getDecks, getReviewCards, reviewCard, Deck, Flashcard } from "@/services/decks";
-import { practiceService } from "@/services/practice";
+import { practiceService, WordAssessmentDto } from "@/services/practice";
 
-const PRONUNCIATION_PHRASES = [
-  "The quick brown fox jumps over the lazy dog.",
-  "She sells seashells by the seashore.",
-  "How much wood would a woodchuck chuck if a woodchuck could chuck wood?",
-  "I scream, you scream, we all scream for ice cream.",
-  "Peter Piper picked a peck of pickled peppers."
-];
 
 // --- Types ---
 type ViewState = "menu" | "decks" | "cards" | "pronunciation";
@@ -403,17 +396,49 @@ function SmartCards({ deck, onBack }: { deck: Deck, onBack: () => void, key?: st
 }
 
 function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
-  const [phraseIndex, setPhraseIndex] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const [feedback, setFeedback] = useState<{ score: number; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<{ score: number; message: string; words?: WordAssessmentDto[] } | null>(null);
   const [isLogging, setIsLogging] = useState(false);
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const streamRef = useRef<MediaStream | null>(null);
+  // AI Phrase Generation States
+  const [selectedLang, setSelectedLang] = useState("English");
+  const [selectedLevel, setSelectedLevel] = useState("Intermediate");
+  const [selectedTopic, setSelectedTopic] = useState("General");
+  const [phrase, setPhrase] = useState("");
+  const [translation, setTranslation] = useState("");
+  const [explanation, setExplanation] = useState("");
+  const [isGenerating, setIsGenerating] = useState(true);
+  const [isAiGenerated, setIsAiGenerated] = useState(true);
 
-  const currentPhrase = PRONUNCIATION_PHRASES[phraseIndex];
+  const handleAiGenerate = async () => {
+    setTranscript("");
+    setFeedback(null);
+    setIsGenerating(true);
+    try {
+      const data = await practiceService.generatePhrase(selectedLang, selectedLevel, selectedTopic);
+      setPhrase(data.phrase);
+      setTranslation(data.translation);
+      setExplanation(data.explanation);
+      setIsAiGenerated(true);
+    } catch (err: any) {
+      console.error("AI Generation failed:", err);
+      if (err?.message !== "No active session") {
+        alert("Không thể tạo câu luyện nói bằng AI. Vui lòng thử lại.");
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Automatically trigger AI phrase generation when PronunciationLab mounts
+  useEffect(() => {
+    void handleAiGenerate();
+  }, []);
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     return () => {
@@ -434,15 +459,15 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
         }
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        await handleAudioStopped(audioBlob);
+        const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType || "audio/webm" });
+        await processAndAssessAudio(audioBlob);
       };
 
       mediaRecorder.start();
@@ -472,27 +497,82 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
     }
   };
 
-  const handleAudioStopped = async (audioBlob: Blob) => {
+  const processAndAssessAudio = async (audioBlob: Blob) => {
     try {
       setIsLogging(true);
-      setTranscript("Analyzing audio...");
-      const result = await practiceService.assessPronunciation(audioBlob, currentPhrase);
+      setTranscript("Processing audio...");
+
+      // 1. Convert Blob to ArrayBuffer
+      const arrayBuffer = await audioBlob.arrayBuffer();
+
+      // 2. Decode Audio Data to AudioBuffer
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const tempCtx = new AudioContextClass();
+      
+      let decodedBuffer;
+      try {
+        decodedBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+      } catch (decodeErr) {
+        console.error("Failed to decode audio data:", decodeErr);
+        throw new Error("Không thể giải mã dữ liệu âm thanh ghi được.");
+      } finally {
+        await tempCtx.close();
+      }
+
+      // 3. Downsample to 16000 Hz Mono using OfflineAudioContext
+      const targetSampleRate = 16000;
+      const offlineCtx = new OfflineAudioContext(
+        1, // mono channel
+        Math.round(decodedBuffer.duration * targetSampleRate), // length
+        targetSampleRate // sample rate
+      );
+
+      // Create a buffer source
+      const source = offlineCtx.createBufferSource();
+      source.buffer = decodedBuffer;
+      source.connect(offlineCtx.destination);
+      source.start();
+
+      // Render downsampled audio
+      const renderedBuffer = await offlineCtx.startRendering();
+
+      // 4. Convert downsampled AudioBuffer to 16kHz Mono WAV Blob
+      const channelData = renderedBuffer.getChannelData(0);
+      const wavBlob = bufferToWav(channelData, renderedBuffer.sampleRate);
+
+      // 5. Send to C# WebApi Backend
+      setTranscript("Analyzing pronunciation...");
+      console.log(`[Practice] Sending WAV Blob to backend (size: ${wavBlob.size} bytes)...`);
+      
+      const result = await practiceService.assessPronunciation(wavBlob, phrase);
+      console.log("[Practice] Pronunciation result received:", result);
+
       setTranscript(result.transcript);
-      setFeedback({ score: result.score, message: result.message });
+      setFeedback({ score: result.score, message: result.message, words: result.words });
     } catch (err) {
       console.error("Pronunciation assessment failed:", err);
       setTranscript("Failed to analyze audio.");
-      setFeedback({ score: 0, message: "Lỗi kết nối máy chủ. Vui lòng thử lại." });
+      
+      // Extract descriptive message for display
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setFeedback({ 
+        score: 0, 
+        message: `Lỗi: ${errMsg}. Vui lòng thử lại.` 
+      });
     } finally {
       setIsLogging(false);
     }
   };
 
   const playTTS = () => {
-    const utterance = new SpeechSynthesisUtterance(currentPhrase);
-    utterance.lang = 'en-US';
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(phrase);
+    utterance.lang = selectedLang === "Japanese" ? 'ja-JP' :
+                   selectedLang === "Chinese" ? 'zh-CN' : 'en-US';
     window.speechSynthesis.speak(utterance);
   };
+
+
 
   return (
     <motion.div
@@ -514,23 +594,127 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
       </div>
 
       <div className="flex-1 overflow-y-auto p-8 flex flex-col max-w-xl mx-auto w-full gap-8">
+        
+        {/* AI Selection Controls */}
+        <div className="glass-card bg-slate-900/20 backdrop-blur-md rounded-[2.5rem] p-6 border border-white/5 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em]">AI Generator Settings</span>
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">✦ Real-time Llama 3</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            {/* Language */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Language</label>
+              <select
+                value={selectedLang}
+                onChange={(e) => setSelectedLang(e.target.value)}
+                className="bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer"
+                disabled={isGenerating || isRecording}
+              >
+                <option value="English">English 🇺🇸</option>
+                <option value="Japanese">Japanese 🇯🇵</option>
+                <option value="Chinese">Chinese 🇨🇳</option>
+              </select>
+            </div>
+
+            {/* Level */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Level</label>
+              <select
+                value={selectedLevel}
+                onChange={(e) => setSelectedLevel(e.target.value)}
+                className="bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer"
+                disabled={isGenerating || isRecording}
+              >
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+            </div>
+
+            {/* Topic */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Topic</label>
+              <select
+                value={selectedTopic}
+                onChange={(e) => setSelectedTopic(e.target.value)}
+                className="bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer"
+                disabled={isGenerating || isRecording}
+              >
+                <option value="General">General</option>
+                <option value="Travel">Travel</option>
+                <option value="Daily Life">Daily Life</option>
+                <option value="Business">Business</option>
+                <option value="Academic">Academic</option>
+                <option value="Shopping">Shopping</option>
+              </select>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleAiGenerate}
+            disabled={isGenerating || isRecording}
+            className="w-full h-12 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg border-none relative overflow-hidden group active:scale-[0.98] transition-transform"
+          >
+            {isGenerating ? (
+              <span className="flex items-center justify-center gap-2">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" /> AI is composing...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-1.5">
+                ✦ Generate Dynamic AI Phrase ✦
+              </span>
+            )}
+          </Button>
+        </div>
+
+        {/* Dynamic Phrase Card */}
         <div className="glass-card bg-slate-900/40 backdrop-blur-md rounded-[3rem] p-10 shadow-2xl border border-white/5 shrink-0 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16 blur-2xl" />
-          <div className="flex justify-between items-center mb-8 relative z-10">
-            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] bg-indigo-500/10 px-4 py-1.5 rounded-full border border-indigo-500/20">Guide Audio</span>
+          <div className="flex justify-between items-center mb-6 relative z-10">
+            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] bg-indigo-500/10 px-4 py-1.5 rounded-full border border-indigo-500/20">
+              {isAiGenerated ? `✦ AI Generated (${selectedLang})` : "Guide Audio"}
+            </span>
             <Button
               size="icon"
               onClick={playTTS}
+              disabled={isGenerating || isRecording}
               className="w-12 h-12 bg-indigo-600 hover:bg-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-xl transition-transform active:scale-95 border-none"
             >
               <Volume2 className="w-6 h-6" />
             </Button>
           </div>
-          <h3 className="text-4xl font-black text-white leading-tight tracking-tighter italic relative z-10">
-            "{currentPhrase}"
-          </h3>
+          
+          {isGenerating ? (
+            <div className="flex flex-col gap-3 relative z-10 mb-4 animate-pulse">
+              <div className="h-9 w-11/12 bg-white/10 rounded-xl" />
+              <div className="h-9 w-2/3 bg-white/10 rounded-xl" />
+            </div>
+          ) : (
+            <h3 className="text-3xl font-black text-white leading-tight tracking-tighter italic relative z-10 mb-4">
+              "{phrase}"
+            </h3>
+          )}
+          
+          {isGenerating ? (
+            <div className="h-5 w-1/2 bg-white/5 rounded-lg animate-pulse mb-4 relative z-10" />
+          ) : translation ? (
+            <p className="text-sm font-bold text-slate-400 italic mb-4 relative z-10">
+              Meaning: "{translation}"
+            </p>
+          ) : null}
+
+          {isGenerating ? (
+            <div className="h-16 w-full bg-white/5 rounded-2xl animate-pulse border border-white/5 relative z-10" />
+          ) : explanation ? (
+            <div className="text-xs text-indigo-200 bg-indigo-500/5 px-5 py-4 rounded-2xl border border-indigo-500/10 leading-relaxed relative z-10">
+              💡 {explanation}
+            </div>
+          ) : null}
         </div>
 
+        {/* Live Transcript & Feedback */}
         <div className="flex-1 bg-slate-900/20 rounded-[3rem] p-10 relative flex flex-col border border-white/5 border-dashed">
           <span className="text-[10px] font-black text-slate-450 uppercase tracking-[0.3em] mb-6">Live Transcript</span>
           <div className="flex-1 flex flex-col justify-center min-h-[160px]">
@@ -544,27 +728,97 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
           </div>
 
           {feedback && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={cn(
-                "mt-8 p-8 rounded-[2rem] border shadow-2xl",
-                feedback.score >= 80 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-emerald-500/5' :
-                  feedback.score >= 50 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-amber-500/5' :
-                    'bg-rose-500/10 text-rose-400 border-rose-500/20 shadow-rose-500/5'
+            <>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={cn(
+                  "mt-8 p-8 rounded-[2rem] border shadow-2xl",
+                  feedback.score >= 80 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-emerald-500/5' :
+                    feedback.score >= 50 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-amber-500/5' :
+                      'bg-rose-500/10 text-rose-400 border-rose-500/20 shadow-rose-500/5'
+                )}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-black text-[10px] uppercase tracking-[0.4em] opacity-80">Fluency Score</span>
+                  <span className="text-4xl font-black italic tracking-tighter">{feedback.score}%</span>
+                </div>
+                <p className="text-sm font-black uppercase tracking-widest">{feedback.message}</p>
+                {isLogging && (
+                  <p className="text-[10px] font-bold opacity-60 mt-3 uppercase tracking-widest animate-pulse">
+                    ✦ Saving to profile...
+                  </p>
+                )}
+              </motion.div>
+
+              {/* ELSA Speak Word-by-Word Highlight & Phoneme Tooltips */}
+              {feedback.words && feedback.words.length > 0 && (
+                <div className="mt-6 bg-slate-950/60 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-8 w-full relative z-20 overflow-visible shadow-2xl">
+                  <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-4 block">Detailed Phonetic Analysis (Tap words for IPA)</span>
+                  
+                  <div className="flex flex-wrap gap-x-4 gap-y-5 justify-center items-center">
+                    {feedback.words.map((w, wIdx) => {
+                      const isOmitted = w.errorType === "Omission";
+                      const isGreen = w.accuracyScore >= 80 && !isOmitted;
+                      const isYellow = w.accuracyScore >= 50 && w.accuracyScore < 80 && !isOmitted;
+                      
+                      return (
+                        <div key={wIdx} className="group relative flex flex-col items-center">
+                          {/* Word button */}
+                          <button
+                            className={cn(
+                              "text-2xl font-black tracking-tight italic transition-all duration-300 hover:scale-115 focus:outline-none",
+                              isOmitted ? "text-slate-600 hover:text-slate-500 opacity-40 line-through decoration-slate-700" :
+                              isGreen ? "text-emerald-400 hover:text-emerald-300" :
+                              isYellow ? "text-amber-400 hover:text-amber-300" :
+                              "text-rose-500 hover:text-rose-400"
+                            )}
+                          >
+                            {w.word}
+                          </button>
+
+                          {/* Small score label */}
+                          <span className="text-[9px] font-bold text-slate-500 mt-0.5">
+                            {isOmitted ? "—" : `${w.accuracyScore}%`}
+                          </span>
+
+                          {/* Phoneme IPA Dropdown Tooltip */}
+                          {w.phonemes && w.phonemes.length > 0 && (
+                            <div className="absolute bottom-full mb-3 hidden group-hover:flex flex-col items-center bg-slate-900 border border-white/10 rounded-2xl p-4 shadow-3xl z-30 min-w-[130px] transition-all">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 pb-1 border-b border-white/5">IPA Phonemes</span>
+                              <div className="flex gap-1.5 justify-center items-center">
+                                {w.phonemes.map((p, pIdx) => {
+                                  const pGreen = p.accuracyScore >= 80 && !isOmitted;
+                                  const pYellow = p.accuracyScore >= 50 && p.accuracyScore < 80 && !isOmitted;
+                                  
+                                  return (
+                                    <div key={pIdx} className="flex flex-col items-center">
+                                      <span className={cn(
+                                        "text-base font-black font-mono",
+                                        isOmitted ? "text-slate-600 opacity-40" :
+                                        pGreen ? "text-emerald-400" :
+                                        pYellow ? "text-amber-400" :
+                                        "text-rose-500"
+                                      )}>
+                                        /{p.phoneme}/
+                                      </span>
+                                      <span className="text-[8px] font-bold text-slate-500 mt-0.5">
+                                        {isOmitted ? "—" : `${p.accuracyScore}%`}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <div className="absolute top-full w-3 h-3 bg-slate-900 border-r border-b border-white/10 rotate-45 -mt-1.5" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-black text-[10px] uppercase tracking-[0.4em] opacity-80">Fluency Score</span>
-                <span className="text-4xl font-black italic tracking-tighter">{feedback.score}%</span>
-              </div>
-              <p className="text-sm font-black uppercase tracking-widest">{feedback.message}</p>
-              {isLogging && (
-                <p className="text-[10px] font-bold opacity-60 mt-3 uppercase tracking-widest animate-pulse">
-                  ✦ Saving to profile...
-                </p>
-              )}
-            </motion.div>
+            </>
           )}
         </div>
       </div>
@@ -573,12 +827,8 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
         <Button
           variant="outline"
           className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all border-none"
-          onClick={() => {
-            setTranscript("");
-            setFeedback(null);
-            setPhraseIndex((prev) => (prev > 0 ? prev - 1 : PRONUNCIATION_PHRASES.length - 1));
-          }}
-          disabled={isRecording}
+          onClick={handleAiGenerate}
+          disabled={isRecording || isGenerating}
         >
           <SkipBack className="w-8 h-8" />
         </Button>
@@ -596,6 +846,7 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
                 : 'bg-indigo-600 text-white hover:bg-indigo-700'
             )}
             onClick={toggleRecording}
+            disabled={isGenerating}
           >
             {isRecording ? <Square className="w-10 h-10 fill-current" /> : <Mic className="w-10 h-10" />}
           </button>
@@ -604,16 +855,60 @@ function PronunciationLab({ onBack }: { onBack: () => void, key?: string }) {
         <Button
           variant="outline"
           className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all border-none"
-          onClick={() => {
-            setTranscript("");
-            setFeedback(null);
-            setPhraseIndex((prev) => (prev + 1) % PRONUNCIATION_PHRASES.length);
-          }}
-          disabled={isRecording}
+          onClick={handleAiGenerate}
+          disabled={isRecording || isGenerating}
         >
           <SkipForward className="w-8 h-8" />
         </Button>
       </div>
     </motion.div>
   );
+}
+
+function bufferToWav(buffer: Float32Array, sampleRate: number): Blob {
+  const bufferLength = buffer.length;
+  const wavBuffer = new ArrayBuffer(44 + bufferLength * 2);
+  const view = new DataView(wavBuffer);
+
+  /* RIFF identifier */
+  writeString(view, 0, 'RIFF');
+  /* file length */
+  view.setUint32(4, 36 + bufferLength * 2, true);
+  /* RIFF type */
+  writeString(view, 8, 'WAVE');
+  /* format chunk identifier */
+  writeString(view, 12, 'fmt ');
+  /* format chunk length */
+  view.setUint32(16, 16, true);
+  /* sample format (raw PCM) */
+  view.setUint16(20, 1, true);
+  /* channel count */
+  view.setUint16(22, 1, true);
+  /* sample rate */
+  view.setUint32(24, sampleRate, true);
+  /* byte rate (sample rate * block align) */
+  view.setUint32(28, sampleRate * 2, true);
+  /* block align (channel count * bytes per sample) */
+  view.setUint16(32, 2, true);
+  /* bits per sample */
+  view.setUint16(34, 16, true);
+  /* data chunk identifier */
+  writeString(view, 36, 'data');
+  /* data chunk length */
+  view.setUint32(40, bufferLength * 2, true);
+
+  // Write PCM audio samples
+  let offset = 44;
+  for (let i = 0; i < bufferLength; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, buffer[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+
+  return new Blob([view], { type: 'audio/wav' });
+}
+
+function writeString(view: DataView, offset: number, str: string) {
+  for (let i = 0; i < str.length; i++) {
+    view.setUint8(offset + i, str.charCodeAt(i));
+  }
 }

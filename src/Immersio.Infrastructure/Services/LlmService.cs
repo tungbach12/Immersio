@@ -465,6 +465,79 @@ namespace Immersio.Infrastructure.Services
                 throw;
             }
         }
+
+        public async Task<GeneratedPhraseDto> GeneratePronunciationPhraseAsync(
+            string language,
+            string level,
+            string topic,
+            CancellationToken cancellationToken)
+        {
+            var systemPrompt = $"You are a language teacher creating pronunciation speaking exercises for a language learner.\n" +
+                               $"Create a single natural and interesting phrase in {language} for a learner at the {level} difficulty level, focused on the topic/context of '{topic}'.\n\n" +
+                               $"INSTRUCTIONS:\n" +
+                               $"- The phrase must be completely in {language}.\n" +
+                               $"- It should be natural and common in conversations.\n" +
+                               $"- The length should match the level: Beginner (1 short simple sentence), Intermediate (1-2 sentences), Advanced (2 sentences or a slightly complex/idiomatic expression).\n" +
+                               $"- Provide the meaning/translation in Tiếng Việt.\n" +
+                               $"- Provide a brief grammatical or cultural explanation or vocabulary tip in Tiếng Việt.\n\n" +
+                               $"Return a JSON object with strictly these keys:\n" +
+                               $"- \"phrase\": The generated phrase in {language}.\n" +
+                               $"- \"translation\": The Vietnamese translation.\n" +
+                               $"- \"explanation\": The brief tip/note in Vietnamese.\n\n" +
+                               $"The output must be strictly valid JSON. Example:\n" +
+                               $"{{\n  \"phrase\": \"I'd like to reserve a table for two, please.\",\n  \"translation\": \"Tôi muốn đặt trước một bàn cho hai người.\",\n  \"explanation\": \"Sử dụng 'I'd like to' là cách lịch sự để đưa ra yêu cầu.\"\n}}";
+
+            var requestBody = new
+            {
+                model = DefaultModel,
+                messages = new[]
+                {
+                    new { role = "system", content = systemPrompt },
+                    new { role = "user", content = $"Generate a phrase for {language} ({level}) about '{topic}'" }
+                },
+                temperature = 0.8,
+                response_format = new { type = "json_object" },
+                stream = false
+            };
+
+            var defaultPhrase = language.ToLower().Contains("ja") ? "こんにちは、元気ですか？"
+                             : language.ToLower().Contains("zh") ? "你好，你怎么样？"
+                             : "The quick brown fox jumps over the lazy dog.";
+            var defaultTranslation = language.ToLower().Contains("ja") ? "Xin chào, bạn khỏe không?"
+                                  : language.ToLower().Contains("zh") ? "Xin chào, bạn thế nào?"
+                                  : "Chú cáo nâu nhanh nhẹn nhảy qua con chó lười biếng.";
+            var defaultExplanation = "Một câu nói thông dụng.";
+
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, GroqEndpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+                request.Content = JsonContent.Create(requestBody);
+
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                response.EnsureSuccessStatusCode();
+
+                var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
+                var contentJson = chatResponse?.Choices?.FirstOrDefault()?.Message?.Content;
+
+                if (!string.IsNullOrWhiteSpace(contentJson))
+                {
+                    using var doc = JsonDocument.Parse(contentJson);
+                    var root = doc.RootElement;
+                    var phrase = root.TryGetProperty("phrase", out var p) ? p.GetString() : defaultPhrase;
+                    var translation = root.TryGetProperty("translation", out var t) ? t.GetString() : defaultTranslation;
+                    var explanation = root.TryGetProperty("explanation", out var e) ? e.GetString() : defaultExplanation;
+
+                    return new GeneratedPhraseDto(phrase ?? defaultPhrase, translation ?? defaultTranslation, explanation ?? defaultExplanation);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to generate pronunciation phrase: {ex.Message}");
+            }
+
+            return new GeneratedPhraseDto(defaultPhrase, defaultTranslation, defaultExplanation);
+        }
     }
 
     // Helper classes for standard OpenAI / Groq JSON serialization

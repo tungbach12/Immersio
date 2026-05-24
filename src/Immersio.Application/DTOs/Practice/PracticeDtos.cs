@@ -37,9 +37,34 @@ namespace Immersio.Application.DTOs.Practice
         List<string> Suggestions
     );
 
+    public sealed record PhonemeAssessmentDto(
+        string Phoneme,
+        int AccuracyScore
+    );
+
+    public sealed record WordAssessmentDto(
+        string Word,
+        int AccuracyScore,
+        string ErrorType,
+        List<PhonemeAssessmentDto> Phonemes
+    );
+
     public sealed record PronunciationAssessmentResultDto(
         string Transcript,
         int Score,
-        string Message
+        string Message,
+        List<WordAssessmentDto> Words
+    );
+
+    public sealed record GeneratePhraseRequest(
+        string Language,
+        string Level,
+        string Topic
+    );
+
+    public sealed record GeneratedPhraseDto(
+        string Phrase,
+        string Translation,
+        string Explanation
     );
 }

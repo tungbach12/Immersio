@@ -75,7 +75,7 @@ export const practiceService = {
   async assessPronunciation(
     audioBlob: Blob,
     phrase: string
-  ): Promise<{ transcript: string; score: number; message: string }> {
+  ): Promise<{ transcript: string; score: number; message: string; words: WordAssessmentDto[] }> {
     const formData = new FormData();
     formData.append("audio", audioBlob, "pronunciation.webm");
     formData.append("phrase", phrase);
@@ -95,4 +95,44 @@ export const practiceService = {
 
     return response.json();
   },
+
+  async generatePhrase(
+    language: string,
+    level: string,
+    topic: string
+  ): Promise<GeneratedPhraseDto> {
+    const response = await authService.fetchWithAuth(
+      `${BASE_URL}/generate-phrase`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language, level, topic }),
+      }
+    );
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Generation failed" }));
+      throw new Error(err.detail || "Failed to generate AI phrase");
+    }
+
+    return response.json();
+  },
 };
+
+export interface PhonemeAssessmentDto {
+  phoneme: string;
+  accuracyScore: number;
+}
+
+export interface WordAssessmentDto {
+  word: string;
+  accuracyScore: number;
+  errorType: string;
+  phonemes: PhonemeAssessmentDto[];
+}
+
+export interface GeneratedPhraseDto {
+  phrase: string;
+  translation: string;
+  explanation: string;
+}

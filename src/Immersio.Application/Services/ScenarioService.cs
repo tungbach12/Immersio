@@ -276,7 +276,8 @@ namespace Immersio.Application.Services
                 dto.ContextPrompt,
                 dto.InitialMessage,
                 dto.AvatarUrl,
-                dto.IsNavigation
+                dto.IsNavigation,
+                dto.VoiceId
             );
 
             _context.Scenarios.Add(scenario);
@@ -306,7 +307,8 @@ namespace Immersio.Application.Services
                 dto.ContextPrompt,
                 dto.InitialMessage,
                 dto.AvatarUrl,
-                dto.IsNavigation
+                dto.IsNavigation,
+                dto.VoiceId
             );
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -354,6 +356,7 @@ namespace Immersio.Application.Services
                 s.InitialMessage,
                 s.AvatarUrl,
                 s.IsNavigation,
+                s.VoiceId,
                 s.Items.Select(i => new ScenarioItemDto(i.Id, i.Name, i.Price, i.ImageUrl, i.Icon))
             );
         }

@@ -25,6 +25,7 @@ export interface Scenario {
   bg: string;
   modes: ("2d" | "ar")[];
   isNavigation?: boolean;
+  voiceId?: string;
   items?: ScenarioItem[];
 }
 
@@ -147,6 +148,7 @@ export const scenarioService = {
       bg: dto.imageUrl,
       modes: dto.isNavigation ? ["ar"] : ["2d", "ar"],
       isNavigation: dto.isNavigation,
+      voiceId: dto.voiceId,
       items: dto.items?.map((item: any) => ({
         id: item.id,
         name: item.name,

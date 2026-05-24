@@ -117,6 +117,18 @@ using (var scope = app.Services.CreateScope())
 {
     var scenarioService = scope.ServiceProvider.GetRequiredService<IScenarioService>();
     await scenarioService.SeedScenariosAsync(default);
+
+    // Seed Admin User
+    var context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+    var existingAdmin = await context.Users.FirstOrDefaultAsync(u => u.Email == "admin@immersio.com");
+    if (existingAdmin == null)
+    {
+        var admin = new Immersio.Domain.Entities.User("admin", "admin@immersio.com", passwordHasher.Hash("Admin123!"));
+        admin.SetRole("Admin");
+        context.Users.Add(admin);
+        await context.SaveChangesAsync(default);
+    }
 }
 
 // ── Middleware Pipeline ──────────────────────────────────────────────

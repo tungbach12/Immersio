@@ -19,8 +19,12 @@ export default function Login() {
     setError(null);
 
     try {
-      await authService.login(email, password);
-      navigate("/student/dashboard");
+      const res = await authService.login(email, password);
+      if (res.user.role === "Admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/student/dashboard");
+      }
     } catch (err: any) {
       setError(err.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
     } finally {

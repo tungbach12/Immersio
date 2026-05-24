@@ -27,5 +27,9 @@ namespace Immersio.Application.Interfaces
             string filename,
             string targetPhrase,
             CancellationToken cancellationToken = default);
+
+        Task<GeneratedPhraseDto> GeneratePhraseAsync(
+            GeneratePhraseRequest request,
+            CancellationToken cancellationToken = default);
     }
 }

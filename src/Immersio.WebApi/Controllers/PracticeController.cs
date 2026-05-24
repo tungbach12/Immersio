@@ -16,10 +16,14 @@ namespace Immersio.WebApi.Controllers
     public class PracticeController : ControllerBase
     {
         private readonly IPronunciationService _pronunciationService;
+        private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
 
-        public PracticeController(IPronunciationService pronunciationService)
+        public PracticeController(
+            IPronunciationService pronunciationService,
+            Microsoft.Extensions.Configuration.IConfiguration configuration)
         {
             _pronunciationService = pronunciationService;
+            _configuration = configuration;
         }
 
         [HttpPost("pronunciation-log")]
@@ -86,5 +90,97 @@ namespace Immersio.WebApi.Controllers
 
             return Ok(ApiResponse<object>.SuccessResult(result));
         }
+
+        [HttpPost("tts")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SynthesizeSpeech(
+            [FromBody] TtsRequest request,
+            CancellationToken cancellationToken)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Text))
+                return BadRequest(ApiResponse.FailureResult("Text parameter is required."));
+
+            var apiKey = _configuration["Azure:Speech:ApiKey"];
+            var region = _configuration["Azure:Speech:Region"] ?? "centralindia";
+            var customEndpoint = _configuration["Azure:Speech:Endpoint"];
+            var voice = string.IsNullOrWhiteSpace(request.Voice) ? "en-US-JennyNeural" : request.Voice;
+
+            if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Contains("YOUR_AZURE"))
+            {
+                return BadRequest(ApiResponse.FailureResult("Azure Speech ApiKey not set yet. Configure real key in appsettings.json to preview voice."));
+            }
+
+            string endpoint;
+            if (!string.IsNullOrWhiteSpace(customEndpoint) && !customEndpoint.Contains("api.cognitive.microsoft.com"))
+            {
+                var baseUri = customEndpoint.Trim();
+                if (!baseUri.EndsWith("/"))
+                {
+                    baseUri += "/";
+                }
+                endpoint = $"{baseUri}cognitiveservices/v1";
+            }
+            else
+            {
+                endpoint = $"https://{region}.tts.speech.microsoft.com/cognitiveservices/v1";
+            }
+
+            var lang = "en-US";
+            if (voice.Length >= 5)
+            {
+                lang = voice.Substring(0, 5);
+            }
+
+            using var httpClient = new HttpClient();
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, endpoint);
+
+            httpRequest.Headers.Add("Ocp-Apim-Subscription-Key", apiKey);
+            httpRequest.Headers.Add("User-Agent", "Immersio");
+            httpRequest.Headers.Add("X-Microsoft-OutputFormat", "audio-16khz-64kbitrate-mono-mp3");
+
+            var ssml = $@"<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='{lang}'>
+                <voice name='{voice}'>
+                    {request.Text}
+                </voice>
+            </speak>";
+
+            httpRequest.Content = new StringContent(ssml, System.Text.Encoding.UTF8, "application/ssml+xml");
+
+            try
+            {
+                var response = await httpClient.SendAsync(httpRequest, cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var err = await response.Content.ReadAsStringAsync(cancellationToken);
+                    return StatusCode((int)response.StatusCode, ApiResponse.FailureResult($"Azure TTS error: {err}"));
+                }
+
+                var audioBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+                return File(audioBytes, "audio/mpeg");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse.FailureResult($"TTS Synthesis failed: {ex.Message}"));
+            }
+        }
+
+        [HttpPost("generate-phrase")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GeneratePhrase(
+            [FromBody] GeneratePhraseRequest request,
+            CancellationToken cancellationToken)
+        {
+            if (request == null)
+                return BadRequest(ApiResponse.FailureResult("Request body is required."));
+
+            var result = await _pronunciationService.GeneratePhraseAsync(request, cancellationToken);
+            return Ok(ApiResponse<GeneratedPhraseDto>.SuccessResult(result));
+        }
+    }
+
+    public class TtsRequest
+    {
+        public string Text { get; set; } = null!;
+        public string Voice { get; set; } = null!;
     }
 }

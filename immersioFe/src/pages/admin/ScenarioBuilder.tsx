@@ -4,9 +4,34 @@ import { adminService } from "@/services/admin";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { 
-  Layers, Plus, Trash2, Edit, Loader2, X, Check, Globe, Sliders, Image, Type, HelpCircle, DollarSign
+  Layers, Plus, Trash2, Edit, Loader2, X, Check, Globe, Sliders, Image, Type, HelpCircle, DollarSign, Volume2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const LANGUAGE_VOICES: Record<string, { id: string; label: string }[]> = {
+  English: [
+    { id: "en-US-JennyNeural", label: "Jenny (Female, US - Friendly/Expressive)" },
+    { id: "en-US-GuyNeural", label: "Guy (Male, US - Conversational)" },
+    { id: "en-US-AvaNeural", label: "Ava (Female, US - Youthful)" },
+    { id: "en-US-AndrewNeural", label: "Andrew (Male, US - Conversational)" },
+    { id: "en-GB-SoniaNeural", label: "Sonia (Female, UK - Elegant)" },
+    { id: "en-GB-RyanNeural", label: "Ryan (Male, UK - Clear)" },
+  ],
+  Japanese: [
+    { id: "ja-JP-NanamiNeural", label: "Nanami (Female - Standard)" },
+    { id: "ja-JP-KeitaNeural", label: "Keita (Male - Natural)" },
+    { id: "ja-JP-AoiNeural", label: "Aoi (Female - Gentle)" },
+  ],
+  Chinese: [
+    { id: "zh-CN-XiaoxiaoNeural", label: "Xiaoxiao (Female - Sweet)" },
+    { id: "zh-CN-YunxiNeural", label: "Yunxi (Male - Natural)" },
+    { id: "zh-CN-XiaoyiNeural", label: "Xiaoyi (Female - Conversational)" },
+  ],
+  Spanish: [
+    { id: "es-ES-ElviraNeural", label: "Elvira (Female - Gentle)" },
+    { id: "es-ES-AlvaroNeural", label: "Alvaro (Male - Clear)" },
+  ],
+};
 
 export default function ScenarioBuilder() {
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
@@ -32,6 +57,46 @@ export default function ScenarioBuilder() {
   const [isNavigation, setIsNavigation] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const [voiceId, setVoiceId] = useState("");
+  const [previewing, setPreviewing] = useState(false);
+  const [previewError, setPreviewError] = useState("");
+
+  const handlePreviewVoice = async () => {
+    if (!voiceId) return;
+    setPreviewing(true);
+    setPreviewError("");
+    try {
+      const textToSpeak = initialMessage || "Hello! This is a preview of my voice.";
+      const token = localStorage.getItem("token") || "";
+      const response = await fetch("http://localhost:5249/api/practice/tts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          text: textToSpeak,
+          voice: voiceId
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: "Preview failed" }));
+        throw new Error(errorData.detail || "Failed to synthesize speech.");
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      await audio.play();
+    } catch (err: any) {
+      console.error(err);
+      setPreviewError(err.message || "Failed to preview voice.");
+    } finally {
+      setPreviewing(false);
+    }
+  };
+
   // Vocab Item Builder State
   const [activeScenarioForItems, setActiveScenarioForItems] = useState<Scenario | null>(null);
   const [newItemName, setNewItemName] = useState("");
@@ -43,6 +108,16 @@ export default function ScenarioBuilder() {
   useEffect(() => {
     loadScenarios();
   }, []);
+
+  useEffect(() => {
+    const list = LANGUAGE_VOICES[language] || LANGUAGE_VOICES["English"];
+    if (list && list.length > 0) {
+      const matches = list.some(v => v.id === voiceId);
+      if (!matches) {
+        setVoiceId(list[0].id);
+      }
+    }
+  }, [language]);
 
   const loadScenarios = () => {
     setLoading(true);
@@ -68,6 +143,8 @@ export default function ScenarioBuilder() {
     setInitialMessage("");
     setContextPrompt("");
     setIsNavigation(false);
+    setVoiceId("en-US-JennyNeural");
+    setPreviewError("");
     setIsModalOpen(true);
   };
 
@@ -85,6 +162,8 @@ export default function ScenarioBuilder() {
     // Fetch scenario prompt or provide fallback
     setContextPrompt(item.context || "");
     setIsNavigation(!!item.isNavigation);
+    setVoiceId(item.voiceId || "en-US-JennyNeural");
+    setPreviewError("");
     setIsModalOpen(true);
   };
 
@@ -106,7 +185,8 @@ export default function ScenarioBuilder() {
       contextPrompt,
       initialMessage,
       avatarUrl,
-      isNavigation
+      isNavigation,
+      voiceId
     };
 
     try {
@@ -375,6 +455,40 @@ export default function ScenarioBuilder() {
                     placeholder="e.g. Welcome! What can I get for you today?"
                     className="h-11 px-4 rounded-xl border border-white/10 bg-slate-900/60 text-xs font-semibold focus:outline-none focus:border-indigo-500 text-slate-200"
                   />
+                </div>
+
+                <div className="flex flex-col gap-2 col-span-2 p-5 bg-white/5 border border-white/10 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-extrabold text-[10px] text-white uppercase tracking-widest block">Character Neural Voice</span>
+                      <span className="text-[8px] font-medium text-slate-500">Populated based on Target Language</span>
+                    </div>
+                    <Button 
+                      type="button"
+                      disabled={previewing || !voiceId}
+                      onClick={handlePreviewVoice}
+                      className="gap-2 h-9 px-4 rounded-xl font-bold uppercase tracking-wider text-[9px] bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-glow active:scale-95 transition-all shrink-0"
+                    >
+                      {previewing ? <Loader2 className="animate-spin" size={12} /> : <Volume2 size={12} />}
+                      {previewing ? "Previewing..." : "Listen Preview"}
+                    </Button>
+                  </div>
+
+                  <select 
+                    value={voiceId}
+                    onChange={(e) => setVoiceId(e.target.value)}
+                    className="h-10 px-4 rounded-xl border border-white/10 bg-slate-950 text-xs font-bold text-indigo-400 w-full"
+                  >
+                    {(LANGUAGE_VOICES[language] || LANGUAGE_VOICES["English"]).map((v) => (
+                      <option key={v.id} value={v.id}>{v.label}</option>
+                    ))}
+                  </select>
+
+                  {previewError && (
+                    <span className="text-[10px] font-bold text-red-400 mt-1 uppercase block tracking-wide">
+                      ⚠️ {previewError}
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-1.5 col-span-2">

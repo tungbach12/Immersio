@@ -52,6 +52,10 @@ namespace Immersio.Infrastructure.Persistence.Configurations
                 .HasMaxLength(1000)
                 .IsRequired();
 
+            builder.Property(s => s.VoiceId)
+                .HasMaxLength(100)
+                .IsRequired(false);
+
             // Soft delete query filter
             builder.HasQueryFilter(s => !s.IsDeleted);
 

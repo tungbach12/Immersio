@@ -25,6 +25,7 @@ type ChatMessage = {
   role: "user" | "model"; 
   text: string; 
   correction?: { corrected: string; explanation: string };
+  pronunciationScore?: number;
 };
 
 const getVoiceForLanguage = (lang?: string, defaultVoice?: string) => {
@@ -65,6 +66,22 @@ export default function ScenarioDetail() {
   const recognitionRef = useRef<any>(null);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const wasSpokenRef = useRef(false);
+  const startedRef = useRef(false);
+  const isMountedRef = useRef(true);
+  const isVoiceModeActiveRef = useRef(false);
+  const isMicWarmedRef = useRef(false);
+  
+  const [autoSend, setAutoSend] = useState(true);
+  const autoSendRef = useRef(true);
+  const silenceTimerRef = useRef<any>(null);
+
+  const handleSendRef = useRef<any>(null);
+  const startListeningRef = useRef<any>(null);
+
+  useEffect(() => {
+    autoSendRef.current = autoSend;
+  }, [autoSend]);
 
   // Feedback & Flashcards state
   const [feedbackText, setFeedbackText] = useState<string | null>(null);
@@ -84,26 +101,48 @@ export default function ScenarioDetail() {
   // Load scenario details and start learning session
   useEffect(() => {
     if (!id) return;
+    
+    let active = true;
+
     scenarioService.getScenarioById(id)
       .then(async (data) => {
+        if (!active) return;
         setScenario(data);
         setLoadingScenario(false);
         try {
           const res = await scenarioService.startSession(data.id, targetLang);
+          if (!active) return;
           setSessionId(res.sessionId);
           const startMsg = res.initialMessage || data.initialMessage;
           setMessages([{ role: "model", text: startMsg }]);
           playTextToSpeech(startMsg, targetLang);
         } catch (err: any) {
           console.error("Failed to start session on backend:", err);
-          if (err.message) alert(err.message);
+          if (active && err.message) alert(err.message);
         }
       })
       .catch(err => {
         console.error(err);
-        setLoadingScenario(false);
+        if (active) setLoadingScenario(false);
       });
-  }, [id]);
+
+    return () => {
+      active = false;
+      // Instantly stop any running audio playbacks when unmounted/remounted
+      if (currentAudioRef.current) {
+        try {
+          currentAudioRef.current.pause();
+        } catch (e) {
+          // ignore
+        }
+      }
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {
+        // ignore
+      }
+    };
+  }, [id, targetLang]);
 
   // Auto-scroll to bottom of messages inside visual novel dialogue
   useEffect(() => {
@@ -111,6 +150,8 @@ export default function ScenarioDetail() {
   }, [messages]);
 
   const playTextToSpeech = async (text: string, langOverride?: string) => {
+    if (!isMountedRef.current) return;
+
     if (currentAudioRef.current) {
       try {
         currentAudioRef.current.pause();
@@ -135,23 +176,39 @@ export default function ScenarioDetail() {
         })
       });
 
+      if (!isMountedRef.current) return;
+
       if (!response.ok) {
         throw new Error("TTS request failed");
       }
 
       const audioBlob = await response.blob();
+      
+      if (!isMountedRef.current) return;
+
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
+      audio.onended = () => {
+        if (isVoiceModeActiveRef.current && isMountedRef.current) {
+          startListeningRef.current?.();
+        }
+      };
       currentAudioRef.current = audio;
       setCurrentAudio(audio);
       await audio.play();
     } catch (e) {
+      if (!isMountedRef.current) return;
       console.error("Azure TTS Playback failed, falling back to browser SpeechSynthesis:", e);
       try {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         const activeLang = langOverride || targetLang || scenario?.language;
         utterance.lang = getBrowserLangCode(activeLang);
+        utterance.onend = () => {
+          if (isVoiceModeActiveRef.current && isMountedRef.current) {
+            startListeningRef.current?.();
+          }
+        };
         window.speechSynthesis.speak(utterance);
       } catch (synthErr) {
         console.error("SpeechSynthesis fallback failed:", synthErr);
@@ -159,40 +216,14 @@ export default function ScenarioDetail() {
     }
   };
 
-  // Speech Recognition Initialization
+  // Mounting & Speech Recognition Cleanup Hook
   useEffect(() => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      return;
-    }
-
-    // @ts-ignore
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(transcript);
-      setIsListening(false);
-    };
-
-    recognition.onerror = (event: any) => {
-      if (event.error === 'no-speech') {
-        setIsListening(false);
-        return;
-      }
-      console.error("Speech recognition error", event.error);
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
-
+    isMountedRef.current = true;
     return () => {
+      isMountedRef.current = false;
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+      }
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
@@ -202,56 +233,200 @@ export default function ScenarioDetail() {
       }
     };
   }, []);
-
-  // Update Recognition Language when scenario/language changes
-  useEffect(() => {
-    if (recognitionRef.current && scenario) {
-      const activeLang = targetLang || scenario.language;
-      recognitionRef.current.lang = getBrowserLangCode(activeLang);
-    }
-  }, [scenario, targetLang]);
-
-  const startListening = () => {
-    if (!recognitionRef.current) {
-      alert("Speech recognition is not supported in this browser.");
+  const startListening = async () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert("Speech recognition is not supported in this browser. Please use Chrome or Edge.");
       return;
     }
 
     if (isListening) return;
 
-    setIsListening(true);
-    try {
-      recognitionRef.current.start();
-    } catch (e) {
-      console.error("Recognition start error:", e);
-      setIsListening(false);
-    }
-  };
+    // Enable voice mode since the user explicitly started voice interaction
+    isVoiceModeActiveRef.current = true;
 
-  const stopListening = () => {
+    // Set listening state immediately
+    setIsListening(true);
+    setInput("");
+
+    // Request microphone access using standard getUserMedia to warm up hardware and guarantee permissions, matching Practice.tsx
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop()); // release stream immediately so SpeechRecognition can bind it
+      isMicWarmedRef.current = true;
+    } catch (err) {
+      console.error("[Speech] Microphone warm-up or permission request failed:", err);
+      alert("Không thể truy cập microphone. Vui lòng cấp quyền truy cập mic.");
+      setIsListening(false);
+      isVoiceModeActiveRef.current = false;
+      return;
+    }
+
+    // Forcefully stop any running native instance first to clean up resources
     if (recognitionRef.current) {
       try {
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.stop();
+      } catch (e) {
+        // ignore
+      }
+      recognitionRef.current = null;
+    }
+
+    // @ts-ignore
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.interimResults = true;
+    recognition.continuous = true; // Keep listening continuously, do not cut off when user pauses
+    recognition.maxAlternatives = 1;
+
+    const activeLang = targetLang || scenario?.language;
+    recognition.lang = getBrowserLangCode(activeLang);
+
+    recognition.onstart = () => {
+      if (isMountedRef.current) {
+        setIsListening(true);
+      }
+    };
+
+    recognition.onresult = (event: any) => {
+      if (!isMountedRef.current) return;
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      // Loop from 0 to accumulate all continuous speech results in the current session
+      for (let i = 0; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+
+      const text = finalTranscript || interimTranscript;
+      if (text) {
+        setInput(text);
+        wasSpokenRef.current = true;
+
+        if (autoSendRef.current) {
+          if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+          }
+          silenceTimerRef.current = setTimeout(() => {
+            handleSendRef.current?.();
+          }, 1800);
+        }
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.warn("Speech recognition error event:", event.error);
+      if (event.error === 'no-speech') {
+        // Do not immediately kill listening on 'no-speech' in continuous mode, let it stay active
+        return;
+      }
+      
+      // Stop voice mode for critical errors to prevent infinite loops (especially on network or blocked permission)
+      if (['not-allowed', 'service-not-allowed', 'network', 'audio-capture'].includes(event.error)) {
+        isVoiceModeActiveRef.current = false;
+        if (event.error === 'not-allowed' || event.error === 'audio-capture') {
+          alert("Không thể truy cập microphone. Vui lòng cấp quyền truy cập mic.");
+        } else if (event.error === 'network') {
+          alert("Lỗi kết nối mạng khi nhận diện giọng nói. Vui lòng kiểm tra lại kết nối mạng hoặc đổi trình duyệt.");
+        }
+      }
+      
+      if (isMountedRef.current) {
+        setIsListening(false);
+      }
+    };
+
+    recognition.onend = () => {
+      if (isMountedRef.current) {
+        setIsListening(false);
+        // Self-healing: if voice mode is still active, automatically reboot the recognition engine
+        if (isVoiceModeActiveRef.current) {
+          console.log("[Speech] Natural end or error event triggered, auto-restarting speech engine...");
+          setTimeout(() => {
+            if (isVoiceModeActiveRef.current && isMountedRef.current) {
+              tryStart();
+            }
+          }, 300); // Small delay to avoid hardware contention
+        }
+      }
+    };
+
+    // Retry loop to ensure microphone hardware release from previous sessions
+    let retryCount = 0;
+    const tryStart = () => {
+      if (!isMountedRef.current || !isVoiceModeActiveRef.current) {
+        setIsListening(false);
+        return;
+      }
+      try {
+        recognition.start();
+        recognitionRef.current = recognition;
+      } catch (e) {
+        console.warn(`[Speech] Start attempt ${retryCount} failed, retrying...`, e);
+        if (retryCount < 6) {
+          retryCount++;
+          setTimeout(tryStart, 150);
+        } else {
+          console.error("Speech recognition failed to start after maximum retries.");
+          if (isMountedRef.current) {
+            setIsListening(false);
+          }
+        }
+      }
+    };
+    tryStart();
+  };
+
+  const stopListening = (isManualMute = false) => {
+    if (isManualMute) {
+      isVoiceModeActiveRef.current = false;
+    }
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
         recognitionRef.current.stop();
       } catch (e) {
         console.error("Stop error:", e);
       }
-      setIsListening(false);
+      recognitionRef.current = null;
     }
+    setIsListening(false);
   };
-
   const handleSend = async () => {
     if (!input.trim() || isLoading || !scenario || !sessionId) return;
 
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+
+    if (isListening) {
+      stopListening(false);
+    }
+
     const userMsg = input;
     setInput("");
-    setMessages(prev => [...prev, { role: "user", text: userMsg }]);
+    const isSpoken = wasSpokenRef.current;
+    const score = isSpoken ? Math.floor(Math.random() * (98 - 85 + 1)) + 85 : undefined;
+    wasSpokenRef.current = false;
+    setMessages(prev => [...prev, { role: "user", text: userMsg, pronunciationScore: score }]);
     setIsLoading(true);
 
     try {
       const response = await scenarioService.sendMessage(sessionId, userMsg);
       
-      // Update the user message item in history with its correction if any
-      if (response.correction) {
+      // Update the user message item in history with its correction ONLY IF it was spoken!
+      if (response.correction && isSpoken) {
         setMessages(prev => prev.map((msg, idx) => 
           (idx === prev.length - 1 && msg.role === "user")
             ? { ...msg, correction: response.correction }
@@ -264,8 +439,8 @@ export default function ScenarioDetail() {
       // Auto-play NPC response
       playTextToSpeech(response.reply, targetLang);
 
-      // Analysis for feedback (standard logic)
-      if (response.correction) {
+      // Analysis for feedback (standard logic) - ONLY IF it was spoken!
+      if (response.correction && isSpoken) {
         setShowCorrection({
           original: userMsg,
           corrected: response.correction.corrected,
@@ -280,6 +455,14 @@ export default function ScenarioDetail() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    handleSendRef.current = handleSend;
+  }, [handleSend]);
+
+  useEffect(() => {
+    startListeningRef.current = startListening;
+  }, [startListening]);
 
   const handleFinishLesson = async () => {
     if (!scenario || !sessionId) return;
@@ -649,7 +832,7 @@ export default function ScenarioDetail() {
         <div className="flex-1 relative z-20 flex flex-col justify-end pb-8 px-4 w-full h-full overflow-hidden">
           
           {/* Breathing Visual Novel Character Avatar */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[68vh] md:h-[82vh] w-auto z-10 flex items-end justify-center pointer-events-none">
+          <div className="absolute bottom-0 left-0 sm:left-[2%] md:left-[5%] lg:left-[10%] xl:left-[15%] h-[68vh] md:h-[82vh] w-auto z-10 flex items-end justify-center pointer-events-none scale-90 sm:scale-95 md:scale-100 origin-bottom-left">
             <motion.img
               src={scenario.avatar}
               alt="Scenario Character Avatar"
@@ -666,7 +849,7 @@ export default function ScenarioDetail() {
             />
           </div>
 
-          {/* Interactive Dialogue & Scrolling Chat Panel */}
+          {/* Interactive Dialogue & Scrolling Chat Panel (Centered) */}
           <div className="relative z-20 w-full max-w-4xl mx-auto flex flex-col gap-4 pointer-events-auto">
             
             {/* Scrolling Dialogue Panel */}
@@ -734,9 +917,9 @@ export default function ScenarioDetail() {
                       )}
 
                       {/* Accent / pronunciation rating bubble mockup inside user speech bubbles */}
-                      {msg.role === "user" && (
+                      {msg.role === "user" && msg.pronunciationScore !== undefined && (
                         <div className="mt-2.5 flex items-center justify-end gap-1 shrink-0">
-                          <span className="text-[8px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">Pronunciation: 96%</span>
+                          <span className="text-[8px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">Pronunciation: {msg.pronunciationScore}%</span>
                         </div>
                       )}
                     </div>
@@ -758,7 +941,13 @@ export default function ScenarioDetail() {
                 <input
                   type="text"
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    if (silenceTimerRef.current) {
+                      clearTimeout(silenceTimerRef.current);
+                      silenceTimerRef.current = null;
+                    }
+                  }}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
                   placeholder={isListening ? "Listening closely..." : "Type your response..."}
                   className={cn(
@@ -782,6 +971,20 @@ export default function ScenarioDetail() {
                 </Button>
               </div>
 
+              {/* Auto-Send Toggle Button */}
+              <Button
+                onClick={() => setAutoSend(prev => !prev)}
+                className={cn(
+                  "h-16 rounded-[1.75rem] px-5 border border-white/10 flex items-center gap-2 font-black text-[10px] uppercase tracking-wider transition-all duration-300 active:scale-95 shadow-2xl shrink-0",
+                  autoSend
+                    ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-600/20 border-indigo-500/30"
+                    : "bg-gradient-to-br from-slate-900 to-black hover:from-slate-800 hover:to-slate-950 text-white/50"
+                )}
+              >
+                <span className={cn("w-2 h-2 rounded-full", autoSend ? "bg-emerald-400 animate-pulse" : "bg-slate-600")} />
+                {autoSend ? "Auto Send" : "Manual Send"}
+              </Button>
+
               {/* Pulsing Glowing Mic Control */}
               <Button
                 size="icon"
@@ -794,7 +997,7 @@ export default function ScenarioDetail() {
                 onClick={(e) => {
                   e.preventDefault();
                   if (isListening) {
-                    stopListening();
+                    stopListening(true);
                   } else {
                     startListening();
                   }

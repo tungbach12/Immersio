@@ -19,6 +19,13 @@ namespace Immersio.Application.DTOs.Admin
         int GrammarSensitivity,
         int VocabSensitivity,
         bool EnableSlang,
-        string SpeedOfSpeech
+        string SpeedOfSpeech,
+        string LlmEndpoint,
+        string LlmApiKey,
+        string ModelChat,
+        string ModelGrammar,
+        string ModelFeedback,
+        string ModelFlashcard,
+        string ModelPhrase
     );
 }

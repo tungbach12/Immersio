@@ -141,8 +141,15 @@ namespace Immersio.Application.Services
             var vocab = int.Parse(await GetSettingValueAsync("VocabSensitivity", "50", cancellationToken));
             var slang = bool.Parse(await GetSettingValueAsync("EnableSlang", "true", cancellationToken));
             var speed = await GetSettingValueAsync("SpeedOfSpeech", "1.0x (Normal)", cancellationToken);
+            var endpoint = await GetSettingValueAsync("LlmEndpoint", "https://api.groq.com/openai/v1/chat/completions", cancellationToken);
+            var apiKey = await GetSettingValueAsync("LlmApiKey", "", cancellationToken);
+            var modelChat = await GetSettingValueAsync("ModelChat", "llama-3.3-70b-versatile", cancellationToken);
+            var modelGrammar = await GetSettingValueAsync("ModelGrammar", "llama-3.3-70b-versatile", cancellationToken);
+            var modelFeedback = await GetSettingValueAsync("ModelFeedback", "llama-3.3-70b-versatile", cancellationToken);
+            var modelFlashcard = await GetSettingValueAsync("ModelFlashcard", "llama-3.3-70b-versatile", cancellationToken);
+            var modelPhrase = await GetSettingValueAsync("ModelPhrase", "llama-3.3-70b-versatile", cancellationToken);
 
-            return new SystemSettingsDto(prompt, grammar, vocab, slang, speed);
+            return new SystemSettingsDto(prompt, grammar, vocab, slang, speed, endpoint, apiKey, modelChat, modelGrammar, modelFeedback, modelFlashcard, modelPhrase);
         }
 
         public async Task SaveAiSettingsAsync(SystemSettingsDto settings, CancellationToken cancellationToken)
@@ -152,6 +159,13 @@ namespace Immersio.Application.Services
             await SaveSettingValueAsync("VocabSensitivity", settings.VocabSensitivity.ToString(), cancellationToken);
             await SaveSettingValueAsync("EnableSlang", settings.EnableSlang.ToString(), cancellationToken);
             await SaveSettingValueAsync("SpeedOfSpeech", settings.SpeedOfSpeech, cancellationToken);
+            await SaveSettingValueAsync("LlmEndpoint", settings.LlmEndpoint ?? "https://api.groq.com/openai/v1/chat/completions", cancellationToken);
+            await SaveSettingValueAsync("LlmApiKey", settings.LlmApiKey ?? "", cancellationToken);
+            await SaveSettingValueAsync("ModelChat", settings.ModelChat ?? "llama-3.3-70b-versatile", cancellationToken);
+            await SaveSettingValueAsync("ModelGrammar", settings.ModelGrammar ?? "llama-3.3-70b-versatile", cancellationToken);
+            await SaveSettingValueAsync("ModelFeedback", settings.ModelFeedback ?? "llama-3.3-70b-versatile", cancellationToken);
+            await SaveSettingValueAsync("ModelFlashcard", settings.ModelFlashcard ?? "llama-3.3-70b-versatile", cancellationToken);
+            await SaveSettingValueAsync("ModelPhrase", settings.ModelPhrase ?? "llama-3.3-70b-versatile", cancellationToken);
 
             await _context.SaveChangesAsync(cancellationToken);
         }

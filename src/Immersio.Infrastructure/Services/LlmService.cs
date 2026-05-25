@@ -12,6 +12,7 @@ using Immersio.Application.DTOs.Scenario;
 using Immersio.Application.DTOs.Srs;
 using Immersio.Application.DTOs.Practice;
 using Immersio.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace Immersio.Infrastructure.Services
@@ -20,13 +21,58 @@ namespace Immersio.Infrastructure.Services
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
+        private readonly IApplicationDbContext _context;
         private const string GroqEndpoint = "https://api.groq.com/openai/v1/chat/completions";
         private const string DefaultModel = "llama-3.3-70b-versatile";
 
-        public LlmService(HttpClient httpClient, IConfiguration configuration)
+        public LlmService(HttpClient httpClient, IConfiguration configuration, IApplicationDbContext context)
         {
             _httpClient = httpClient;
             _apiKey = configuration["Groq:ApiKey"] ?? throw new ArgumentNullException("Groq API key is not configured.");
+            _context = context;
+        }
+
+        private async Task<(string ModelName, string Endpoint, string ApiKey)> GetModelConfigAsync(string modelKey, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var modelSetting = await _context.SystemSettings
+                    .FirstOrDefaultAsync(s => s.Key == modelKey, cancellationToken);
+                var endpointSetting = await _context.SystemSettings
+                    .FirstOrDefaultAsync(s => s.Key == "LlmEndpoint", cancellationToken);
+                var apiKeySetting = await _context.SystemSettings
+                    .FirstOrDefaultAsync(s => s.Key == "LlmApiKey", cancellationToken);
+
+                var modelName = !string.IsNullOrWhiteSpace(modelSetting?.Value) ? modelSetting.Value : DefaultModel;
+                var endpoint = !string.IsNullOrWhiteSpace(endpointSetting?.Value) ? endpointSetting.Value : GroqEndpoint;
+                var apiKey = !string.IsNullOrWhiteSpace(apiKeySetting?.Value) ? apiKeySetting.Value : _apiKey;
+
+                return (modelName, endpoint, apiKey);
+            }
+            catch
+            {
+                return (DefaultModel, GroqEndpoint, _apiKey);
+            }
+        }
+
+        private void SetJsonContent(HttpRequestMessage request, object requestBody)
+        {
+            var json = JsonSerializer.Serialize(requestBody);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            request.Content = content;
+        }
+
+        private async Task LogErrorAsync(string operationName, string endpoint, string modelName, HttpResponseMessage response, CancellationToken cancellationToken)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            Console.WriteLine($"\n==================================================");
+            Console.WriteLine($"[LlmService ERROR - {operationName}]");
+            Console.WriteLine($"Endpoint: {endpoint}");
+            Console.WriteLine($"Model: {modelName}");
+            Console.WriteLine($"Status: {(int)response.StatusCode} ({response.StatusCode})");
+            Console.WriteLine($"Response Body: {errorContent}");
+            Console.WriteLine($"==================================================\n");
         }
 
         public async Task<string> GenerateChatResponseAsync(
@@ -63,21 +109,27 @@ namespace Immersio.Infrastructure.Services
                 messagesPayload.Add(new { role = "user", content = userMessage });
             }
 
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelChat", cancellationToken);
+
             var requestBody = new
             {
-                model = DefaultModel,
+                model = modelName,
                 messages = messagesPayload,
                 temperature = 0.7,
-                max_completion_tokens = 1024,
+                max_tokens = 1024,
                 stream = false
             };
 
-            var request = new HttpRequestMessage(HttpMethod.Post, GroqEndpoint);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-            request.Content = JsonContent.Create(requestBody);
+            var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+            SetJsonContent(request, requestBody);
 
             var response = await _httpClient.SendAsync(request, cancellationToken);
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                await LogErrorAsync("GenerateChatResponseAsync", endpoint, modelName, response, cancellationToken);
+                response.EnsureSuccessStatusCode();
+            }
 
             var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
             return chatResponse?.Choices?.FirstOrDefault()?.Message?.Content ?? "I am sorry, I couldn't understand that.";
@@ -88,14 +140,21 @@ namespace Immersio.Infrastructure.Services
             string targetLanguage, 
             CancellationToken cancellationToken)
         {
-            var systemPrompt = $"Analyze the sentence spoken by a language learner in {targetLanguage}.\n" +
-                               $"Return a JSON object with \"corrected\" (natural version) and \"explanation\" (brief note explaining why or \"Perfect!\").\n" +
-                               $"The output must be strictly valid JSON. Example:\n" +
-                               $"{{\n  \"corrected\": \"Good morning, how are you?\",\n  \"explanation\": \"Added a comma for natural phrasing.\"\n}}";
+            var systemPrompt = $"You are an expert language teacher and a lenient speech-to-text grammar evaluator for language learners speaking {targetLanguage}.\n" +
+                               $"Your primary task is to review the user's spoken sentence and determine if it has serious grammatical errors (e.g., incorrect tense, wrong verb conjugation, incorrect word order, or completely inappropriate word choice that distorts the meaning).\n\n" +
+                               $"CRITICAL RULES:\n" +
+                               $"1. STRICT LENIENCY FOR SPOKEN SPEECH: Spoken language is naturally informal and fragmented. NEVER correct minor punctuation, missing commas, periods, capitalization, or apostrophes (e.g., 'im' instead of 'I'm', or lack of question marks). These are NOT grammar errors.\n" +
+                               $"2. NO OVER-CORRECTION: If the user's sentence is natural, understandable, and commonly used by native speakers in daily conversation (even if simple, colloquial, or using casual slang), you MUST mark it as correct. Do not rephrase it to sound like a formal book.\n" +
+                               $"3. CORRECTION DIRECTION: If there is a genuine and serious error, correct it to be a natural spoken phrase in {targetLanguage} that preserves the user's original intent. Avoid complex or overly formal vocabulary in the correction.\n" +
+                               $"4. EXPLANATION: If there is no error, the explanation MUST be exactly 'Perfect!'. If there is an error, write a short, encouraging explanation in Vietnamese (Tiếng Việt) describing the mistake clearly and how to avoid it (keep it under 2 sentences).\n" +
+                               $"5. Output format: You must return a valid JSON object only, with no markdown wrappers or backticks. Example:\n" +
+                               $"{{\n  \"corrected\": \"(corrected sentence if errors exist, otherwise the exact original input)\",\n  \"explanation\": \"(EXACTLY 'Perfect!' if correct, otherwise a short Vietnamese explanation of the error)\"\n}}";
+
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelGrammar", cancellationToken);
 
             var requestBody = new
             {
-                model = DefaultModel,
+                model = modelName,
                 messages = new[]
                 {
                     new { role = "system", content = systemPrompt },
@@ -108,12 +167,16 @@ namespace Immersio.Infrastructure.Services
 
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, GroqEndpoint);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-                request.Content = JsonContent.Create(requestBody);
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
 
                 var response = await _httpClient.SendAsync(request, cancellationToken);
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("AnalyzeGrammarAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
 
                 var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
                 var contentJson = chatResponse?.Choices?.FirstOrDefault()?.Message?.Content;
@@ -147,9 +210,11 @@ namespace Immersio.Infrastructure.Services
             var historyText = string.Join("\n", history.Select(m => $"{m.Role}: {m.Text}"));
             var userPrompt = $"Context: {contextPrompt}\n\nHistory:\n{historyText}";
 
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelFeedback", cancellationToken);
+
             var requestBody = new
             {
-                model = DefaultModel,
+                model = modelName,
                 messages = new[]
                 {
                     new { role = "system", content = systemPrompt },
@@ -159,12 +224,16 @@ namespace Immersio.Infrastructure.Services
                 stream = false
             };
 
-            var request = new HttpRequestMessage(HttpMethod.Post, GroqEndpoint);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-            request.Content = JsonContent.Create(requestBody);
+            var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+            SetJsonContent(request, requestBody);
 
             var response = await _httpClient.SendAsync(request, cancellationToken);
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                await LogErrorAsync("GenerateSessionFeedbackAsync", endpoint, modelName, response, cancellationToken);
+                response.EnsureSuccessStatusCode();
+            }
 
             var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
             return chatResponse?.Choices?.FirstOrDefault()?.Message?.Content ?? "Great job practicing today!";
@@ -175,20 +244,29 @@ namespace Immersio.Infrastructure.Services
             string targetLanguage, 
             CancellationToken cancellationToken)
         {
-            var systemPrompt = $"Analyze the conversation between a language learner and an AI in {targetLanguage}.\n" +
-                               $"Identify 3 to 5 key vocabulary terms, grammar corrections, or useful idioms that the student struggled with or could benefit from reviewing.\n" +
+            var systemPrompt = $"You are an expert language acquisition assistant. Analyze the conversation history between the language learner (USER) and the AI (ASSISTANT) in {targetLanguage}.\n" +
+                               $"Identify 3 to 5 key vocabulary terms, grammar corrections, or useful idioms that the student struggled with, made mistakes on, or could benefit from reviewing based EXCLUSIVELY on the USER's turns and the corrections provided to them.\n\n" +
+                               $"CRITICAL RULES:\n" +
+                               $"1. SOURCE RESTRICTION: Every single flashcard must be directly derived from the actual words, phrases, or errors that occurred in the USER's dialog turns. DO NOT generate random vocabulary or make up unrelated words that were never in the conversation.\n" +
+                               $"2. NO TRIVIAL CARDS: Do not create flashcards for extremely basic words (e.g., 'hello', 'yes', 'no', 'thank you', 'good', 'bye', 'I', 'you') unless the user specifically made a major error with them.\n" +
+                               $"3. ACCURACY: The translation (back) and explanation must perfectly match the specific context of the conversation.\n" +
+                               $"4. Front representation: The 'front' must be the correct word, phrase, or whole sentence in {targetLanguage}.\n" +
+                               $"5. Back representation: The 'back' must be the precise translation or meaning in Vietnamese (Tiếng Việt).\n" +
+                               $"6. Explanation: Provide a brief, useful contextual note or tip in Vietnamese explaining the word's usage or correcting the mistake.\n\n" +
                                $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must have:\n" +
-                               $"- \"front\": The word, phrase or sentence in {targetLanguage}\n" +
-                               $"- \"back\": The translation or definition in Vietnamese (Tiếng Việt)\n" +
-                               $"- \"explanation\": A brief explanation or grammatical tip\n\n" +
+                               $"- \"front\": The correct word/phrase/sentence in {targetLanguage}\n" +
+                               $"- \"back\": The definition/translation in Vietnamese\n" +
+                               $"- \"explanation\": A brief note in Vietnamese\n\n" +
                                $"The output must be strictly valid JSON. Example:\n" +
                                $"{{\n  \"flashcards\": [\n    {{\n      \"front\": \"Famichiki\",\n      \"back\": \"Gà rán của FamilyMart\",\n      \"explanation\": \"Món ăn nổi tiếng tại chuỗi tiện lợi Nhật Bản.\"\n    }}\n  ]\n}}";
 
             var historyText = string.Join("\n", history.Select(m => $"{m.Role}: {m.Text}"));
 
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelFlashcard", cancellationToken);
+
             var requestBody = new
             {
-                model = DefaultModel,
+                model = modelName,
                 messages = new[]
                 {
                     new { role = "system", content = systemPrompt },
@@ -203,12 +281,16 @@ namespace Immersio.Infrastructure.Services
 
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, GroqEndpoint);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-                request.Content = JsonContent.Create(requestBody);
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
 
                 var response = await _httpClient.SendAsync(request, cancellationToken);
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("GenerateFlashcardsAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
 
                 var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
                 var contentJson = chatResponse?.Choices?.FirstOrDefault()?.Message?.Content;
@@ -248,27 +330,30 @@ namespace Immersio.Infrastructure.Services
             CancellationToken cancellationToken)
         {
             var optionsCsv = string.Join(", ", options);
-            var systemPrompt = $"Analyze the language learning session history in {targetLanguage}.\n" +
-                               $"Focus EXCLUSIVELY on the USER's messages, corrections, and sentence improvements. DO NOT generate cards for the AI character's messages.\n\n" +
-                               $"You must generate custom flashcards covering these selected categories: [{optionsCsv}].\n\n" +
-                               $"CATEGORY INSTRUCTIONS:\n" +
-                               $"- 'grammar': Look at the user's messages that had grammatical/spelling errors and corrections. Create cards where Front is the corrected sentence/phrase in {targetLanguage}, Back is the translation/meaning in Vietnamese, and Explanation details what error was made and why the correction is correct.\n" +
-                               $"- 'vocabulary': Extract key vocabulary words, phrases, or idioms that the user used or attempted to use during their turns. Front is the word/phrase in {targetLanguage}, Back is the Vietnamese definition.\n" +
-                               $"- 'improvement': Look at the user's sentences (even correct ones) and propose more natural, idiomatic, or native ways to express those ideas. Front is the advanced/natural expression in {targetLanguage}, Back is the Vietnamese translation of the user's original intent.\n\n" +
-                               $"DETERMINATION OF CARD COUNT:\n" +
-                               $"Do not limit yourself to a fixed count. Generate a dynamic number of cards (from 1 up to 10+) based purely on the depth of the user's conversation and the number of mistakes, words, or improvements identified.\n\n" +
+            var systemPrompt = $"You are an expert language acquisition assistant. Analyze the conversation history between the language learner (USER) and the AI (ASSISTANT) in {targetLanguage}.\n" +
+                               $"You must generate custom flashcards covering these selected categories: [{optionsCsv}] based EXCLUSIVELY on the USER's turns and the corrections provided.\n\n" +
+                               $"CRITICAL RULES:\n" +
+                               $"1. SOURCE RESTRICTION: Every single flashcard must be directly derived from the actual words, phrases, or errors that occurred in the USER's dialog turns in the session. Absolutely DO NOT generate cards for the AI character's messages, and do not make up arbitrary words that were never mentioned.\n" +
+                               $"2. CATEGORY COMPLIANCE:\n" +
+                               $"   - 'grammar': Extract sentences where the user made grammatical errors. Front is the corrected sentence in {targetLanguage}, Back is the translation in Vietnamese, Explanation explains the mistake and correction in Vietnamese.\n" +
+                               $"   - 'vocabulary': Extract key words, expressions, or idioms that the user struggled with or tried to use. Front is the term in {targetLanguage}, Back is the Vietnamese definition.\n" +
+                               $"   - 'improvement': Propose more natural or idiomatic native alternatives for the ideas the user expressed. Front is the natural alternative in {targetLanguage}, Back is the Vietnamese translation of the user's intent.\n" +
+                               $"3. NO TRIVIAL CARDS: Do not include basic words (e.g., 'hello', 'yes', 'no', 'good') unless they were corrected.\n" +
+                               $"4. DYNAMIC CARD COUNT: Generate a dynamic number of cards (from 1 up to 10) depending on how many valid elements can be extracted from the user's turns. If the conversation was short and had no mistakes/key words, only generate 1-2 high-quality cards.\n\n" +
                                $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must have:\n" +
-                               $"- \"front\": The phrase, sentence, or word in {targetLanguage}\n" +
-                               $"- \"back\": The definition or translation in Vietnamese (Tiếng Việt)\n" +
-                               $"- \"explanation\": A helpful grammatical tip or context note in Vietnamese\n\n" +
+                               $"- \"front\": The correct word/phrase/sentence in {targetLanguage}\n" +
+                               $"- \"back\": The definition/translation in Vietnamese (Tiếng Việt)\n" +
+                               $"- \"explanation\": A helpful grammatical tip or contextual note in Vietnamese\n\n" +
                                $"The output must be strictly valid JSON. Example:\n" +
                                $"{{\n  \"flashcards\": [\n    {{\n      \"front\": \"Famichiki\",\n      \"back\": \"Gà rán của FamilyMart\",\n      \"explanation\": \"Từ vựng phổ biến khi mua sắm tại Nhật.\"\n    }}\n  ]\n}}";
 
             var historyText = string.Join("\n", history.Select(m => $"{m.Role}: {m.Text}"));
 
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelFlashcard", cancellationToken);
+
             var requestBody = new
             {
-                model = DefaultModel,
+                model = modelName,
                 messages = new[]
                 {
                     new { role = "system", content = systemPrompt },
@@ -283,12 +368,16 @@ namespace Immersio.Infrastructure.Services
 
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, GroqEndpoint);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-                request.Content = JsonContent.Create(requestBody);
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
 
                 var response = await _httpClient.SendAsync(request, cancellationToken);
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("GenerateCustomFlashcardsAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
 
                 var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
                 var contentJson = chatResponse?.Choices?.FirstOrDefault()?.Message?.Content;
@@ -360,9 +449,11 @@ namespace Immersio.Infrastructure.Services
                              $"Recent Pronunciation Scores: [{speechScoresCsv}]\n" +
                              $"Active Vocabulary Count: {activeWordsCount} words\n";
 
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelFeedback", cancellationToken);
+
             var requestBody = new
             {
-                model = DefaultModel,
+                model = modelName,
                 messages = new[]
                 {
                     new { role = "system", content = systemPrompt },
@@ -383,12 +474,16 @@ namespace Immersio.Infrastructure.Services
 
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, GroqEndpoint);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-                request.Content = JsonContent.Create(requestBody);
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
 
                 var response = await _httpClient.SendAsync(request, cancellationToken);
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("GenerateCefrFeedbackAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
 
                 var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
                 var contentJson = chatResponse?.Choices?.FirstOrDefault()?.Message?.Content;
@@ -447,8 +542,10 @@ namespace Immersio.Infrastructure.Services
             form.Add(new StringContent("whisper-large-v3"), "model");
             form.Add(new StringContent("en"), "language");
 
+            var (_, _, apiKey) = await GetModelConfigAsync("ModelChat", cancellationToken);
+
             var request = new HttpRequestMessage(HttpMethod.Post, GroqAudioEndpoint);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
             request.Content = form;
 
             try
@@ -487,9 +584,11 @@ namespace Immersio.Infrastructure.Services
                                $"The output must be strictly valid JSON. Example:\n" +
                                $"{{\n  \"phrase\": \"I'd like to reserve a table for two, please.\",\n  \"translation\": \"Tôi muốn đặt trước một bàn cho hai người.\",\n  \"explanation\": \"Sử dụng 'I'd like to' là cách lịch sự để đưa ra yêu cầu.\"\n}}";
 
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelPhrase", cancellationToken);
+
             var requestBody = new
             {
-                model = DefaultModel,
+                model = modelName,
                 messages = new[]
                 {
                     new { role = "system", content = systemPrompt },
@@ -510,12 +609,16 @@ namespace Immersio.Infrastructure.Services
 
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, GroqEndpoint);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-                request.Content = JsonContent.Create(requestBody);
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
 
                 var response = await _httpClient.SendAsync(request, cancellationToken);
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("GeneratePronunciationPhraseAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
 
                 var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
                 var contentJson = chatResponse?.Choices?.FirstOrDefault()?.Message?.Content;

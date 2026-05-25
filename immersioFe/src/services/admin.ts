@@ -25,6 +25,13 @@ export interface AiSettings {
   vocabSensitivity: number;
   enableSlang: boolean;
   speedOfSpeech: string;
+  llmEndpoint: string;
+  llmApiKey: string;
+  modelChat: string;
+  modelGrammar: string;
+  modelFeedback: string;
+  modelFlashcard: string;
+  modelPhrase: string;
 }
 
 const BASE_URL = "http://localhost:5249/api/admin";

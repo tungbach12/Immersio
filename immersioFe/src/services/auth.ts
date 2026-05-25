@@ -89,6 +89,26 @@ export const authService = {
     return data;
   },
 
+  async loginWithGoogle(credential: string): Promise<AuthResponse> {
+    const response = await fetch(`${BASE_URL}/google`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ credential }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Google login failed" }));
+      throw new Error(err.detail || "Google login failed");
+    }
+
+    const res = await response.json();
+    const data: AuthResponse = res.data;
+    this.setSession(data.accessToken, data.refreshToken, data.user);
+    return data;
+  },
+
   async refreshToken(): Promise<string> {
     const accessToken = this.getAccessToken();
     const refreshToken = this.getRefreshToken();

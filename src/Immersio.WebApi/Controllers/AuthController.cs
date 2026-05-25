@@ -36,6 +36,15 @@ namespace Immersio.WebApi.Controllers
             return Ok(ApiResponse<AuthResponse>.SuccessResult(result));
         }
 
+        [HttpPost("google")]
+        public async Task<IActionResult> LoginWithGoogle(
+            [FromBody] GoogleLoginRequest request,
+            CancellationToken cancellationToken)
+        {
+            var result = await _authService.LoginWithGoogleAsync(request, cancellationToken);
+            return Ok(ApiResponse<AuthResponse>.SuccessResult(result));
+        }
+
         [HttpPost("refresh")]
         public async Task<IActionResult> RefreshToken(
             [FromBody] RefreshTokenRequest request,

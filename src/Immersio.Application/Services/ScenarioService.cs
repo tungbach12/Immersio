@@ -16,6 +16,7 @@ namespace Immersio.Application.Services
     {
         private readonly IApplicationDbContext _context;
         private readonly ILLMService _llmService;
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, string> SessionLanguages = new();
 
         public ScenarioService(IApplicationDbContext context, ILLMService llmService)
         {
@@ -47,7 +48,7 @@ namespace Immersio.Application.Services
             return MapToDto(scenario);
         }
 
-        public async Task<Guid> StartSessionAsync(Guid userId, Guid scenarioId, CancellationToken cancellationToken)
+        public async Task<(Guid SessionId, string InitialMessage)> StartSessionAsync(Guid userId, Guid scenarioId, string? targetLanguage, CancellationToken cancellationToken)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken);
             if (user == null)
@@ -57,34 +58,36 @@ namespace Immersio.Application.Services
             if (scenario == null)
                 throw new NotFoundException("Scenario", scenarioId);
 
-            // Subscription/daily-limit checks temporarily disabled for development.
-            /*
-            // Enforce daily scenario limit based on subscription tier
-            var today = DateTime.UtcNow.Date;
-            var sessionCountToday = await _context.ScenarioSessions
-                .CountAsync(s => s.UserId == userId && s.StartedAt >= today, cancellationToken);
-
-            var tier = user.ActiveSubscriptionTier;
-            if (string.Equals(tier, "Basic", StringComparison.OrdinalIgnoreCase) && sessionCountToday >= 5)
-            {
-                throw new ConflictException("You have reached your daily scenario limit of 5. Please upgrade your subscription to get more scenarios.");
-            }
-            else if (string.Equals(tier, "Plus", StringComparison.OrdinalIgnoreCase) && sessionCountToday >= 20)
-            {
-                throw new ConflictException("You have reached your daily scenario limit of 20. Please upgrade your subscription to get unlimited scenarios.");
-            }
-            */
-
             // Create new session
             var session = new ScenarioSession(userId, scenarioId);
             
+            var language = string.IsNullOrWhiteSpace(targetLanguage) ? scenario.Language : targetLanguage;
+            SessionLanguages[session.Id] = language;
+
+            var initialMessage = scenario.InitialMessage;
+            if (!string.Equals(language, scenario.Language, StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    initialMessage = await _llmService.GenerateChatResponseAsync(
+                        $"You are a professional language translator. Translate the following opening roleplay dialog sentence of a scenario into {language}. Return ONLY the direct translation, with absolutely no other comments, explanations or markdown quotation: \"{scenario.InitialMessage}\"",
+                        Enumerable.Empty<SessionMessageDto>(),
+                        "Translate",
+                        cancellationToken);
+                }
+                catch
+                {
+                    // Fallback to original initialMessage if translation fails
+                }
+            }
+
             // Auto-append model's initial message
-            session.AddMessage("model", scenario.InitialMessage);
+            session.AddMessage("model", initialMessage);
 
             _context.ScenarioSessions.Add(session);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return session.Id;
+            return (session.Id, initialMessage);
         }
 
         public async Task<ChatOutputResponse> SendMessageAsync(Guid sessionId, string userMessage, CancellationToken cancellationToken)
@@ -100,8 +103,10 @@ namespace Immersio.Application.Services
             if (session.IsFinished)
                 throw new ConflictException("Cannot send messages to a completed session.");
 
+            var language = SessionLanguages.TryGetValue(sessionId, out var lang) ? lang : session.Scenario.Language;
+
             // 1. Core Evaluation: real-time accent / spelling / grammar analyzer
-            var correction = await _llmService.AnalyzeGrammarAsync(userMessage, session.Scenario.Language, cancellationToken);
+            var correction = await _llmService.AnalyzeGrammarAsync(userMessage, language, cancellationToken);
 
             // 2. Append User message
             var isCorrect = string.Equals(correction.Corrected.Trim(), userMessage.Trim(), StringComparison.OrdinalIgnoreCase) 
@@ -124,7 +129,12 @@ namespace Immersio.Application.Services
                 .ToList();
 
             // 4. Generate AI character reply based on contextual roleplay
-            var reply = await _llmService.GenerateChatResponseAsync(session.Scenario.ContextPrompt, history, userMessage, cancellationToken);
+            var prompt = session.Scenario.ContextPrompt;
+            if (!string.Equals(language, session.Scenario.Language, StringComparison.OrdinalIgnoreCase))
+            {
+                prompt += $"\n\nCRITICAL INSTRUCTION: The conversation target language is '{language}'. You must respond in '{language}' only. Keep the character style and scenario context consistent.";
+            }
+            var reply = await _llmService.GenerateChatResponseAsync(prompt, history, userMessage, cancellationToken);
             
             // 5. Append AI reply
             var modelMsg = new SessionMessage(session.Id, "model", reply);
@@ -149,6 +159,8 @@ namespace Immersio.Application.Services
             if (session.IsFinished)
                 throw new ConflictException("Session is already completed.");
 
+            var language = SessionLanguages.TryGetValue(sessionId, out var lang) ? lang : session.Scenario.Language;
+
             // 1. Prepare history
             var history = session.Messages
                 .OrderBy(m => m.SentAt)
@@ -159,7 +171,7 @@ namespace Immersio.Application.Services
             var feedback = await _llmService.GenerateSessionFeedbackAsync(session.Scenario.ContextPrompt, history, cancellationToken);
 
             // 3. Generate suggested flashcard deck candidates
-            var flashcards = await _llmService.GenerateFlashcardsAsync(history, session.Scenario.Language, cancellationToken);
+            var flashcards = await _llmService.GenerateFlashcardsAsync(history, language, cancellationToken);
 
             // 4. Complete session
             session.Complete(feedback);
@@ -183,7 +195,8 @@ namespace Immersio.Application.Services
                 .Select(m => new SessionMessageDto(m.SenderRole, m.Text, m.CorrectionText, m.CorrectionExplanation, m.SentAt))
                 .ToList();
 
-            return await _llmService.GenerateCustomFlashcardsAsync(history, session.Scenario.Language, options, cancellationToken);
+            var language = SessionLanguages.TryGetValue(sessionId, out var lang) ? lang : session.Scenario.Language;
+            return await _llmService.GenerateCustomFlashcardsAsync(history, language, options, cancellationToken);
         }
 
         public async Task SeedScenariosAsync(CancellationToken cancellationToken)

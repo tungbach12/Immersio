@@ -23,7 +23,7 @@ namespace Immersio.Application.DTOs.Scenario
         IEnumerable<ScenarioItemDto> Items
     );
 
-    public sealed record StartSessionRequest(Guid ScenarioId);
+    public sealed record StartSessionRequest(Guid ScenarioId, string? TargetLanguage = null);
 
     public sealed record SessionMessageDto(string Role, string Text, string? CorrectionText, string? CorrectionExplanation, DateTime SentAt);
 

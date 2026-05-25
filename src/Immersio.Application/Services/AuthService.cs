@@ -4,6 +4,7 @@ using Immersio.Domain.Entities;
 using Immersio.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Google.Apis.Auth;
 
 namespace Immersio.Application.Services
 {
@@ -83,6 +84,78 @@ namespace Immersio.Application.Services
             var accessToken = _tokenService.GenerateAccessToken(user);
 
             return new AuthResponse(accessToken, refreshToken.Token, MapToDto(user));
+        }
+
+        public async Task<AuthResponse> LoginWithGoogleAsync(GoogleLoginRequest request, CancellationToken cancellationToken = default)
+        {
+            GoogleJsonWebSignature.Payload payload;
+            try
+            {
+                var clientId = _configuration["Google:ClientId"];
+                var settings = new GoogleJsonWebSignature.ValidationSettings();
+                if (!string.IsNullOrEmpty(clientId))
+                {
+                    settings.Audience = new[] { clientId };
+                }
+
+                payload = await GoogleJsonWebSignature.ValidateAsync(request.Credential, settings);
+            }
+            catch (Exception ex)
+            {
+                throw new UnauthorizedException($"Google token validation failed: {ex.Message}");
+            }
+
+            if (payload == null)
+                throw new UnauthorizedException("Invalid Google credential.");
+
+            var email = payload.Email;
+            var name = payload.Name ?? payload.GivenName ?? "Google User";
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
+
+            if (user is null)
+            {
+                var usernameBase = email.Split('@')[0];
+                var username = usernameBase;
+                int counter = 1;
+                while (await _context.Users.AnyAsync(u => u.Username == username, cancellationToken))
+                {
+                    username = $"{usernameBase}{counter++}";
+                }
+
+                user = new User(username, email, string.Empty);
+
+                var isFirstUser = !await _context.Users.AnyAsync(cancellationToken);
+                if (isFirstUser)
+                {
+                    user.SetRole("Admin");
+                }
+
+                var refreshTokenValue = _tokenService.GenerateRefreshToken();
+                var refreshTokenExpiryDays = int.Parse(_configuration["Jwt:RefreshTokenExpiryDays"] ?? "7");
+                var refreshToken = new RefreshToken(refreshTokenValue, user.Id, DateTime.UtcNow.AddDays(refreshTokenExpiryDays));
+                user.AddRefreshToken(refreshToken);
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                var refreshTokenValue = _tokenService.GenerateRefreshToken();
+                var refreshTokenExpiryDays = int.Parse(_configuration["Jwt:RefreshTokenExpiryDays"] ?? "7");
+                var refreshToken = new RefreshToken(refreshTokenValue, user.Id, DateTime.UtcNow.AddDays(refreshTokenExpiryDays));
+
+                _context.RefreshTokens.Add(refreshToken);
+                await _context.SaveChangesAsync(cancellationToken);
+
+                user.AddRefreshToken(refreshToken);
+            }
+
+            var accessToken = _tokenService.GenerateAccessToken(user);
+            var activeRefreshToken = user.RefreshTokens.LastOrDefault()?.Token ?? _tokenService.GenerateRefreshToken();
+
+            return new AuthResponse(accessToken, activeRefreshToken, MapToDto(user));
         }
 
         public async Task<AuthResponse> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)

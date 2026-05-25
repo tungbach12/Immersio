@@ -65,13 +65,13 @@ export const scenarioService = {
     return this.mapDtoToModel(data);
   },
 
-  async startSession(scenarioId: string): Promise<string> {
+  async startSession(scenarioId: string, targetLanguage?: string): Promise<{ sessionId: string; initialMessage: string }> {
     const response = await authService.fetchWithAuth(`${BASE_URL}/sessions/start`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ scenarioId }),
+      body: JSON.stringify({ scenarioId, targetLanguage }),
     });
 
     if (!response.ok) {
@@ -83,7 +83,10 @@ export const scenarioService = {
     }
 
     const data = await response.json();
-    return data.sessionId;
+    return {
+      sessionId: data.sessionId,
+      initialMessage: data.initialMessage,
+    };
   },
 
   async sendMessage(sessionId: string, message: string): Promise<ChatOutputResponse> {

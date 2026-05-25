@@ -13,19 +13,44 @@ import {
   X,
   Check,
   Brain,
-  Trophy
+  Trophy,
+  UserCircle2
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { scenarioService, Scenario } from "@/services/scenario";
 import { getDecks, addCardsToDeck, addDeck, Deck, Flashcard } from "@/services/decks";
-import { generateGroqSpeech } from "@/services/groq";
 
-type ChatMessage = { role: "user" | "model"; text: string };
+type ChatMessage = { 
+  role: "user" | "model"; 
+  text: string; 
+  correction?: { corrected: string; explanation: string };
+};
+
+const getVoiceForLanguage = (lang?: string, defaultVoice?: string) => {
+  if (!lang) return defaultVoice || "en-US-JennyNeural";
+  const lower = lang.toLowerCase();
+  if (lower.includes("japanese") || lower === "ja") return "ja-JP-NanamiNeural";
+  if (lower.includes("chinese") || lower === "zh") return "zh-CN-XiaoxiaoNeural";
+  if (lower.includes("french") || lower === "fr") return "fr-FR-DeniseNeural";
+  return "en-US-JennyNeural";
+};
+
+const getBrowserLangCode = (lang?: string) => {
+  if (!lang) return "en-US";
+  const lower = lang.toLowerCase();
+  if (lower.includes("japanese") || lower === "ja") return "ja-JP";
+  if (lower.includes("chinese") || lower === "zh") return "zh-CN";
+  if (lower.includes("french") || lower === "fr") return "fr-FR";
+  return "en-US";
+};
 
 export default function ScenarioDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const queryParams = new URLSearchParams(window.location.search);
+  const targetLang = queryParams.get("lang") || undefined;
 
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -64,10 +89,11 @@ export default function ScenarioDetail() {
         setScenario(data);
         setLoadingScenario(false);
         try {
-          const sid = await scenarioService.startSession(data.id);
-          setSessionId(sid);
-          setMessages([{ role: "model", text: data.initialMessage }]);
-          playTextToSpeech(data.initialMessage);
+          const res = await scenarioService.startSession(data.id, targetLang);
+          setSessionId(res.sessionId);
+          const startMsg = res.initialMessage || data.initialMessage;
+          setMessages([{ role: "model", text: startMsg }]);
+          playTextToSpeech(startMsg, targetLang);
         } catch (err: any) {
           console.error("Failed to start session on backend:", err);
           if (err.message) alert(err.message);
@@ -84,7 +110,7 @@ export default function ScenarioDetail() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const playTextToSpeech = async (text: string) => {
+  const playTextToSpeech = async (text: string, langOverride?: string) => {
     if (currentAudioRef.current) {
       try {
         currentAudioRef.current.pause();
@@ -94,7 +120,8 @@ export default function ScenarioDetail() {
     }
 
     try {
-      const selectedVoice = scenario?.voiceId || "en-US-JennyNeural";
+      const activeLang = langOverride || targetLang || scenario?.language;
+      const selectedVoice = getVoiceForLanguage(activeLang, scenario?.voiceId);
       const token = localStorage.getItem("token") || "";
       const response = await fetch("http://localhost:5249/api/practice/tts", {
         method: "POST",
@@ -123,9 +150,8 @@ export default function ScenarioDetail() {
       try {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = scenario?.language === "English" ? 'en-US' :
-                       scenario?.language === "Japanese" ? 'ja-JP' :
-                       scenario?.language === "Chinese" ? 'zh-CN' : 'en-US';
+        const activeLang = langOverride || targetLang || scenario?.language;
+        utterance.lang = getBrowserLangCode(activeLang);
         window.speechSynthesis.speak(utterance);
       } catch (synthErr) {
         console.error("SpeechSynthesis fallback failed:", synthErr);
@@ -180,11 +206,10 @@ export default function ScenarioDetail() {
   // Update Recognition Language when scenario/language changes
   useEffect(() => {
     if (recognitionRef.current && scenario) {
-      recognitionRef.current.lang = scenario.language === "English" ? 'en-US' :
-        scenario.language === "Chinese" ? 'zh-CN' :
-          scenario.language === "Japanese" ? 'ja-JP' : 'en-US';
+      const activeLang = targetLang || scenario.language;
+      recognitionRef.current.lang = getBrowserLangCode(activeLang);
     }
-  }, [scenario]);
+  }, [scenario, targetLang]);
 
   const startListening = () => {
     if (!recognitionRef.current) {
@@ -224,10 +249,20 @@ export default function ScenarioDetail() {
 
     try {
       const response = await scenarioService.sendMessage(sessionId, userMsg);
+      
+      // Update the user message item in history with its correction if any
+      if (response.correction) {
+        setMessages(prev => prev.map((msg, idx) => 
+          (idx === prev.length - 1 && msg.role === "user")
+            ? { ...msg, correction: response.correction }
+            : msg
+        ));
+      }
+
       setMessages(prev => [...prev, { role: "model", text: response.reply }]);
 
       // Auto-play NPC response
-      playTextToSpeech(response.reply);
+      playTextToSpeech(response.reply, targetLang);
 
       // Analysis for feedback (standard logic)
       if (response.correction) {
@@ -396,7 +431,7 @@ export default function ScenarioDetail() {
           
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 shadow-2xl">
-              <span className="text-indigo-400 font-black text-xs uppercase tracking-widest">{scenario.language}</span>
+              <span className="text-indigo-400 font-black text-xs uppercase tracking-widest">{targetLang || scenario.language}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
             </div>
             <div className="hidden sm:flex items-center gap-2 bg-slate-900/80 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 shadow-2xl">
@@ -631,32 +666,90 @@ export default function ScenarioDetail() {
             />
           </div>
 
-          {/* Interactive Cinematic Dialogue HUD Box */}
+          {/* Interactive Dialogue & Scrolling Chat Panel */}
           <div className="relative z-20 w-full max-w-4xl mx-auto flex flex-col gap-4 pointer-events-auto">
             
-            {/* Main Speaker Tag & Transcript Bubble */}
-            <div className="bg-slate-950/90 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-6 md:p-8 shadow-2xl min-h-[160px] relative overflow-hidden flex flex-col justify-between">
-              {/* Speaker Header Card */}
-              <div className="absolute top-0 left-0 bg-indigo-600 text-white px-6 py-2 rounded-br-3xl font-black text-[10px] uppercase tracking-[0.25em] shadow-lg">
-                {messages.length > 0 && messages[messages.length - 1].role === "model" ? scenario.title.split(' ')[0] : "You"}
+            {/* Scrolling Dialogue Panel */}
+            <div className="bg-slate-950/85 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-6 md:p-8 shadow-2xl min-h-[280px] flex flex-col justify-between max-h-[45vh]">
+              
+              {/* Header card for Speech Lab */}
+              <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-3 shrink-0">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-[10px] font-black">
+                    ✦
+                  </div>
+                  <span className="text-[9px] font-black text-white uppercase tracking-widest">IMMERSIO Speech Lab</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-wider">Active Dialogue</span>
+                </div>
               </div>
 
-              {/* Speech Text Box */}
-              <div className="text-white text-base md:text-xl font-bold leading-relaxed mt-6 mb-2 pr-12">
-                {messages.length > 0 
-                  ? messages[messages.length - 1].text 
-                  : `Welcome! Let's start practicing in ${scenario.language}.`}
-              </div>
+              {/* Conversation list */}
+              <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar scrollbar-hide py-2 select-text">
+                {messages.map((msg, idx) => (
+                  <div key={idx} className={cn("flex gap-3 max-w-[85%] animate-fade-in", msg.role === "user" ? "ml-auto justify-end" : "justify-start")}>
+                    {msg.role !== "user" && (
+                      <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white shrink-0 border border-white/10 shadow-md">
+                        <Sparkles size={12} />
+                      </div>
+                    )}
+                    
+                    <div className={cn(
+                      "p-3.5 rounded-2xl border text-xs md:text-sm font-semibold leading-relaxed shadow-sm relative group",
+                      msg.role === "user" 
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-500/20 rounded-tr-none" 
+                        : "bg-white/5 border-white/5 text-slate-200 rounded-tl-none pr-12"
+                    )}>
+                      {msg.role !== "user" && (
+                        <p className="text-[9px] font-black text-indigo-400 mb-1 uppercase tracking-wide leading-none">
+                          {scenario.title.split(' ')[0]} (AI Barista)
+                        </p>
+                      )}
+                      {msg.role === "user" && (
+                        <p className="text-[9px] font-black text-cyan-300 mb-1 text-right uppercase tracking-wide leading-none">
+                          You (Speaking)
+                        </p>
+                      )}
+                      
+                      <p>{msg.text}</p>
+                      
+                      {/* Audio Button overlay on AI messages */}
+                      {msg.role !== "user" && (
+                        <button
+                          className="absolute bottom-2.5 right-2.5 w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/55 hover:text-white hover:bg-white/15 transition-all duration-200"
+                          onClick={() => playTextToSpeech(msg.text, targetLang)}
+                        >
+                          <Volume2 size={12} />
+                        </button>
+                      )}
 
-              {/* Right Audio Button */}
-              {messages.length > 0 && messages[messages.length - 1].role === "model" && (
-                <button
-                  className="absolute bottom-6 right-6 w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all active:scale-90"
-                  onClick={() => playTextToSpeech(messages[messages.length - 1].text)}
-                >
-                  <Volume2 size={20} />
-                </button>
-              )}
+                      {/* Inline grammar correction inside user bubble */}
+                      {msg.role === "user" && msg.correction && (
+                        <div className="mt-2.5 pt-2.5 border-t border-white/10 text-[9px] text-cyan-200 font-medium">
+                          💡 Suggestion: Did you mean <span className="font-extrabold text-white">"{msg.correction.corrected}"</span>?
+                          <p className="italic text-white/70 mt-0.5 font-bold">"{msg.correction.explanation}"</p>
+                        </div>
+                      )}
+
+                      {/* Accent / pronunciation rating bubble mockup inside user speech bubbles */}
+                      {msg.role === "user" && (
+                        <div className="mt-2.5 flex items-center justify-end gap-1 shrink-0">
+                          <span className="text-[8px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">Pronunciation: 96%</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {msg.role === "user" && (
+                      <div className="w-8 h-8 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-white shrink-0 shadow-md">
+                        <UserCircle2 size={14} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
             </div>
 
             {/* User Response controls */}

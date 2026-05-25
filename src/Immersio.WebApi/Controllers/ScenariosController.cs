@@ -45,8 +45,8 @@ namespace Immersio.WebApi.Controllers
             if (!Guid.TryParse(userIdStr, out var userId))
                 return Unauthorized(ApiResponse.FailureResult("Invalid user identity."));
 
-            var sessionId = await _scenarioService.StartSessionAsync(userId, request.ScenarioId, cancellationToken);
-            return Ok(ApiResponse<object>.SuccessResult(new { SessionId = sessionId }));
+            var (sessionId, initialMessage) = await _scenarioService.StartSessionAsync(userId, request.ScenarioId, request.TargetLanguage, cancellationToken);
+            return Ok(ApiResponse<object>.SuccessResult(new { SessionId = sessionId, InitialMessage = initialMessage }));
         }
 
         [HttpPost("sessions/{sessionId:guid}/chat")]

@@ -73,7 +73,8 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ steps.prep.outputs.owner_lower }}/immersio-be:latest
-          no-cache: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy:
     name: Deploy to Linux VPS

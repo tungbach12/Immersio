@@ -67,29 +67,28 @@ namespace Immersio.WebApi.Controllers
         [HttpPost("assess-pronunciation")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> AssessPronunciation(
-            [FromForm] Microsoft.AspNetCore.Http.IFormFile audio,
-            [FromForm] string phrase,
+            [FromForm] AssessPronunciationRequest request,
             CancellationToken cancellationToken)
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdStr, out var userId))
                 return Unauthorized(ApiResponse.FailureResult("Invalid user identity."));
 
-            if (audio == null || audio.Length == 0)
+            if (request.Audio == null || request.Audio.Length == 0)
                 return BadRequest(ApiResponse.FailureResult("No audio file was uploaded."));
 
-            if (string.IsNullOrWhiteSpace(phrase))
+            if (string.IsNullOrWhiteSpace(request.Phrase))
                 return BadRequest(ApiResponse.FailureResult("Target phrase is required."));
 
             using var memoryStream = new System.IO.MemoryStream();
-            await audio.CopyToAsync(memoryStream, cancellationToken);
+            await request.Audio.CopyToAsync(memoryStream, cancellationToken);
             var audioBytes = memoryStream.ToArray();
 
             var result = await _pronunciationService.AssessPronunciationAsync(
                 userId,
                 audioBytes,
-                audio.FileName,
-                phrase,
+                request.Audio.FileName,
+                request.Phrase,
                 cancellationToken);
 
             return Ok(ApiResponse<object>.SuccessResult(result));
@@ -199,5 +198,14 @@ namespace Immersio.WebApi.Controllers
     {
         public string Text { get; set; } = null!;
         public string Voice { get; set; } = null!;
+    }
+
+    /// <summary>Request DTO for multipart/form-data pronunciation assessment.</summary>
+    public class AssessPronunciationRequest
+    {
+        /// <summary>Audio file to assess (wav/mp3/webm)</summary>
+        public Microsoft.AspNetCore.Http.IFormFile Audio { get; set; } = null!;
+        /// <summary>Target phrase the user attempted to pronounce</summary>
+        public string Phrase { get; set; } = null!;
     }
 }

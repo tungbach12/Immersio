@@ -1,6 +1,6 @@
-import { authService } from "./auth";
+import { authService, API_BASE } from "./auth";
 
-const BASE_URL = "http://localhost:5249/api/practice";
+const BASE_URL = `${API_BASE}/api/practice`;
 
 export interface PronunciationLogDto {
   id: string;

@@ -1,4 +1,4 @@
-import { authService, UserDto } from "./auth";
+import { authService, UserDto, API_BASE } from "./auth";
 
 export interface GrowthPoint {
   name: string;
@@ -34,8 +34,8 @@ export interface AiSettings {
   modelPhrase: string;
 }
 
-const BASE_URL = "http://localhost:5249/api/admin";
-const SCENARIOS_URL = "http://localhost:5249/api/scenarios";
+const BASE_URL = `${API_BASE}/api/admin`;
+const SCENARIOS_URL = `${API_BASE}/api/scenarios`;
 
 export const adminService = {
   async getDashboardStats(): Promise<AdminDashboardStats> {

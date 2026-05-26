@@ -1,4 +1,4 @@
-import { authService } from "./auth";
+import { authService, API_BASE } from "./auth";
 
 export interface ScenarioItem {
   id: string;
@@ -44,7 +44,7 @@ export interface FinishSessionResponse {
   suggestedFlashcards: { front: string; back: string; explanation?: string; tag?: string }[];
 }
 
-const BASE_URL = "http://localhost:5249/api/scenarios";
+const BASE_URL = `${API_BASE}/api/scenarios`;
 
 export const scenarioService = {
   async getScenarios(): Promise<Scenario[]> {

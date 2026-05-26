@@ -17,7 +17,9 @@ export interface AuthResponse {
   user: UserDto;
 }
 
-const BASE_URL = "http://localhost:5249/api/auth";
+const isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+export const API_BASE = isLocal ? "http://localhost:5249" : "";
+const BASE_URL = `${API_BASE}/api/auth`;
 
 export const authService = {
   getAccessToken(): string | null {

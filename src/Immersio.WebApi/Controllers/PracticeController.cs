@@ -65,6 +65,7 @@ namespace Immersio.WebApi.Controllers
         }
 
         [HttpPost("assess-pronunciation")]
+        [Consumes("multipart/form-data")]
         public async Task<IActionResult> AssessPronunciation(
             [FromForm] Microsoft.AspNetCore.Http.IFormFile audio,
             [FromForm] string phrase,

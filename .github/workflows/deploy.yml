@@ -132,9 +132,9 @@ jobs:
             # Log into GHCR inside the VPS
             echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
-            # Set environment variables for docker compose run
-            export GITHUB_REPOSITORY_OWNER=$OWNER_LOWER
-            export DB_PASSWORD=$DB_PASSWORD
+            # Set environment variables for docker compose run via .env file
+            echo "DB_PASSWORD=$DB_PASSWORD" > .env
+            echo "GITHUB_REPOSITORY_OWNER=$OWNER_LOWER" >> .env
 
             # Pull the latest backend image and restart the docker-compose services
             docker compose pull

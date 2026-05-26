@@ -90,24 +90,16 @@ jobs:
           name: frontend-dist
           path: dist
 
-      - name: Copy Frontend Static Assets to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "dist/*"
-          target: "/var/www/immersio"
-          strip_components: 1
-          rm: true
+      - name: Compress Frontend Assets (Tarball Optimization)
+        run: tar -czf dist.tar.gz -C dist .
 
-      - name: Copy Docker Compose config to VPS
+      - name: Copy Deployment Packages to VPS (Single Stream SCP)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "docker-compose.yml"
+          source: "dist.tar.gz,docker-compose.yml"
           target: "/home/azureuser/immersio"
 
       - name: Execute remote deployment commands via SSH
@@ -126,6 +118,13 @@ jobs:
             # Create target deployment folder if missing
             mkdir -p /home/azureuser/immersio
             cd /home/azureuser/immersio
+
+            # Extract frontend assets to Nginx folder and align permissions
+            sudo rm -rf /var/www/immersio/*
+            sudo tar -xzf dist.tar.gz -C /var/www/immersio
+            sudo chown -R azureuser:azureuser /var/www/immersio
+            sudo chmod -R 755 /var/www/immersio
+            rm -f dist.tar.gz
 
             # Set owner lowercase
             OWNER_LOWER=$(echo "$GITHUB_OWNER" | tr '[:upper:]' '[:lower:]')

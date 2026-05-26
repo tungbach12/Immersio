@@ -17,13 +17,16 @@ namespace Immersio.WebApi.Controllers
     {
         private readonly IPronunciationService _pronunciationService;
         private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
+        private readonly ILLMService _llmService;
 
         public PracticeController(
             IPronunciationService pronunciationService,
-            Microsoft.Extensions.Configuration.IConfiguration configuration)
+            Microsoft.Extensions.Configuration.IConfiguration configuration,
+            ILLMService llmService)
         {
             _pronunciationService = pronunciationService;
             _configuration = configuration;
+            _llmService = llmService;
         }
 
         [HttpPost("pronunciation-log")]
@@ -175,6 +178,19 @@ namespace Immersio.WebApi.Controllers
 
             var result = await _pronunciationService.GeneratePhraseAsync(request, cancellationToken);
             return Ok(ApiResponse<GeneratedPhraseDto>.SuccessResult(result));
+        }
+
+        [HttpPost("dictionary-lookup")]
+        public async Task<IActionResult> DictionaryLookup(
+            [FromBody] DictionaryLookupRequest request,
+            CancellationToken cancellationToken)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Word))
+                return BadRequest(ApiResponse.FailureResult("Word parameter is required."));
+
+            var targetLanguage = string.IsNullOrWhiteSpace(request.TargetLanguage) ? "English" : request.TargetLanguage;
+            var result = await _llmService.LookupWordAsync(request.Word, targetLanguage, cancellationToken);
+            return Ok(ApiResponse<DictionaryEntryDto>.SuccessResult(result));
         }
     }
 

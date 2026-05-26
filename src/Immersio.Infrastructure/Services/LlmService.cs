@@ -249,16 +249,22 @@ namespace Immersio.Infrastructure.Services
                                $"CRITICAL RULES:\n" +
                                $"1. SOURCE RESTRICTION: Every single flashcard must be directly derived from the actual words, phrases, or errors that occurred in the USER's dialog turns. DO NOT generate random vocabulary or make up unrelated words that were never in the conversation.\n" +
                                $"2. NO TRIVIAL CARDS: Do not create flashcards for extremely basic words (e.g., 'hello', 'yes', 'no', 'thank you', 'good', 'bye', 'I', 'you') unless the user specifically made a major error with them.\n" +
-                               $"3. ACCURACY: The translation (back) and explanation must perfectly match the specific context of the conversation.\n" +
-                               $"4. Front representation: The 'front' must be the correct word, phrase, or whole sentence in {targetLanguage}.\n" +
-                               $"5. Back representation: The 'back' must be the precise translation or meaning in Vietnamese (Tiếng Việt).\n" +
-                               $"6. Explanation: Provide a brief, useful contextual note or tip in Vietnamese explaining the word's usage or correcting the mistake.\n\n" +
-                               $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must have:\n" +
-                               $"- \"front\": The correct word/phrase/sentence in {targetLanguage}\n" +
-                               $"- \"back\": The definition/translation in Vietnamese\n" +
-                               $"- \"explanation\": A brief note in Vietnamese\n\n" +
+                               $"3. HIGH MEMORY RETRIEVAL FORMAT:\n" +
+                               $"   - For vocabulary terms: \n" +
+                               $"     * 'front': The target word/phrase with its IPA phonetic guide and context tag, followed by a fill-in-the-blank sentence where the word is replaced by a blank line (e.g. \"accomplish /əˈkʌm.plɪʃ/ [verb • Scenario Context]\\nWe can _______ anything if we work together. (Điền vào chỗ trống)\").\n" +
+                               $"     * 'back': The precise translation or meaning in Vietnamese (Tiếng Việt).\n" +
+                               $"     * 'explanation': A helpful definition in English, followed by the complete example sentence, its translation in Vietnamese, and synonyms (e.g. \"Definition: To succeed in doing something...\\n\\nExample: 'We can accomplish anything...'\\nTranslation: 'Chúng ta có thể...'\\n\\nSynonyms: achieve, fulfill\").\n" +
+                               $"   - For grammar corrections: \n" +
+                               $"     * 'front': The sentence containing the user's highlighted error (e.g. \"I *goes* to school yesterday. ❌ (Sửa lỗi sai) [Simple Past]\").\n" +
+                               $"     * 'back': The corrected sentence in the target language (e.g. \"I went to school yesterday. (Corrected)\").\n" +
+                               $"     * 'explanation': A clear, encouraging grammatical rule in Vietnamese explaining the mistake, the corrected form, and a short rule formula (e.g. \"Giải thích: Trạng từ 'yesterday' yêu cầu quá khứ đơn...\\n\\nCông thức: S + V2/ed\").\n" +
+                               $"   - For natural improvements:\n" +
+                               $"     * 'front': The flat/awkward sentence that the user said, marked with a warning sign (e.g. \"I want a cup of coffee. ⚠️ (Nói tự nhiên hơn?) [Polite Register]\").\n" +
+                               $"     * 'back': The natural, native-level formulation in the target language (e.g. \"Could I get a cup of coffee, please? [Polite]\").\n" +
+                               $"     * 'explanation': The Vietnamese translation of the user's intent, plus a short Vietnamese nuance note explaining why the native formulation is more appropriate or polite.\n\n" +
+                               $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must have \"front\", \"back\", and \"explanation\" keys.\n\n" +
                                $"The output must be strictly valid JSON. Example:\n" +
-                               $"{{\n  \"flashcards\": [\n    {{\n      \"front\": \"Famichiki\",\n      \"back\": \"Gà rán của FamilyMart\",\n      \"explanation\": \"Món ăn nổi tiếng tại chuỗi tiện lợi Nhật Bản.\"\n    }}\n  ]\n}}";
+                               $"{{\n  \"flashcards\": [\n    {{\n      \"front\": \"accomplish /əˈkʌm.plɪʃ/ [verb]\\nWe can _______ anything if we work together. (Điền vào chỗ trống)\",\n      \"back\": \"hoàn thành, đạt được\",\n      \"explanation\": \"Definition: To succeed in doing something.\\n\\nExample: 'We can accomplish...'\\nTranslation: 'Chúng ta có thể...'\\n\\nSynonyms: achieve\"\n    }}\n  ]\n}}";
 
             var historyText = string.Join("\n", history.Select(m => $"{m.Role}: {m.Text}"));
 
@@ -334,18 +340,24 @@ namespace Immersio.Infrastructure.Services
                                $"You must generate custom flashcards covering these selected categories: [{optionsCsv}] based EXCLUSIVELY on the USER's turns and the corrections provided.\n\n" +
                                $"CRITICAL RULES:\n" +
                                $"1. SOURCE RESTRICTION: Every single flashcard must be directly derived from the actual words, phrases, or errors that occurred in the USER's dialog turns in the session. Absolutely DO NOT generate cards for the AI character's messages, and do not make up arbitrary words that were never mentioned.\n" +
-                               $"2. CATEGORY COMPLIANCE:\n" +
-                               $"   - 'grammar': Extract sentences where the user made grammatical errors. Front is the corrected sentence in {targetLanguage}, Back is the translation in Vietnamese, Explanation explains the mistake and correction in Vietnamese.\n" +
-                               $"   - 'vocabulary': Extract key words, expressions, or idioms that the user struggled with or tried to use. Front is the term in {targetLanguage}, Back is the Vietnamese definition.\n" +
-                               $"   - 'improvement': Propose more natural or idiomatic native alternatives for the ideas the user expressed. Front is the natural alternative in {targetLanguage}, Back is the Vietnamese translation of the user's intent.\n" +
+                               $"2. CATEGORY COMPLIANCE & HIGH MEMORY RETRIEVAL FORMAT:\n" +
+                               $"   - 'grammar': Extract sentences where the user made grammatical errors. \n" +
+                               $"     * 'front': The sentence containing the user's highlighted error (e.g. \"I *goes* to school yesterday. ❌ (Sửa lỗi sai) [Simple Past]\").\n" +
+                               $"     * 'back': The corrected sentence in the target language (e.g. \"I went to school yesterday. (Corrected)\").\n" +
+                               $"     * 'explanation': A clear, encouraging grammatical rule in Vietnamese explaining the mistake, the corrected form, and a short rule formula (e.g. \"Giải thích: Trạng từ 'yesterday' yêu cầu quá khứ đơn...\\n\\nCông thức: S + V2/ed\").\n" +
+                               $"   - 'vocabulary': Extract key words, expressions, or idioms that the user struggled with or tried to use.\n" +
+                               $"     * 'front': The target word/phrase with its IPA phonetic guide and context tag, followed by a fill-in-the-blank sentence where the word is replaced by a blank line (e.g. \"accomplish /əˈkʌm.plɪʃ/ [verb • Scenario Context]\\nWe can _______ anything if we work together. (Điền vào chỗ trống)\").\n" +
+                               $"     * 'back': The precise translation or meaning in Vietnamese (Tiếng Việt).\n" +
+                               $"     * 'explanation': A helpful definition in English, followed by the complete example sentence, its translation in Vietnamese, and synonyms (e.g. \"Definition: To succeed in doing something...\\n\\nExample: 'We can accomplish anything...'\\nTranslation: 'Chúng ta có thể...'\\n\\nSynonyms: achieve, fulfill\").\n" +
+                               $"   - 'improvement': Propose more natural or idiomatic native alternatives for the ideas the user expressed.\n" +
+                               $"     * 'front': The flat/awkward sentence that the user said, marked with a warning sign (e.g. \"I want a cup of coffee. ⚠️ (Nói tự nhiên hơn?) [Polite Register]\").\n" +
+                               $"     * 'back': The natural, native-level formulation in the target language (e.g. \"Could I get a cup of coffee, please? [Polite]\").\n" +
+                               $"     * 'explanation': The Vietnamese translation of the user's intent, plus a short Vietnamese nuance note explaining why the native formulation is more appropriate or polite.\n" +
                                $"3. NO TRIVIAL CARDS: Do not include basic words (e.g., 'hello', 'yes', 'no', 'good') unless they were corrected.\n" +
                                $"4. DYNAMIC CARD COUNT: Generate a dynamic number of cards (from 1 up to 10) depending on how many valid elements can be extracted from the user's turns. If the conversation was short and had no mistakes/key words, only generate 1-2 high-quality cards.\n\n" +
-                               $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must have:\n" +
-                               $"- \"front\": The correct word/phrase/sentence in {targetLanguage}\n" +
-                               $"- \"back\": The definition/translation in Vietnamese (Tiếng Việt)\n" +
-                               $"- \"explanation\": A helpful grammatical tip or contextual note in Vietnamese\n\n" +
+                               $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must have \"front\", \"back\", and \"explanation\" keys.\n\n" +
                                $"The output must be strictly valid JSON. Example:\n" +
-                               $"{{\n  \"flashcards\": [\n    {{\n      \"front\": \"Famichiki\",\n      \"back\": \"Gà rán của FamilyMart\",\n      \"explanation\": \"Từ vựng phổ biến khi mua sắm tại Nhật.\"\n    }}\n  ]\n}}";
+                               $"{{\n  \"flashcards\": [\n    {{\n      \"front\": \"accomplish /əˈkʌm.plɪʃ/ [verb]\\nWe can _______ anything if we work together. (Điền vào chỗ trống)\",\n      \"back\": \"hoàn thành, đạt được\",\n      \"explanation\": \"Definition: To succeed in doing something.\\n\\nExample: 'We can accomplish...'\\nTranslation: 'Chúng ta có thể...'\\n\\nSynonyms: achieve\"\n    }}\n  ]\n}}";
 
             var historyText = string.Join("\n", history.Select(m => $"{m.Role}: {m.Text}"));
 
@@ -640,6 +652,106 @@ namespace Immersio.Infrastructure.Services
             }
 
             return new GeneratedPhraseDto(defaultPhrase, defaultTranslation, defaultExplanation);
+        }
+
+        public async Task<DictionaryEntryDto> LookupWordAsync(
+            string word,
+            string targetLanguage,
+            CancellationToken cancellationToken)
+        {
+            var systemPrompt = $"You are an advanced bilingual dictionary service for language learners. " +
+                               $"Provide a highly detailed and accurate dictionary entry for the queried word/phrase in the target language '{targetLanguage}'.\n\n" +
+                               $"INSTRUCTIONS:\n" +
+                               $"- The output must be strictly in Vietnamese (Tiếng Việt) for the translation and example translation, and English for the definition.\n" +
+                               $"- Provide the international phonetic alphabet (IPA) representation for the phonetic property.\n" +
+                               $"- Choose the most common part of speech and definition for the word/phrase.\n" +
+                               $"- Provide a high-quality example sentence in '{targetLanguage}' demonstrating its typical conversational usage, followed by its Vietnamese translation.\n\n" +
+                               $"Return a JSON object with strictly these keys:\n" +
+                               $"- \"word\": The exact word/phrase queried.\n" +
+                               $"- \"translation\": The standard Vietnamese translation/meaning of the word/phrase.\n" +
+                               $"- \"phonetic\": The international phonetic alphabet (IPA) representation (e.g. /haʊ/, /kəˈmit/).\n" +
+                               $"- \"partOfSpeech\": The part of speech (e.g. noun, verb, adjective, adverb, phrase, idiom).\n" +
+                               $"- \"definition\": A clear, concise English definition of the word/phrase.\n" +
+                               $"- \"example\": A natural, common example sentence using the word in {targetLanguage}.\n" +
+                               $"- \"exampleTranslation\": The Vietnamese translation of the example sentence.\n\n" +
+                               $"The output must be strictly valid JSON. Example:\n" +
+                               $"{{\n  \"word\": \"accomplish\",\n  \"translation\": \"hoàn thành, đạt được\",\n  \"phonetic\": \"/əˈkʌm.plɪʃ/\",\n  \"partOfSpeech\": \"verb\",\n  \"definition\": \"To succeed in doing something, especially after a lot of effort.\",\n  \"example\": \"We can accomplish anything if we work together.\",\n  \"exampleTranslation\": \"Chúng ta có thể đạt được bất cứ điều gì nếu làm việc cùng nhau.\"\n}}";
+
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelChat", cancellationToken);
+
+            var requestBody = new
+            {
+                model = modelName,
+                messages = new[]
+                {
+                    new { role = "system", content = systemPrompt },
+                    new { role = "user", content = $"Lookup details for the word/phrase: {word}" }
+                },
+                temperature = 0.3,
+                response_format = new { type = "json_object" },
+                stream = false
+            };
+
+            var defaultPhonetic = "/.../";
+            var defaultTranslation = "Nghĩa của từ.";
+            var defaultPartOfSpeech = "noun";
+            var defaultDefinition = "Definition of the word.";
+            var defaultExample = "An example sentence.";
+            var defaultExampleTranslation = "Câu ví dụ.";
+
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
+
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("LookupWordAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
+
+                var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
+                var contentJson = chatResponse?.Choices?.FirstOrDefault()?.Message?.Content;
+
+                if (!string.IsNullOrWhiteSpace(contentJson))
+                {
+                    using var doc = JsonDocument.Parse(contentJson);
+                    var root = doc.RootElement;
+                    
+                    var trans = root.TryGetProperty("translation", out var t) ? t.GetString() : defaultTranslation;
+                    var phone = root.TryGetProperty("phonetic", out var p) ? p.GetString() : defaultPhonetic;
+                    var pos = root.TryGetProperty("partOfSpeech", out var ps) ? ps.GetString() : defaultPartOfSpeech;
+                    var def = root.TryGetProperty("definition", out var d) ? d.GetString() : defaultDefinition;
+                    var ex = root.TryGetProperty("example", out var e) ? e.GetString() : defaultExample;
+                    var exTrans = root.TryGetProperty("exampleTranslation", out var et) ? et.GetString() : defaultExampleTranslation;
+
+                    return new DictionaryEntryDto(
+                        Word: word,
+                        Translation: trans ?? defaultTranslation,
+                        Phonetic: phone ?? defaultPhonetic,
+                        PartOfSpeech: pos ?? defaultPartOfSpeech,
+                        Definition: def ?? defaultDefinition,
+                        Example: ex ?? defaultExample,
+                        ExampleTranslation: exTrans ?? defaultExampleTranslation
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to lookup dictionary entry: {ex.Message}");
+            }
+
+            return new DictionaryEntryDto(
+                Word: word,
+                Translation: defaultTranslation,
+                Phonetic: defaultPhonetic,
+                PartOfSpeech: defaultPartOfSpeech,
+                Definition: defaultDefinition,
+                Example: defaultExample,
+                ExampleTranslation: defaultExampleTranslation
+            );
         }
     }
 

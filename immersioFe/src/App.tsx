@@ -8,8 +8,9 @@ import Register from "@/pages/auth/Register";
 import StudentDashboard from "@/pages/student/Dashboard";
 import Scenarios from "@/pages/student/Scenarios";
 import ScenarioDetail from "@/pages/student/ScenarioDetail";
-import Practice from "@/pages/student/Practice";
+import VocalLab from "@/pages/student/VocalLab";
 import FlashcardsPage from "@/pages/student/FlashcardsPage";
+import DictionaryPage from "@/pages/student/DictionaryPage";
 import Profile from "@/pages/student/Profile";
 import Subscription from "@/pages/student/Subscription";
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -32,9 +33,10 @@ export default function App() {
           <Route path="dashboard" element={<StudentDashboard />} />
           <Route path="scenarios" element={<Scenarios />} />
           <Route path="scenarios/:id" element={<ScenarioDetail />} />
-          <Route path="practice" element={<Practice />} />
+          <Route path="vocal-lab" element={<VocalLab />} />
           <Route path="flashcards" element={<FlashcardsPage />} />
           <Route path="flashcards/:deckId" element={<FlashcardsPage />} />
+          <Route path="dictionary" element={<DictionaryPage />} />
           <Route path="profile" element={<Profile />} />
           <Route path="subscription" element={<Subscription />} />
           <Route index element={<Navigate to="dashboard" replace />} />

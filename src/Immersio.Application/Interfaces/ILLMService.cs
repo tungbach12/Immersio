@@ -54,5 +54,10 @@ namespace Immersio.Application.Interfaces
             string level,
             string topic,
             CancellationToken cancellationToken);
+
+        Task<DictionaryEntryDto> LookupWordAsync(
+            string word,
+            string targetLanguage,
+            CancellationToken cancellationToken);
     }
 }

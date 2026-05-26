@@ -21,6 +21,7 @@ import { scenarios } from "@/data/scenarios";
 import { motion, AnimatePresence } from "motion/react";
 import { authService, UserDto } from "@/services/auth";
 import { practiceService, CefrAnalysisDto } from "@/services/practice";
+import { scenarioService, Scenario } from "@/services/scenario";
 import { cn } from "@/lib/utils";
 
 const CEFR_CONFIG: Record<
@@ -88,9 +89,10 @@ export default function StudentDashboard() {
   const [cefrData, setCefrData] = useState<CefrAnalysisDto | null>(null);
   const [showCefrBreakdown, setShowCefrBreakdown] = useState(false);
   const [loadingCefr, setLoadingCefr] = useState(false);
-
-  const recommendedScenarios = scenarios.slice(0, 3);
-  const featuredScenario = scenarios[0];
+  const [dbScenarios, setDbScenarios] = useState<Scenario[]>([]);
+  const [practiceLanguage] = useState<string>(() => {
+    return localStorage.getItem("practice_language") || "English";
+  });
 
   useEffect(() => {
     // Sync latest user from server
@@ -101,7 +103,17 @@ export default function StudentDashboard() {
         setUser(latest);
       })
       .catch((err) => console.error("Profile sync failed:", err));
+
+    // Load real scenarios from database
+    scenarioService.getScenarios()
+      .then((list) => setDbScenarios(list))
+      .catch((err) => console.error("Failed to load scenarios for dashboard:", err));
   }, []);
+
+  // Determine active scenarios (use real database ones if loaded, otherwise fallback to local mocks)
+  const recommendedScenarios = dbScenarios.length > 0 
+    ? dbScenarios.slice(0, 3) 
+    : (scenarios as unknown as Scenario[]).slice(0, 3);
 
   const handleToggleCefr = async () => {
     if (showCefrBreakdown) {
@@ -364,7 +376,7 @@ export default function StudentDashboard() {
                 </div>
               )}
 
-              <Link to="/student/practice">
+              <Link to="/student/vocal-lab">
                 <Button className="w-full h-12 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-black uppercase tracking-widest text-[10px] border border-white/10 gap-2 transition-transform active:scale-95">
                   <Zap size={14} className="text-indigo-400" />
                   Practice Now to Level Up
@@ -376,83 +388,7 @@ export default function StudentDashboard() {
         )}
       </AnimatePresence>
 
-          {/* Active Scenario */}
-      <section>
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-black text-slate-100 italic tracking-tight">
-            Active Lesson
-          </h2>
-          <Link
-            to="/student/scenarios"
-            className="text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:underline hover:text-indigo-300 transition-colors"
-          >
-            View All
-          </Link>
-        </div>
-        <Link
-          to={`/student/scenarios/${featuredScenario.id}`}
-          className="block"
-        >
-          <Card className="group border-white/5 rounded-[2.5rem] shadow-lg shadow-black/30 hover:shadow-2xl transition-all cursor-pointer overflow-hidden bg-slate-900/60 backdrop-blur-xl">
-            <div className="flex flex-col lg:flex-row">
-              <div className="w-full lg:w-56 h-44 lg:h-auto bg-slate-800 relative overflow-hidden">
-                <img
-                  src={featuredScenario.image}
-                  alt="Scenario"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                <div className="absolute bottom-4 left-4">
-                  <span className="px-3 py-1 rounded-lg bg-black/40 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest border border-white/10">
-                    {featuredScenario.language}
-                  </span>
-                </div>
-              </div>
-              <div className="flex-1 p-8 lg:p-10 flex flex-col justify-center">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 text-[9px] font-black uppercase tracking-[0.2em] border border-indigo-500/20">
-                    {featuredScenario.category}
-                  </span>
-                  <span className="text-slate-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5">
-                    <Monitor size={12} />
-                    15 min left
-                  </span>
-                </div>
-                <h3 className="text-2xl font-black text-slate-100 mb-6 tracking-tight leading-tight group-hover:text-indigo-400 transition-colors">
-                  {featuredScenario.title}
-                </h3>
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                      Progress
-                    </span>
-                    <span className="text-sm font-black text-indigo-400 italic">
-                      65%
-                    </span>
-                  </div>
-                  <div className="h-3 bg-white/5 rounded-full overflow-hidden border border-white/5 p-0.5">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: "65%" }}
-                      transition={{ duration: 1.5, ease: "circOut" }}
-                      className="h-full bg-gradient-vibrant rounded-full shadow-md"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="p-6 lg:p-8 flex items-center justify-center bg-white/5 border-t lg:border-t-0 lg:border-l border-white/5">
-                <Button
-                  size="icon"
-                  className="rounded-2xl w-14 h-14 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-900/30 group-hover:scale-110 transition-transform"
-                >
-                  <Play className="ml-1 fill-white" size={20} />
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </Link>
-      </section>
 
       {/* Recommendations */}
       <section>
@@ -470,7 +406,7 @@ export default function StudentDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {recommendedScenarios.map((scenario) => (
             <Link
-              to={`/student/scenarios/${scenario.id}`}
+              to={`/student/scenarios/${scenario.id}?lang=${practiceLanguage}`}
               key={scenario.id}
               className="block group"
             >

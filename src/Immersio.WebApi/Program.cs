@@ -20,7 +20,7 @@ builder.Services.AddControllers()
 
 // ── DbContext ────────────────────────────────────────────────────────
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IApplicationDbContext>(provider =>
     provider.GetRequiredService<ApplicationDbContext>());
@@ -112,9 +112,13 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// ── Seed Scenarios ───────────────────────────────────────────────────
+// ── Auto-Migrate & Seed ──────────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
+    // Run pending EF Core migrations automatically on startup
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+
     var scenarioService = scope.ServiceProvider.GetRequiredService<IScenarioService>();
     await scenarioService.SeedScenariosAsync(default);
 

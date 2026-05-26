@@ -117,7 +117,38 @@ export const practiceService = {
 
     return response.json();
   },
+
+  async lookupWord(
+    word: string,
+    targetLanguage: string
+  ): Promise<DictionaryEntryDto> {
+    const response = await authService.fetchWithAuth(
+      `${BASE_URL}/dictionary-lookup`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ word, targetLanguage }),
+      }
+    );
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Lookup failed" }));
+      throw new Error(err.detail || "Failed to lookup dictionary entry");
+    }
+
+    return response.json();
+  },
 };
+
+export interface DictionaryEntryDto {
+  word: string;
+  translation: string;
+  phonetic: string;
+  partOfSpeech: string;
+  definition: string;
+  example: string;
+  exampleTranslation: string;
+}
 
 export interface PhonemeAssessmentDto {
   phoneme: string;

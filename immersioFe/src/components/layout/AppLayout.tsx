@@ -14,7 +14,10 @@ import {
   Bell,
   LogOut,
   Sparkles,
-  Crown
+  Crown,
+  Book,
+  Brain,
+  Mic
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -23,7 +26,11 @@ import { authService, UserDto } from "@/services/auth";
 export default function AppLayout() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
-  const isScenarioDetail = location.pathname.includes("/scenarios/") && !location.pathname.endsWith("/scenarios");
+
+  const segments = location.pathname.split("/").filter(Boolean);
+  const isScenarioDetail = segments[0] === "student" && 
+                           segments[1] === "scenarios" && 
+                           segments.length > 2;
 
   const [user, setUser] = useState<UserDto | null>(null);
 
@@ -47,7 +54,9 @@ export default function AppLayout() {
   const studentLinks = [
     { icon: Home, label: "Home", path: "/student/dashboard" },
     { icon: BookOpen, label: "Learn", path: "/student/scenarios" },
-    { icon: Sparkles, label: "Practice", path: "/student/practice" },
+    { icon: Brain, label: "Smart Cards", path: "/student/flashcards" },
+    { icon: Mic, label: "Vocal Lab", path: "/student/vocal-lab" },
+    { icon: Book, label: "Dictionary", path: "/student/dictionary" },
     { icon: User, label: "Profile", path: "/student/profile" },
   ];
 
@@ -68,7 +77,7 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#030712] flex flex-col md:flex-row overflow-hidden font-body text-slate-100 relative">
+    <div className="h-screen bg-[#030712] flex flex-col md:flex-row overflow-hidden font-body text-slate-100 relative">
       {/* Background Decorative Blobs */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-[#030712]">
         <motion.div
@@ -116,7 +125,7 @@ export default function AppLayout() {
       </div>
       {/* Desktop Sidebar */}
       {!isScenarioDetail && (
-        <aside className="hidden md:flex w-80 flex-col bg-slate-950/80 backdrop-blur-3xl border-r border-white/5 z-20">
+        <aside className="hidden md:flex w-80 flex-col h-full bg-slate-950/80 backdrop-blur-3xl border-r border-white/5 z-20">
           <div className="p-10 flex items-center gap-4">
             <img src="/logo.png" alt="IMMERSIO Logo" className="h-12 w-auto object-contain" />
             <span className="text-xl font-black italic tracking-tighter text-white">IMMERSIO</span>

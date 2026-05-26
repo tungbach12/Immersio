@@ -67,4 +67,19 @@ namespace Immersio.Application.DTOs.Practice
         string Translation,
         string Explanation
     );
+
+    public sealed record DictionaryLookupRequest(
+        string Word,
+        string TargetLanguage
+    );
+
+    public sealed record DictionaryEntryDto(
+        string Word,
+        string Translation,
+        string Phonetic,
+        string PartOfSpeech,
+        string Definition,
+        string Example,
+        string ExampleTranslation
+    );
 }

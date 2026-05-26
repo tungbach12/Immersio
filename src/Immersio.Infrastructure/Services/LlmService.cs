@@ -338,14 +338,12 @@ namespace Immersio.Infrastructure.Services
                                $"         \"content\": {{\n" +
                                $"           \"full_sentence\": \"We need to take into account all the factors before making a decision.\",\n" +
                                $"           \"cloze_sentence\": \"We need to {{{{c1::take into account}}}} all the factors before making a decision.\",\n" +
-                               $"           \"choices\": [\"take into account\", \"take in\", \"account for\", \"take over\"],\n" +
                                $"           \"translation\": \"Chúng ta cần cân nhắc/tính đến tất cả các yếu tố trước khi đưa ra quyết định.\",\n" +
                                $"           \"target_phrase\": \"take into account\",\n" +
                                $"           \"phrase_meaning\": \"Cân nhắc, tính đến một yếu tố nào đó khi xem xét một tình huống.\",\n" +
                                $"           \"context_note\": \"Đồng nghĩa với 'take into consideration'.\"\n" +
                                $"         }}\n" +
-                               $"       }}\n" +
-                               $"     * Note: The 'choices' array must contain exactly 4 options: the correct 'target_phrase' and 3 other grammatically plausible but incorrect options (distractors) in the target language. The choices must be shuffled or placed in a random order inside the 'choices' array.\n\n" +
+                               $"       }}\n\n" +
                                $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must strictly match one of the three structures above.\n\n" +
                                $"The output must be strictly valid JSON. Example:\n" +
                                $"{{\n  \"flashcards\": [\n    {{\n      \"type\": \"vocab\",\n      \"meta\": {{ \"tags\": [\"english\", \"vocab\"] }},\n      \"content\": {{\n        \"word\": \"meticulous\",\n        \"part_of_speech\": \"adj\",\n        \"phonetic\": \"/məˈtɪk.jə.ləs/\",\n        \"audio_url\": \"\",\n        \"meaning\": \"Rất cẩn thận, tỉ mỉ, chú ý đến từng chi tiết nhỏ.\",\n        \"definition_en\": \"Very careful and precise; showing great attention to detail.\",\n        \"examples\": [\n          {{ \"sentence\": \"Many hours of meticulous preparation have gone into writing the book.\", \"translation\": \"Nhiều giờ chuẩn bị tỉ mỉ đã được dành cho việc viết cuốn sách.\" }}\n        ],\n        \"synonyms\": [\"thorough\", \"scrupulous\"],\n        \"antonyms\": [\"careless\"]\n      }}\n    }}\n  ]\n}}";
@@ -508,14 +506,12 @@ namespace Immersio.Infrastructure.Services
                                $"         \"content\": {{\n" +
                                $"           \"full_sentence\": \"We need to take into account all the factors before making a decision.\",\n" +
                                $"           \"cloze_sentence\": \"We need to {{{{c1::take into account}}}} all the factors before making a decision.\",\n" +
-                               $"           \"choices\": [\"take into account\", \"take in\", \"account for\", \"take over\"],\n" +
                                $"           \"translation\": \"Chúng ta cần cân nhắc/tính đến tất cả các yếu tố trước khi đưa ra quyết định.\",\n" +
                                $"           \"target_phrase\": \"take into account\",\n" +
                                $"           \"phrase_meaning\": \"Cân nhắc, tính đến một yếu tố nào đó khi xem xét một tình huống.\",\n" +
                                $"           \"context_note\": \"Đồng nghĩa với 'take into consideration'.\"\n" +
                                $"         }}\n" +
-                               $"       }}\n" +
-                               $"     * Note: The 'choices' array must contain exactly 4 options: the correct 'target_phrase' and 3 other grammatically plausible but incorrect options (distractors) in the target language. The choices must be shuffled or placed in a random order inside the 'choices' array.\n\n" +
+                               $"       }}\n\n" +
                                $"4. NO TRIVIAL CARDS: Do not include basic words (e.g., 'hello', 'yes', 'no', 'good') unless they were corrected.\n" +
                                $"5. DYNAMIC CARD COUNT: Generate a dynamic number of cards (from 3 up to 15) depending on how many valid elements can be extracted from the user's turns.\n\n" +
                                $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must strictly match one of the three structures above.\n\n" +

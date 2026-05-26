@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: immersio-db
+    restart: always
+    environment:
+      POSTGRES_DB: ImmersioDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-your_secure_password_here}
+    ports:
+      - "127.0.0.1:5432:5432" # Securely bind to localhost only to prevent public exposure
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ImmersioDb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - immersio-network
+
+  immersio-api:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-tungbach12}/immersio-be:latest
+    container_name: immersio-api
+    restart: always
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres-db;Port=5432;Database=ImmersioDb;Username=postgres;Password=${DB_PASSWORD:-your_secure_password_here}
+      - ASPNETCORE_ENVIRONMENT=Production
+    ports:
+      - "5249:5249"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - immersio-network
+
+volumes:
+  pgdata:
+
+networks:
+  immersio-network:
+    driver: bridge

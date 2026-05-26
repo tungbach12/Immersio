@@ -3,6 +3,7 @@ using Immersio.Application.Services;
 using Immersio.Infrastructure.Persistence;
 using Immersio.Infrastructure.Services;
 using Immersio.WebApi.Middlewares;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -111,6 +112,11 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 // ── Auto-Migrate & Seed ──────────────────────────────────────────────
 using (var scope = app.Services.CreateScope())

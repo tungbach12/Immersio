@@ -146,11 +146,16 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseCors("AllowAll");
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.RouteTemplate = "api/swagger/{documentName}/swagger.json";
+});
+
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Immersio API V1");
+    c.RoutePrefix = "api/swagger";
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

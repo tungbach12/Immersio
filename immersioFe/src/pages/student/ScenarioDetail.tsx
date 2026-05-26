@@ -21,9 +21,9 @@ import { cn } from "@/lib/utils";
 import { scenarioService, Scenario } from "@/services/scenario";
 import { getDecks, addCardsToDeck, addDeck, Deck, Flashcard } from "@/services/decks";
 
-type ChatMessage = { 
-  role: "user" | "model"; 
-  text: string; 
+type ChatMessage = {
+  role: "user" | "model";
+  text: string;
   correction?: { corrected: string; explanation: string };
   pronunciationScore?: number;
 };
@@ -44,6 +44,29 @@ const getBrowserLangCode = (lang?: string) => {
   if (lower.includes("chinese") || lower === "zh") return "zh-CN";
   if (lower.includes("french") || lower === "fr") return "fr-FR";
   return "en-US";
+};
+
+const getTagBadge = (tag?: string) => {
+  const t = tag?.toLowerCase();
+  if (t === "grammar" || t === "ngữ pháp") {
+    return (
+      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        Ngữ pháp
+      </span>
+    );
+  }
+  if (t === "cải thiện" || t === "improvement" || t === "sentence" || t === "câu") {
+    return (
+      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+        Ngữ cảnh
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-300 border border-amber-500/20">
+      Từ vựng
+    </span>
+  );
 };
 
 export default function ScenarioDetail() {
@@ -71,7 +94,7 @@ export default function ScenarioDetail() {
   const isMountedRef = useRef(true);
   const isVoiceModeActiveRef = useRef(false);
   const isMicWarmedRef = useRef(false);
-  
+
   const [autoSend, setAutoSend] = useState(true);
   const autoSendRef = useRef(true);
   const silenceTimerRef = useRef<any>(null);
@@ -89,6 +112,7 @@ export default function ScenarioDetail() {
   const [flashcards, setFlashcards] = useState<Flashcard[] | null>(null);
   const [isLoadingFlashcards, setIsLoadingFlashcards] = useState(false);
   const [selectedFlashcardOptions, setSelectedFlashcardOptions] = useState<string[]>(["grammar", "vocabulary", "improvement"]);
+  const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
 
   // Deck states
   const [showSaveDeckModal, setShowSaveDeckModal] = useState(false);
@@ -101,7 +125,7 @@ export default function ScenarioDetail() {
   // Load scenario details and start learning session
   useEffect(() => {
     if (!id) return;
-    
+
     let active = true;
 
     scenarioService.getScenarioById(id)
@@ -183,7 +207,7 @@ export default function ScenarioDetail() {
       }
 
       const audioBlob = await response.blob();
-      
+
       if (!isMountedRef.current) return;
 
       const audioUrl = URL.createObjectURL(audioBlob);
@@ -327,7 +351,7 @@ export default function ScenarioDetail() {
         // Do not immediately kill listening on 'no-speech' in continuous mode, let it stay active
         return;
       }
-      
+
       // Stop voice mode for critical errors to prevent infinite loops (especially on network or blocked permission)
       if (['not-allowed', 'service-not-allowed', 'network', 'audio-capture'].includes(event.error)) {
         isVoiceModeActiveRef.current = false;
@@ -337,7 +361,7 @@ export default function ScenarioDetail() {
           alert("Lỗi kết nối mạng khi nhận diện giọng nói. Vui lòng kiểm tra lại kết nối mạng hoặc đổi trình duyệt.");
         }
       }
-      
+
       if (isMountedRef.current) {
         setIsListening(false);
       }
@@ -424,10 +448,10 @@ export default function ScenarioDetail() {
 
     try {
       const response = await scenarioService.sendMessage(sessionId, userMsg);
-      
+
       // Update the user message item in history with its correction ONLY IF it was spoken!
       if (response.correction && isSpoken) {
-        setMessages(prev => prev.map((msg, idx) => 
+        setMessages(prev => prev.map((msg, idx) =>
           (idx === prev.length - 1 && msg.role === "user")
             ? { ...msg, correction: response.correction }
             : msg
@@ -474,21 +498,18 @@ export default function ScenarioDetail() {
     try {
       const response = await scenarioService.finishSession(sessionId);
       setFeedbackText(response.feedback);
-      
-      // Auto-trigger dynamic custom flashcards generation using all three default options
-      setIsLoadingFlashcards(true);
-      try {
-        const customCards = await scenarioService.generateCustomFlashcards(sessionId, ["grammar", "vocabulary", "improvement"]);
-        setFlashcards(customCards.map((c, i) => ({
+
+      // Directly load the flashcards already generated on session completion (avoid duplicate AI calls!)
+      if (response.suggestedFlashcards) {
+        const mapped = response.suggestedFlashcards.map((c, i) => ({
           id: `temp-${i}`,
           front: c.front,
           back: c.back,
-          explanation: c.explanation || ""
-        })));
-      } catch (fErr) {
-        console.error("Failed to generate initial flashcards:", fErr);
-      } finally {
-        setIsLoadingFlashcards(false);
+          explanation: c.explanation || "",
+          tag: c.tag || "vocab"
+        }));
+        setFlashcards(mapped);
+        setSelectedCardIds(mapped.map(item => item.id));
       }
     } catch (error) {
       console.error("Error generating feedback:", error);
@@ -499,9 +520,9 @@ export default function ScenarioDetail() {
   };
 
   const toggleFlashcardOption = (option: string) => {
-    setSelectedFlashcardOptions(prev => 
-      prev.includes(option) 
-        ? prev.filter(o => o !== option) 
+    setSelectedFlashcardOptions(prev =>
+      prev.includes(option)
+        ? prev.filter(o => o !== option)
         : [...prev, option]
     );
   };
@@ -518,12 +539,15 @@ export default function ScenarioDetail() {
 
     try {
       const customCards = await scenarioService.generateCustomFlashcards(sessionId, selectedFlashcardOptions);
-      setFlashcards(customCards.map((c, i) => ({
+      const mapped = customCards.map((c, i) => ({
         id: `temp-${i}`,
         front: c.front,
         back: c.back,
-        explanation: c.explanation || ""
-      })));
+        explanation: c.explanation || "",
+        tag: c.tag || "vocab"
+      }));
+      setFlashcards(mapped);
+      setSelectedCardIds(mapped.map(item => item.id));
     } catch (error) {
       console.error("Error generating dynamic flashcards:", error);
     } finally {
@@ -543,8 +567,13 @@ export default function ScenarioDetail() {
 
   const handleSaveToDeck = async (deckId: string) => {
     if (flashcards && flashcards.length > 0) {
+      const cardsToSave = flashcards.filter(c => selectedCardIds.includes(c.id));
+      if (cardsToSave.length === 0) {
+        alert("Vui lòng chọn ít nhất một thẻ để lưu!");
+        return;
+      }
       try {
-        await addCardsToDeck(deckId, flashcards);
+        await addCardsToDeck(deckId, cardsToSave);
         setIsSaved(true);
         setShowSaveDeckModal(false);
       } catch (err) {
@@ -555,9 +584,14 @@ export default function ScenarioDetail() {
 
   const handleCreateAndSaveDeck = async () => {
     if (newDeckName.trim() && flashcards && flashcards.length > 0) {
+      const cardsToSave = flashcards.filter(c => selectedCardIds.includes(c.id));
+      if (cardsToSave.length === 0) {
+        alert("Vui lòng chọn ít nhất một thẻ để lưu!");
+        return;
+      }
       try {
         const newDeck = await addDeck(newDeckName.trim());
-        await addCardsToDeck(newDeck.id, flashcards);
+        await addCardsToDeck(newDeck.id, cardsToSave);
         setIsSaved(true);
         setShowSaveDeckModal(false);
         setNewDeckName("");
@@ -588,7 +622,7 @@ export default function ScenarioDetail() {
 
   return (
     <div className="fixed inset-0 bg-slate-950 z-50 flex flex-col font-body select-none">
-      
+
       {/* Background Graphic Layer */}
       <div className="absolute inset-0 z-0">
         <img
@@ -611,7 +645,7 @@ export default function ScenarioDetail() {
           >
             <ArrowLeft size={24} />
           </Button>
-          
+
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 shadow-2xl">
               <span className="text-indigo-400 font-black text-xs uppercase tracking-widest">{targetLang || scenario.language}</span>
@@ -741,7 +775,7 @@ export default function ScenarioDetail() {
                   <h3 className="text-sm font-black text-white uppercase tracking-widest">Select Flashcard Categories</h3>
                   <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Select topics to extract card packs</p>
                 </div>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
                     { key: "grammar", label: "Grammar Core" },
@@ -784,32 +818,120 @@ export default function ScenarioDetail() {
 
                 {flashcards && flashcards.length > 0 && (
                   <div className="mt-10 space-y-6">
-                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Synthesized Cards</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {flashcards.map((card, idx) => (
-                        <div key={idx} className="bg-white/5 border border-white/15 rounded-2xl p-6 hover:bg-white/10 transition-all shadow-md">
-                          <p className="text-sm font-black text-white mb-2 pb-2 border-b border-white/5 leading-snug uppercase tracking-tight">{card.front}</p>
-                          <p className="text-sm text-indigo-400 font-black mb-2">{card.back}</p>
-                          {card.explanation && <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">💡 {card.explanation}</p>}
-                        </div>
-                      ))}
+                    <div className="text-center">
+                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Synthesized Cards</h4>
+                      <p className="text-[9px] text-slate-500 font-bold uppercase mt-1 tracking-wider">
+                        Click on cards to toggle selection ({selectedCardIds.length}/{flashcards.length} selected)
+                      </p>
                     </div>
-                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {flashcards.map((card) => {
+                        const isSelected = selectedCardIds.includes(card.id);
+
+                        // Parse card.front if it is a JSON string
+                        let parsedCard = null;
+                        let isJson = false;
+                        try {
+                          if (card.front && card.front.trim().startsWith('{')) {
+                            parsedCard = JSON.parse(card.front);
+                            isJson = true;
+                          }
+                        } catch (e) {
+                          console.error("Failed to parse card.front in ScenarioDetail", e);
+                        }
+
+                        // Determine display values
+                        let displayFront = card.front;
+                        let displayBack = card.back;
+                        let displayExplanation = card.explanation;
+
+                        if (isJson && parsedCard) {
+                          const type = parsedCard.type;
+                          const content = parsedCard.content;
+                          if (type === "vocab") {
+                            displayFront = `${content.word} (${content.part_of_speech || "vocab"}) ${content.phonetic || ""}`;
+                            displayBack = content.meaning;
+                            displayExplanation = content.definition_en;
+                          } else if (type === "grammar") {
+                            displayFront = content.title || "Grammar point";
+                            displayBack = content.examples?.[0]
+                              ? `✓ Correct: ${content.examples[0].sentence}`
+                              : card.back;
+                            displayExplanation = content.usage || card.explanation;
+                          } else if (type === "sentence") {
+                            const rawCloze = content.cloze_sentence || "";
+                            const cleanedCloze = rawCloze.replace(/\{\{?c\d+::(.*?)\}\}?/g, "[ ... ]");
+                            displayFront = cleanedCloze;
+                            displayBack = content.target_phrase ? `Target: ${content.target_phrase}` : card.back;
+                            displayExplanation = content.translation;
+                          }
+                        }
+
+                        return (
+                          <div
+                            key={card.id}
+                            onClick={() => {
+                              setSelectedCardIds(prev =>
+                                prev.includes(card.id)
+                                  ? prev.filter(id => id !== card.id)
+                                  : [...prev, card.id]
+                              );
+                            }}
+                            className={cn(
+                              "relative bg-slate-950/40 border rounded-[1.75rem] p-6 cursor-pointer select-none transition-all duration-300 flex flex-col justify-between min-h-[160px]",
+                              isSelected
+                                ? "border-indigo-500/50 bg-indigo-950/15 shadow-[0_0_20px_rgba(99,102,241,0.12)] opacity-100 scale-[1.01]"
+                                : "border-white/5 bg-white/2 opacity-50 hover:opacity-80 scale-100"
+                            )}
+                          >
+                            <div>
+                              {/* Top metadata line with badge and check status */}
+                              <div className="flex justify-between items-start mb-4">
+                                {getTagBadge(card.tag)}
+                                <div
+                                  className={cn(
+                                    "w-5 h-5 rounded-full flex items-center justify-center border transition-all duration-300 shrink-0",
+                                    isSelected
+                                      ? "bg-indigo-500 border-indigo-400 text-white shadow-md shadow-indigo-500/20"
+                                      : "border-white/20 text-transparent"
+                                  )}
+                                >
+                                  <Check size={10} strokeWidth={3} />
+                                </div>
+                              </div>
+
+                              <p className="text-sm font-black text-white mb-2 leading-snug tracking-tight whitespace-pre-wrap">
+                                {displayFront}
+                              </p>
+                            </div>
+                            <div className="mt-4 pt-3 border-t border-white/5">
+                              <p className="text-xs text-indigo-300 font-bold mb-2 whitespace-pre-wrap">{displayBack}</p>
+                              {displayExplanation && (
+                                <p className="text-[10px] text-slate-400 font-medium leading-relaxed whitespace-pre-wrap">
+                                  💡 {displayExplanation}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
                     <div className="pt-8 flex flex-col sm:flex-row justify-center gap-4">
                       <Button
                         onClick={handleOpenSaveModal}
                         disabled={isSaved}
                         className={cn(
                           "rounded-2xl px-10 h-14 font-black tracking-widest uppercase text-[10px] transition-all duration-300 active:scale-95",
-                          isSaved 
-                            ? "bg-emerald-600 text-white shadow-xl shadow-emerald-500/20" 
+                          isSaved
+                            ? "bg-emerald-600 text-white shadow-xl shadow-emerald-500/20"
                             : "bg-white/5 hover:bg-white/10 text-white border border-white/10"
                         )}
                       >
                         {isSaved ? "Saved successfully!" : "Save Card Pack"}
                       </Button>
-                      <Button 
-                        onClick={() => navigate("/student/scenarios")} 
+                      <Button
+                        onClick={() => navigate("/student/scenarios")}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl px-10 h-14 font-black tracking-widest uppercase text-[10px] shadow-xl shadow-indigo-600/25 active:scale-95 transition-all"
                       >
                         Return to Library
@@ -830,13 +952,13 @@ export default function ScenarioDetail() {
       ) : (
         /* Visual Novel Dialogue Mode */
         <div className="flex-1 relative z-20 flex flex-col justify-end pb-8 px-4 w-full h-full overflow-hidden">
-          
+
           {/* Breathing Visual Novel Character Avatar */}
-          <div className="absolute bottom-0 left-0 sm:left-[2%] md:left-[5%] lg:left-[10%] xl:left-[15%] h-[68vh] md:h-[82vh] w-auto z-10 flex items-end justify-center pointer-events-none scale-90 sm:scale-95 md:scale-100 origin-bottom-left">
+          <div className="absolute left-0 sm:left-[2%] md:left-[5%] lg:left-[10%] xl:left-[15%] w-auto z-10 flex items-end justify-center pointer-events-none origin-bottom-left" style={{ bottom: '53vh', height: '50vh' }}>
             <motion.img
               src={scenario.avatar}
               alt="Scenario Character Avatar"
-              animate={{ 
+              animate={{
                 y: [0, -8, 0],
                 scale: [1, 1.01, 1]
               }}
@@ -851,10 +973,10 @@ export default function ScenarioDetail() {
 
           {/* Interactive Dialogue & Scrolling Chat Panel (Centered) */}
           <div className="relative z-20 w-full max-w-4xl mx-auto flex flex-col gap-4 pointer-events-auto">
-            
+
             {/* Scrolling Dialogue Panel */}
             <div className="bg-slate-950/85 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-6 md:p-8 shadow-2xl min-h-[280px] flex flex-col justify-between max-h-[45vh]">
-              
+
               {/* Header card for Speech Lab */}
               <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-3 shrink-0">
                 <div className="flex items-center gap-2">
@@ -878,11 +1000,11 @@ export default function ScenarioDetail() {
                         <Sparkles size={12} />
                       </div>
                     )}
-                    
+
                     <div className={cn(
                       "p-3.5 rounded-2xl border text-xs md:text-sm font-semibold leading-relaxed shadow-sm relative group",
-                      msg.role === "user" 
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-500/20 rounded-tr-none" 
+                      msg.role === "user"
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-500/20 rounded-tr-none"
                         : "bg-white/5 border-white/5 text-slate-200 rounded-tl-none pr-12"
                     )}>
                       {msg.role !== "user" && (
@@ -895,9 +1017,9 @@ export default function ScenarioDetail() {
                           You (Speaking)
                         </p>
                       )}
-                      
+
                       <p>{msg.text}</p>
-                      
+
                       {/* Audio Button overlay on AI messages */}
                       {msg.role !== "user" && (
                         <button
@@ -955,13 +1077,13 @@ export default function ScenarioDetail() {
                     isListening && "ring-4 ring-red-500/20 bg-red-950/20 border-red-500/35"
                   )}
                 />
-                
+
                 <Button
                   size="icon"
                   className={cn(
                     "absolute right-2 top-2 h-12 w-12 rounded-full transition-all active:scale-95 shadow-lg",
-                    input.trim() 
-                      ? "bg-indigo-600 hover:bg-indigo-700 text-white scale-100" 
+                    input.trim()
+                      ? "bg-indigo-600 hover:bg-indigo-700 text-white scale-100"
                       : "bg-white/5 text-white/20 scale-90 pointer-events-none"
                   )}
                   onClick={handleSend}

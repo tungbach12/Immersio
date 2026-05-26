@@ -141,13 +141,22 @@ namespace Immersio.Application.Services
             var vocab = int.Parse(await GetSettingValueAsync("VocabSensitivity", "50", cancellationToken));
             var slang = bool.Parse(await GetSettingValueAsync("EnableSlang", "true", cancellationToken));
             var speed = await GetSettingValueAsync("SpeedOfSpeech", "1.0x (Normal)", cancellationToken);
-            var endpoint = await GetSettingValueAsync("LlmEndpoint", "https://api.groq.com/openai/v1/chat/completions", cancellationToken);
-            var apiKey = await GetSettingValueAsync("LlmApiKey", "", cancellationToken);
-            var modelChat = await GetSettingValueAsync("ModelChat", "llama-3.3-70b-versatile", cancellationToken);
-            var modelGrammar = await GetSettingValueAsync("ModelGrammar", "llama-3.3-70b-versatile", cancellationToken);
-            var modelFeedback = await GetSettingValueAsync("ModelFeedback", "llama-3.3-70b-versatile", cancellationToken);
-            var modelFlashcard = await GetSettingValueAsync("ModelFlashcard", "llama-3.3-70b-versatile", cancellationToken);
-            var modelPhrase = await GetSettingValueAsync("ModelPhrase", "llama-3.3-70b-versatile", cancellationToken);
+            var endpoint = await GetSettingValueAsync("LlmEndpoint", "https://integrate.api.nvidia.com/v1/chat/completions", cancellationToken);
+            var apiKey = ""; // API Key is securely stored in env/appsettings, do not expose to frontend
+            var modelChat = await GetSettingValueAsync("ModelChat", "meta/llama-4-maverick-17b-128e-instruct", cancellationToken);
+            var modelGrammar = await GetSettingValueAsync("ModelGrammar", "nvidia/nemotron-mini-4b-instruct", cancellationToken);
+            
+            // Auto-heal/migrate deprecated 70B model which returns 404 on NVIDIA Integrate API
+            if (modelGrammar == "nvidia/llama-3.1-nemotron-70b-instruct")
+            {
+                modelGrammar = "nvidia/nemotron-mini-4b-instruct";
+                await SaveSettingValueAsync("ModelGrammar", modelGrammar, cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+
+            var modelFeedback = await GetSettingValueAsync("ModelFeedback", "mistralai/mistral-large-3-675b-instruct-2512", cancellationToken);
+            var modelFlashcard = await GetSettingValueAsync("ModelFlashcard", "qwen/qwen3-coder-480b-a35b-instruct", cancellationToken);
+            var modelPhrase = await GetSettingValueAsync("ModelPhrase", "nvidia/nemotron-mini-4b-instruct", cancellationToken);
 
             return new SystemSettingsDto(prompt, grammar, vocab, slang, speed, endpoint, apiKey, modelChat, modelGrammar, modelFeedback, modelFlashcard, modelPhrase);
         }
@@ -160,7 +169,7 @@ namespace Immersio.Application.Services
             await SaveSettingValueAsync("EnableSlang", settings.EnableSlang.ToString(), cancellationToken);
             await SaveSettingValueAsync("SpeedOfSpeech", settings.SpeedOfSpeech, cancellationToken);
             await SaveSettingValueAsync("LlmEndpoint", settings.LlmEndpoint ?? "https://api.groq.com/openai/v1/chat/completions", cancellationToken);
-            await SaveSettingValueAsync("LlmApiKey", settings.LlmApiKey ?? "", cancellationToken);
+            // LlmApiKey is securely stored in env/appsettings, do not write to DB
             await SaveSettingValueAsync("ModelChat", settings.ModelChat ?? "llama-3.3-70b-versatile", cancellationToken);
             await SaveSettingValueAsync("ModelGrammar", settings.ModelGrammar ?? "llama-3.3-70b-versatile", cancellationToken);
             await SaveSettingValueAsync("ModelFeedback", settings.ModelFeedback ?? "llama-3.3-70b-versatile", cancellationToken);

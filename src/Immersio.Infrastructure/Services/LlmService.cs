@@ -20,15 +20,15 @@ namespace Immersio.Infrastructure.Services
     public class LlmService : ILLMService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _apiKey;
+        private readonly IConfiguration _configuration;
         private readonly IApplicationDbContext _context;
-        private const string GroqEndpoint = "https://api.groq.com/openai/v1/chat/completions";
-        private const string DefaultModel = "llama-3.3-70b-versatile";
+        private const string NvidiaEndpoint = "https://integrate.api.nvidia.com/v1/chat/completions";
+        private const string DefaultModel = "meta/llama-4-maverick-17b-128e-instruct";
 
         public LlmService(HttpClient httpClient, IConfiguration configuration, IApplicationDbContext context)
         {
             _httpClient = httpClient;
-            _apiKey = configuration["Groq:ApiKey"] ?? throw new ArgumentNullException("Groq API key is not configured.");
+            _configuration = configuration;
             _context = context;
         }
 
@@ -40,18 +40,41 @@ namespace Immersio.Infrastructure.Services
                     .FirstOrDefaultAsync(s => s.Key == modelKey, cancellationToken);
                 var endpointSetting = await _context.SystemSettings
                     .FirstOrDefaultAsync(s => s.Key == "LlmEndpoint", cancellationToken);
-                var apiKeySetting = await _context.SystemSettings
-                    .FirstOrDefaultAsync(s => s.Key == "LlmApiKey", cancellationToken);
 
                 var modelName = !string.IsNullOrWhiteSpace(modelSetting?.Value) ? modelSetting.Value : DefaultModel;
-                var endpoint = !string.IsNullOrWhiteSpace(endpointSetting?.Value) ? endpointSetting.Value : GroqEndpoint;
-                var apiKey = !string.IsNullOrWhiteSpace(apiKeySetting?.Value) ? apiKeySetting.Value : _apiKey;
+                var endpoint = !string.IsNullOrWhiteSpace(endpointSetting?.Value) ? endpointSetting.Value : NvidiaEndpoint;
+                
+                string apiKey = "";
+                if (endpoint.Contains("groq.com", StringComparison.OrdinalIgnoreCase))
+                {
+                    apiKey = _configuration["Groq:ApiKey"] ?? "";
+                }
+                else if (endpoint.Contains("nvidia.com", StringComparison.OrdinalIgnoreCase) || endpoint.Contains("nvidia", StringComparison.OrdinalIgnoreCase))
+                {
+                    apiKey = _configuration["Nvidia:ApiKey"] ?? "";
+                }
+                else if (endpoint.Contains("stepfun.com", StringComparison.OrdinalIgnoreCase) || endpoint.Contains("stepfun", StringComparison.OrdinalIgnoreCase))
+                {
+                    apiKey = _configuration["StepFun:ApiKey"] ?? "";
+                }
+                else
+                {
+                    apiKey = _configuration["Groq:ApiKey"] ?? "";
+                }
+
+                Console.WriteLine($"\n[AI DIAGNOSTICS] {DateTime.Now:HH:mm:ss} | Triggering AI Service: '{modelKey}'");
+                Console.WriteLine($"  -> Active Model:   {modelName}");
+                Console.WriteLine($"  -> Target Server:  {endpoint}");
 
                 return (modelName, endpoint, apiKey);
             }
-            catch
+            catch (Exception ex)
             {
-                return (DefaultModel, GroqEndpoint, _apiKey);
+                var defaultKey = _configuration["Nvidia:ApiKey"] ?? _configuration["Groq:ApiKey"] ?? "";
+                Console.WriteLine($"\n[AI DIAGNOSTICS] Warning: Failed to resolve database AI settings (using fallback). Error: {ex.Message}");
+                Console.WriteLine($"  -> Fallback Model: {DefaultModel}");
+                Console.WriteLine($"  -> Fallback Server:{NvidiaEndpoint}");
+                return (DefaultModel, NvidiaEndpoint, defaultKey);
             }
         }
 
@@ -120,19 +143,27 @@ namespace Immersio.Infrastructure.Services
                 stream = false
             };
 
-            var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-            SetJsonContent(request, requestBody);
-
-            var response = await _httpClient.SendAsync(request, cancellationToken);
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                await LogErrorAsync("GenerateChatResponseAsync", endpoint, modelName, response, cancellationToken);
-                response.EnsureSuccessStatusCode();
-            }
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
 
-            var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
-            return chatResponse?.Choices?.FirstOrDefault()?.Message?.Content ?? "I am sorry, I couldn't understand that.";
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("GenerateChatResponseAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
+
+                var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
+                return chatResponse?.Choices?.FirstOrDefault()?.Message?.Content ?? "I am sorry, I couldn't understand that.";
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to generate chat response: {ex.Message}");
+                return "I am sorry, I am having trouble connecting to my mind right now. Please try again in a moment.";
+            }
         }
 
         public async Task<CorrectionResultDto> AnalyzeGrammarAsync(
@@ -224,19 +255,27 @@ namespace Immersio.Infrastructure.Services
                 stream = false
             };
 
-            var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-            SetJsonContent(request, requestBody);
-
-            var response = await _httpClient.SendAsync(request, cancellationToken);
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                await LogErrorAsync("GenerateSessionFeedbackAsync", endpoint, modelName, response, cancellationToken);
-                response.EnsureSuccessStatusCode();
-            }
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
 
-            var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
-            return chatResponse?.Choices?.FirstOrDefault()?.Message?.Content ?? "Great job practicing today!";
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("GenerateSessionFeedbackAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
+
+                var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
+                return chatResponse?.Choices?.FirstOrDefault()?.Message?.Content ?? "Great job practicing today!";
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to generate session feedback: {ex.Message}");
+                return "Great job practicing today! I'm currently unable to generate detailed feedback, but keep up the good work!";
+            }
         }
 
         public async Task<List<AddCardDto>> GenerateFlashcardsAsync(
@@ -245,26 +284,71 @@ namespace Immersio.Infrastructure.Services
             CancellationToken cancellationToken)
         {
             var systemPrompt = $"You are an expert language acquisition assistant. Analyze the conversation history between the language learner (USER) and the AI (ASSISTANT) in {targetLanguage}.\n" +
-                               $"Identify 3 to 5 key vocabulary terms, grammar corrections, or useful idioms that the student struggled with, made mistakes on, or could benefit from reviewing based EXCLUSIVELY on the USER's turns and the corrections provided to them.\n\n" +
+                               $"Identify a dynamic number of cards (from 3 up to 15) covering key vocabulary terms, grammar corrections, or useful idioms/expressions that the student struggled with or could benefit from reviewing based EXCLUSIVELY on the USER's turns and the corrections provided to them.\n\n" +
                                $"CRITICAL RULES:\n" +
                                $"1. SOURCE RESTRICTION: Every single flashcard must be directly derived from the actual words, phrases, or errors that occurred in the USER's dialog turns. DO NOT generate random vocabulary or make up unrelated words that were never in the conversation.\n" +
-                               $"2. NO TRIVIAL CARDS: Do not create flashcards for extremely basic words (e.g., 'hello', 'yes', 'no', 'thank you', 'good', 'bye', 'I', 'you') unless the user specifically made a major error with them.\n" +
-                               $"3. HIGH MEMORY RETRIEVAL FORMAT:\n" +
-                               $"   - For vocabulary terms: \n" +
-                               $"     * 'front': The target word/phrase with its IPA phonetic guide and context tag, followed by a fill-in-the-blank sentence where the word is replaced by a blank line (e.g. \"accomplish /əˈkʌm.plɪʃ/ [verb • Scenario Context]\\nWe can _______ anything if we work together. (Điền vào chỗ trống)\").\n" +
-                               $"     * 'back': The precise translation or meaning in Vietnamese (Tiếng Việt).\n" +
-                               $"     * 'explanation': A helpful definition in English, followed by the complete example sentence, its translation in Vietnamese, and synonyms (e.g. \"Definition: To succeed in doing something...\\n\\nExample: 'We can accomplish anything...'\\nTranslation: 'Chúng ta có thể...'\\n\\nSynonyms: achieve, fulfill\").\n" +
-                               $"   - For grammar corrections: \n" +
-                               $"     * 'front': The sentence containing the user's highlighted error (e.g. \"I *goes* to school yesterday. ❌ (Sửa lỗi sai) [Simple Past]\").\n" +
-                               $"     * 'back': The corrected sentence in the target language (e.g. \"I went to school yesterday. (Corrected)\").\n" +
-                               $"     * 'explanation': A clear, encouraging grammatical rule in Vietnamese explaining the mistake, the corrected form, and a short rule formula (e.g. \"Giải thích: Trạng từ 'yesterday' yêu cầu quá khứ đơn...\\n\\nCông thức: S + V2/ed\").\n" +
-                               $"   - For natural improvements:\n" +
-                               $"     * 'front': The flat/awkward sentence that the user said, marked with a warning sign (e.g. \"I want a cup of coffee. ⚠️ (Nói tự nhiên hơn?) [Polite Register]\").\n" +
-                               $"     * 'back': The natural, native-level formulation in the target language (e.g. \"Could I get a cup of coffee, please? [Polite]\").\n" +
-                               $"     * 'explanation': The Vietnamese translation of the user's intent, plus a short Vietnamese nuance note explaining why the native formulation is more appropriate or polite.\n\n" +
-                               $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must have \"front\", \"back\", and \"explanation\" keys.\n\n" +
+                               $"2. NO OVERLY ROBOTIC OR NITPICKY CORRECTIONS: Focus ONLY on significant grammatical errors or unnatural speaking habits/phrasings. Do NOT be overly strict or nitpicky on minor things that make the system feel too mechanical.\n" +
+                               $"3. NO TRIVIAL CARDS: Do not create flashcards for extremely basic words (e.g., 'hello', 'yes', 'no') unless they made a major error with them.\n" +
+                               $"4. DYNAMIC CARD COUNT: Generate more cards (up to 15) for longer or richer histories. Generate fewer cards (minimum 3) only if the history is extremely short.\n" +
+                               $"5. POLYMORPHIC JSON STRUCTURE: You must categorize every card into one of three exact types ('vocab', 'grammar', 'sentence') and output it adhering strictly to this schema:\n\n" +
+                               $"   - TYPE 1: 'vocab' (For vocabulary terms the user struggled with or tried to use)\n" +
+                               $"     * Schema:\n" +
+                               $"       {{\n" +
+                               $"         \"type\": \"vocab\",\n" +
+                               $"         \"meta\": {{ \"tags\": [\"{targetLanguage.ToLower()}\", \"vocab\", \"academic\"] }},\n" +
+                               $"         \"content\": {{\n" +
+                               $"           \"word\": \"meticulous\",\n" +
+                               $"           \"part_of_speech\": \"adj\",\n" +
+                               $"           \"phonetic\": \"/məˈtɪk.jə.ləs/\",\n" +
+                               $"           \"audio_url\": \"\",\n" +
+                               $"           \"meaning\": \"Rất cẩn thận, tỉ mỉ, chú ý đến từng chi tiết nhỏ.\",\n" +
+                               $"           \"definition_en\": \"Very careful and precise; showing great attention to detail.\",\n" +
+                               $"           \"examples\": [\n" +
+                               $"             {{ \"sentence\": \"Many hours of meticulous preparation have gone into writing the book.\", \"translation\": \"Nhiều giờ chuẩn bị tỉ mỉ đã được dành cho việc viết cuốn sách.\" }}\n" +
+                               $"           ],\n" +
+                               $"           \"synonyms\": [\"thorough\", \"scrupulous\", \"detailed\"],\n" +
+                               $"           \"antonyms\": [\"careless\", \"negligent\"]\n" +
+                               $"         }}\n" +
+                               $"       }}\n\n" +
+                               $"   - TYPE 2: 'grammar' (For sentences containing grammatical errors made by the user)\n" +
+                               $"     * Schema:\n" +
+                               $"       {{\n" +
+                               $"         \"type\": \"grammar\",\n" +
+                               $"         \"meta\": {{ \"tags\": [\"{targetLanguage.ToLower()}\", \"grammar\"] }},\n" +
+                               $"         \"content\": {{\n" +
+                               $"           \"title\": \"Simple Past vs Present Perfect (Thì Quá khứ đơn)\",\n" +
+                               $"           \"formula\": [\n" +
+                               $"             {{ \"form\": \"Khẳng định\", \"structure\": \"S + V2/ed\" }},\n" +
+                               $"             {{ \"form\": \"Phủ định\", \"structure\": \"S + did + not + V_inf\" }}\n" +
+                               $"           ],\n" +
+                               $"           \"usage\": \"Diễn tả hành động đã xảy ra và chấm dứt hoàn toàn trong quá khứ.\",\n" +
+                               $"           \"signal_words\": [\"yesterday\", \"ago\", \"last year\"],\n" +
+                               $"           \"examples\": [\n" +
+                               $"             {{ \"sentence\": \"I went to school yesterday.\", \"translation\": \"Tôi đã đi học ngày hôm qua.\", \"note\": \"Dùng động từ bất quy tắc 'went' thay vì 'goes'.\" }}\n" +
+                               $"           ],\n" +
+                               $"           \"common_mistakes\": \"Tránh nhầm lẫn với quá khứ đơn khi có mốc thời gian cụ thể (Ví dụ: KHÔNG dùng 'I have seen him yesterday').\"\n" +
+                               $"         }}\n" +
+                               $"       }}\n" +
+                               $"       *Note: In grammar cards, the example sentence in 'content.examples' should be the corrected sentence.\"\n\n" +
+                               $"   - TYPE 3: 'sentence' (For phrasings, idioms, or collocations that the user can improve or study, using Cloze deletion)\n" +
+                               $"     * Schema:\n" +
+                               $"       {{\n" +
+                               $"         \"type\": \"sentence\",\n" +
+                               $"         \"meta\": {{ \"tags\": [\"{targetLanguage.ToLower()}\", \"collocation\"] }},\n" +
+                               $"         \"content\": {{\n" +
+                               $"           \"full_sentence\": \"We need to take into account all the factors before making a decision.\",\n" +
+                               $"           \"cloze_sentence\": \"We need to {{{{c1::take into account}}}} all the factors before making a decision.\",\n" +
+                               $"           \"choices\": [\"take into account\", \"take in\", \"account for\", \"take over\"],\n" +
+                               $"           \"translation\": \"Chúng ta cần cân nhắc/tính đến tất cả các yếu tố trước khi đưa ra quyết định.\",\n" +
+                               $"           \"target_phrase\": \"take into account\",\n" +
+                               $"           \"phrase_meaning\": \"Cân nhắc, tính đến một yếu tố nào đó khi xem xét một tình huống.\",\n" +
+                               $"           \"context_note\": \"Đồng nghĩa với 'take into consideration'.\"\n" +
+                               $"         }}\n" +
+                               $"       }}\n" +
+                               $"     * Note: The 'choices' array must contain exactly 4 options: the correct 'target_phrase' and 3 other grammatically plausible but incorrect options (distractors) in the target language. The choices must be shuffled or placed in a random order inside the 'choices' array.\n\n" +
+                               $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must strictly match one of the three structures above.\n\n" +
                                $"The output must be strictly valid JSON. Example:\n" +
-                               $"{{\n  \"flashcards\": [\n    {{\n      \"front\": \"accomplish /əˈkʌm.plɪʃ/ [verb]\\nWe can _______ anything if we work together. (Điền vào chỗ trống)\",\n      \"back\": \"hoàn thành, đạt được\",\n      \"explanation\": \"Definition: To succeed in doing something.\\n\\nExample: 'We can accomplish...'\\nTranslation: 'Chúng ta có thể...'\\n\\nSynonyms: achieve\"\n    }}\n  ]\n}}";
+                               $"{{\n  \"flashcards\": [\n    {{\n      \"type\": \"vocab\",\n      \"meta\": {{ \"tags\": [\"english\", \"vocab\"] }},\n      \"content\": {{\n        \"word\": \"meticulous\",\n        \"part_of_speech\": \"adj\",\n        \"phonetic\": \"/məˈtɪk.jə.ləs/\",\n        \"audio_url\": \"\",\n        \"meaning\": \"Rất cẩn thận, tỉ mỉ, chú ý đến từng chi tiết nhỏ.\",\n        \"definition_en\": \"Very careful and precise; showing great attention to detail.\",\n        \"examples\": [\n          {{ \"sentence\": \"Many hours of meticulous preparation have gone into writing the book.\", \"translation\": \"Nhiều giờ chuẩn bị tỉ mỉ đã được dành cho việc viết cuốn sách.\" }}\n        ],\n        \"synonyms\": [\"thorough\", \"scrupulous\"],\n        \"antonyms\": [\"careless\"]\n      }}\n    }}\n  ]\n}}";
 
             var historyText = string.Join("\n", history.Select(m => $"{m.Role}: {m.Text}"));
 
@@ -303,19 +387,55 @@ namespace Immersio.Infrastructure.Services
 
                 if (!string.IsNullOrWhiteSpace(contentJson))
                 {
+                    contentJson = CleanJsonContent(contentJson);
                     using var doc = JsonDocument.Parse(contentJson);
                     var root = doc.RootElement;
                     if (root.TryGetProperty("flashcards", out var listProp) && listProp.ValueKind == JsonValueKind.Array)
                     {
                         foreach (var item in listProp.EnumerateArray())
                         {
-                            var front = item.TryGetProperty("front", out var f) ? f.GetString() : null;
-                            var back = item.TryGetProperty("back", out var b) ? b.GetString() : null;
-                            var explanation = item.TryGetProperty("explanation", out var e) ? e.GetString() : null;
+                            var type = item.TryGetProperty("type", out var ty) ? ty.GetString() : "vocab";
+                            var frontJson = item.GetRawText();
+                            
+                            string back = "";
+                            string explanation = "";
+                            string tag = type;
 
-                            if (!string.IsNullOrWhiteSpace(front) && !string.IsNullOrWhiteSpace(back))
+                            if (item.TryGetProperty("content", out var contentProp))
                             {
-                                flashcards.Add(new AddCardDto(front, back, explanation));
+                                if (type == "vocab")
+                                {
+                                    var word = contentProp.TryGetProperty("word", out var w) ? w.GetString() : "";
+                                    var meaning = contentProp.TryGetProperty("meaning", out var m) ? m.GetString() : "";
+                                    back = meaning ?? "";
+                                    
+                                    var def = contentProp.TryGetProperty("definition_en", out var d) ? d.GetString() : "";
+                                    explanation = $"Definition: {def}\nWord: {word}";
+                                }
+                                else if (type == "grammar")
+                                {
+                                    var title = contentProp.TryGetProperty("title", out var t) ? t.GetString() : "";
+                                    var usage = contentProp.TryGetProperty("usage", out var u) ? u.GetString() : "";
+                                    back = title ?? "";
+                                    explanation = $"Usage: {usage}";
+                                }
+                                else if (type == "sentence")
+                                {
+                                    var translation = contentProp.TryGetProperty("translation", out var tr) ? tr.GetString() : "";
+                                    var full = contentProp.TryGetProperty("full_sentence", out var f) ? f.GetString() : "";
+                                    back = translation ?? "";
+                                    explanation = $"Sentence: {full}";
+                                }
+                            }
+
+                            if (string.IsNullOrWhiteSpace(back))
+                            {
+                                back = "Review";
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(frontJson))
+                            {
+                                flashcards.Add(new AddCardDto(frontJson, back, explanation, tag));
                             }
                         }
                     }
@@ -340,24 +460,66 @@ namespace Immersio.Infrastructure.Services
                                $"You must generate custom flashcards covering these selected categories: [{optionsCsv}] based EXCLUSIVELY on the USER's turns and the corrections provided.\n\n" +
                                $"CRITICAL RULES:\n" +
                                $"1. SOURCE RESTRICTION: Every single flashcard must be directly derived from the actual words, phrases, or errors that occurred in the USER's dialog turns in the session. Absolutely DO NOT generate cards for the AI character's messages, and do not make up arbitrary words that were never mentioned.\n" +
-                               $"2. CATEGORY COMPLIANCE & HIGH MEMORY RETRIEVAL FORMAT:\n" +
-                               $"   - 'grammar': Extract sentences where the user made grammatical errors. \n" +
-                               $"     * 'front': The sentence containing the user's highlighted error (e.g. \"I *goes* to school yesterday. ❌ (Sửa lỗi sai) [Simple Past]\").\n" +
-                               $"     * 'back': The corrected sentence in the target language (e.g. \"I went to school yesterday. (Corrected)\").\n" +
-                               $"     * 'explanation': A clear, encouraging grammatical rule in Vietnamese explaining the mistake, the corrected form, and a short rule formula (e.g. \"Giải thích: Trạng từ 'yesterday' yêu cầu quá khứ đơn...\\n\\nCông thức: S + V2/ed\").\n" +
-                               $"   - 'vocabulary': Extract key words, expressions, or idioms that the user struggled with or tried to use.\n" +
-                               $"     * 'front': The target word/phrase with its IPA phonetic guide and context tag, followed by a fill-in-the-blank sentence where the word is replaced by a blank line (e.g. \"accomplish /əˈkʌm.plɪʃ/ [verb • Scenario Context]\\nWe can _______ anything if we work together. (Điền vào chỗ trống)\").\n" +
-                               $"     * 'back': The precise translation or meaning in Vietnamese (Tiếng Việt).\n" +
-                               $"     * 'explanation': A helpful definition in English, followed by the complete example sentence, its translation in Vietnamese, and synonyms (e.g. \"Definition: To succeed in doing something...\\n\\nExample: 'We can accomplish anything...'\\nTranslation: 'Chúng ta có thể...'\\n\\nSynonyms: achieve, fulfill\").\n" +
-                               $"   - 'improvement': Propose more natural or idiomatic native alternatives for the ideas the user expressed.\n" +
-                               $"     * 'front': The flat/awkward sentence that the user said, marked with a warning sign (e.g. \"I want a cup of coffee. ⚠️ (Nói tự nhiên hơn?) [Polite Register]\").\n" +
-                               $"     * 'back': The natural, native-level formulation in the target language (e.g. \"Could I get a cup of coffee, please? [Polite]\").\n" +
-                               $"     * 'explanation': The Vietnamese translation of the user's intent, plus a short Vietnamese nuance note explaining why the native formulation is more appropriate or polite.\n" +
-                               $"3. NO TRIVIAL CARDS: Do not include basic words (e.g., 'hello', 'yes', 'no', 'good') unless they were corrected.\n" +
-                               $"4. DYNAMIC CARD COUNT: Generate a dynamic number of cards (from 1 up to 10) depending on how many valid elements can be extracted from the user's turns. If the conversation was short and had no mistakes/key words, only generate 1-2 high-quality cards.\n\n" +
-                               $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must have \"front\", \"back\", and \"explanation\" keys.\n\n" +
-                               $"The output must be strictly valid JSON. Example:\n" +
-                               $"{{\n  \"flashcards\": [\n    {{\n      \"front\": \"accomplish /əˈkʌm.plɪʃ/ [verb]\\nWe can _______ anything if we work together. (Điền vào chỗ trống)\",\n      \"back\": \"hoàn thành, đạt được\",\n      \"explanation\": \"Definition: To succeed in doing something.\\n\\nExample: 'We can accomplish...'\\nTranslation: 'Chúng ta có thể...'\\n\\nSynonyms: achieve\"\n    }}\n  ]\n}}";
+                               $"2. NO OVERLY ROBOTIC OR NITPICKY CORRECTIONS: Focus ONLY on significant grammatical errors or unnatural speaking habits/phrasings. Do NOT be overly strict or nitpicky on minor things that make the system feel too mechanical.\n" +
+                               $"3. CATEGORY COMPLIANCE & POLYMORPHIC JSON STRUCTURE: You must categorize every card into one of three exact types ('vocab', 'grammar', 'sentence') and output it adhering strictly to this schema, depending on the requested categories:\n\n" +
+                               $"   - If 'grammar' is selected, generate 'grammar' cards (For sentences containing grammatical errors made by the user):\n" +
+                               $"     * Schema:\n" +
+                               $"       {{\n" +
+                               $"         \"type\": \"grammar\",\n" +
+                               $"         \"meta\": {{ \"tags\": [\"{targetLanguage.ToLower()}\", \"grammar\"] }},\n" +
+                               $"         \"content\": {{\n" +
+                               $"           \"title\": \"Simple Past vs Present Perfect (Thì Quá khứ đơn)\",\n" +
+                               $"           \"formula\": [\n" +
+                               $"             {{ \"form\": \"Khẳng định\", \"structure\": \"S + V2/ed\" }},\n" +
+                               $"             {{ \"form\": \"Phủ định\", \"structure\": \"S + did + not + V_inf\" }}\n" +
+                               $"           ],\n" +
+                               $"           \"usage\": \"Diễn tả hành động đã xảy ra và chấm dứt hoàn toàn trong quá khứ.\",\n" +
+                               $"           \"signal_words\": [\"yesterday\", \"ago\", \"last year\"],\n" +
+                               $"           \"examples\": [\n" +
+                               $"             {{ \"sentence\": \"I went to school yesterday.\", \"translation\": \"Tôi đã đi học ngày hôm qua.\", \"note\": \"Dùng động từ bất quy tắc 'went' thay vì 'goes'.\" }}\n" +
+                               $"           ],\n" +
+                               $"           \"common_mistakes\": \"Tránh nhầm lẫn với quá khứ đơn khi có mốc thời gian cụ thể (Ví dụ: KHÔNG dùng 'I have seen him yesterday').\"\n" +
+                               $"         }}\n" +
+                               $"       }}\n\n" +
+                               $"   - If 'vocabulary' is selected, generate 'vocab' cards (For vocabulary terms the user struggled with or tried to use):\n" +
+                               $"     * Schema:\n" +
+                               $"       {{\n" +
+                               $"         \"type\": \"vocab\",\n" +
+                               $"         \"meta\": {{ \"tags\": [\"{targetLanguage.ToLower()}\", \"vocab\", \"academic\"] }},\n" +
+                               $"         \"content\": {{\n" +
+                               $"           \"word\": \"meticulous\",\n" +
+                               $"           \"part_of_speech\": \"adj\",\n" +
+                               $"           \"phonetic\": \"/məˈtɪk.jə.ləs/\",\n" +
+                               $"           \"audio_url\": \"\",\n" +
+                               $"           \"meaning\": \"Rất cẩn thận, tỉ mỉ, chú ý đến từng chi tiết nhỏ.\",\n" +
+                               $"           \"definition_en\": \"Very careful and precise; showing great attention to detail.\",\n" +
+                               $"           \"examples\": [\n" +
+                               $"             {{ \"sentence\": \"Many hours of meticulous preparation have gone into writing the book.\", \"translation\": \"Nhiều giờ chuẩn bị tỉ mỉ đã được dành cho việc viết cuốn sách.\" }}\n" +
+                               $"           ],\n" +
+                               $"           \"synonyms\": [\"thorough\", \"scrupulous\", \"detailed\"],\n" +
+                               $"           \"antonyms\": [\"careless\", \"negligent\"]\n" +
+                               $"         }}\n" +
+                               $"       }}\n\n" +
+                               $"   - If 'improvement' is selected, generate 'sentence' cards (For phrasings, idioms, or collocations that the user can improve or study, using Cloze deletion):\n" +
+                               $"     * Schema:\n" +
+                               $"       {{\n" +
+                               $"         \"type\": \"sentence\",\n" +
+                               $"         \"meta\": {{ \"tags\": [\"{targetLanguage.ToLower()}\", \"collocation\"] }},\n" +
+                               $"         \"content\": {{\n" +
+                               $"           \"full_sentence\": \"We need to take into account all the factors before making a decision.\",\n" +
+                               $"           \"cloze_sentence\": \"We need to {{{{c1::take into account}}}} all the factors before making a decision.\",\n" +
+                               $"           \"choices\": [\"take into account\", \"take in\", \"account for\", \"take over\"],\n" +
+                               $"           \"translation\": \"Chúng ta cần cân nhắc/tính đến tất cả các yếu tố trước khi đưa ra quyết định.\",\n" +
+                               $"           \"target_phrase\": \"take into account\",\n" +
+                               $"           \"phrase_meaning\": \"Cân nhắc, tính đến một yếu tố nào đó khi xem xét một tình huống.\",\n" +
+                               $"           \"context_note\": \"Đồng nghĩa với 'take into consideration'.\"\n" +
+                               $"         }}\n" +
+                               $"       }}\n" +
+                               $"     * Note: The 'choices' array must contain exactly 4 options: the correct 'target_phrase' and 3 other grammatically plausible but incorrect options (distractors) in the target language. The choices must be shuffled or placed in a random order inside the 'choices' array.\n\n" +
+                               $"4. NO TRIVIAL CARDS: Do not include basic words (e.g., 'hello', 'yes', 'no', 'good') unless they were corrected.\n" +
+                               $"5. DYNAMIC CARD COUNT: Generate a dynamic number of cards (from 3 up to 15) depending on how many valid elements can be extracted from the user's turns.\n\n" +
+                               $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must strictly match one of the three structures above.\n\n" +
+                               $"The output must be strictly valid JSON.";
 
             var historyText = string.Join("\n", history.Select(m => $"{m.Role}: {m.Text}"));
 
@@ -396,19 +558,55 @@ namespace Immersio.Infrastructure.Services
 
                 if (!string.IsNullOrWhiteSpace(contentJson))
                 {
+                    contentJson = CleanJsonContent(contentJson);
                     using var doc = JsonDocument.Parse(contentJson);
                     var root = doc.RootElement;
                     if (root.TryGetProperty("flashcards", out var listProp) && listProp.ValueKind == JsonValueKind.Array)
                     {
                         foreach (var item in listProp.EnumerateArray())
                         {
-                            var front = item.TryGetProperty("front", out var f) ? f.GetString() : null;
-                            var back = item.TryGetProperty("back", out var b) ? b.GetString() : null;
-                            var explanation = item.TryGetProperty("explanation", out var e) ? e.GetString() : null;
+                            var type = item.TryGetProperty("type", out var ty) ? ty.GetString() : "vocab";
+                            var frontJson = item.GetRawText();
+                            
+                            string back = "";
+                            string explanation = "";
+                            string tag = type;
 
-                            if (!string.IsNullOrWhiteSpace(front) && !string.IsNullOrWhiteSpace(back))
+                            if (item.TryGetProperty("content", out var contentProp))
                             {
-                                flashcards.Add(new AddCardDto(front, back, explanation));
+                                if (type == "vocab")
+                                {
+                                    var word = contentProp.TryGetProperty("word", out var w) ? w.GetString() : "";
+                                    var meaning = contentProp.TryGetProperty("meaning", out var m) ? m.GetString() : "";
+                                    back = meaning ?? "";
+                                    
+                                    var def = contentProp.TryGetProperty("definition_en", out var d) ? d.GetString() : "";
+                                    explanation = $"Definition: {def}\nWord: {word}";
+                                }
+                                else if (type == "grammar")
+                                {
+                                    var title = contentProp.TryGetProperty("title", out var t) ? t.GetString() : "";
+                                    var usage = contentProp.TryGetProperty("usage", out var u) ? u.GetString() : "";
+                                    back = title ?? "";
+                                    explanation = $"Usage: {usage}";
+                                }
+                                else if (type == "sentence")
+                                {
+                                    var translation = contentProp.TryGetProperty("translation", out var tr) ? tr.GetString() : "";
+                                    var full = contentProp.TryGetProperty("full_sentence", out var f) ? f.GetString() : "";
+                                    back = translation ?? "";
+                                    explanation = $"Sentence: {full}";
+                                }
+                            }
+
+                            if (string.IsNullOrWhiteSpace(back))
+                            {
+                                back = "Review";
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(frontJson))
+                            {
+                                flashcards.Add(new AddCardDto(frontJson, back, explanation, tag));
                             }
                         }
                     }
@@ -752,6 +950,19 @@ namespace Immersio.Infrastructure.Services
                 Example: defaultExample,
                 ExampleTranslation: defaultExampleTranslation
             );
+        }
+
+        private static string CleanJsonContent(string content)
+        {
+            if (string.IsNullOrWhiteSpace(content)) return content;
+            content = content.Trim();
+            if (content.StartsWith("```"))
+            {
+                var lines = content.Split('\n');
+                var cleanLines = lines.Where(l => !l.Trim().StartsWith("```")).ToArray();
+                content = string.Join("\n", cleanLines).Trim();
+            }
+            return content;
         }
     }
 

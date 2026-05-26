@@ -5,6 +5,7 @@ export interface Flashcard {
   front: string;
   back: string;
   explanation?: string;
+  tag?: string;
   mastery?: number; // 1-5 level mapped from backend Repetitions
   repetitions?: number;
   easinessFactor?: number;
@@ -71,6 +72,7 @@ export async function addCardsToDeck(deckId: string, cards: Omit<Flashcard, "id"
       front: c.front,
       back: c.back,
       explanation: c.explanation,
+      tag: c.tag,
     }))),
   });
 

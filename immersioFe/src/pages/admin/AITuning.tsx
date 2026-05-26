@@ -12,13 +12,13 @@ const CATALOG_MODELS = [
   { value: "nvidia/llama-3.1-nemotron-70b-instruct", name: "NVIDIA Llama 3.1 Nemotron 70B", desc: "Superb language correction, evaluation, and precise spelling analyzer." },
   { value: "meta/llama-3.3-70b-instruct", name: "Meta Llama 3.3 70B (NVIDIA)", desc: "Heavy SOTA model, perfect for comprehensive session feedback and reports." },
   { value: "nemotron-mini-4b-instruct", name: "NVIDIA Nemotron Mini 4B (Groq)", desc: "Groq-hosted Nemotron Mini 4B model." },
-  { value: "llama-4-maverick-17b-128e-instruct", name: "Meta Llama 4 Maverick 17B", desc: "Multilingual sparse MoE model. Excellent natural flow for dialog." },
-  { value: "step-3.5-flash", name: "Stepfun Step 3.5 Flash", desc: "200B reasoning sparse MoE. Superb for logic and sentence analysis." },
-  { value: "gemma-3n-e2b-it", name: "Google Gemma 3 2B", desc: "Small model for edge, text, image, and voice tasks." },
-  { value: "minimax-m2.7", name: "MiniMax M2.7 230B", desc: "High capacity MoE. Outstanding translation and logical structure." },
-  { value: "mistral-nemotron", name: "Mistral Nemotron 12B", desc: "Designed for agentic workflows and complex instruction following." },
-  { value: "qwen3-coder-480b-a35b-instruct", name: "Qwen 3 Coder 480B", desc: "Massive Alibaba coder model. Exceptional logic and structured data extraction." },
-  { value: "mistral-large-3-675b-instruct-2512", name: "Mistral Large 3 675B", desc: "SOTA heavy MoE, perfect for complex performance reports." },
+  { value: "meta/llama-4-maverick-17b-128e-instruct", name: "Meta Llama 4 Maverick 17B", desc: "Multilingual sparse MoE model. Excellent natural flow for dialog." },
+  { value: "stepfun-ai/step-3.5-flash", name: "Stepfun Step 3.5 Flash", desc: "200B reasoning sparse MoE. Superb for logic and sentence analysis." },
+  { value: "google/gemma-3n-e2b-it", name: "Google Gemma 3 2B", desc: "Small model for edge, text, image, and voice tasks." },
+  { value: "minimaxai/minimax-m2.7", name: "MiniMax M2.7 230B", desc: "High capacity MoE. Outstanding translation and logical structure." },
+  { value: "nvidia/mistral-nemotron-12b-instruct", name: "Mistral Nemotron 12B", desc: "Designed for agentic workflows and complex instruction following." },
+  { value: "qwen/qwen3-coder-480b-a35b-instruct", name: "Qwen 3 Coder 480B", desc: "Massive Alibaba coder model. Exceptional logic and structured data extraction." },
+  { value: "mistralai/mistral-large-3-675b-instruct-2512", name: "Mistral Large 3 675B", desc: "SOTA heavy MoE, perfect for complex performance reports." },
   { value: "custom", name: "✏️ Custom Model Name...", desc: "Type any custom model identifier manually." }
 ];
 
@@ -283,19 +283,19 @@ export default function AITuning() {
                       name: "NVIDIA NIM",
                       endpoint: "https://integrate.api.nvidia.com/v1/chat/completions",
                       chat: "nvidia/nemotron-mini-4b-instruct",
-                      grammar: "nvidia/llama-3.1-nemotron-70b-instruct",
-                      feedback: "meta/llama-3.3-70b-instruct",
-                      flashcard: "meta/llama-3.3-70b-instruct",
+                      grammar: "nvidia/nemotron-mini-4b-instruct",
+                      feedback: "mistralai/mistral-large-3-675b-instruct-2512",
+                      flashcard: "qwen/qwen3-coder-480b-a35b-instruct",
                       phrase: "nvidia/nemotron-mini-4b-instruct"
                     },
                     {
                       name: "StepFun MoE",
                       endpoint: "https://api.stepfun.com/v1/chat/completions",
-                      chat: "step-3.5-flash",
-                      grammar: "step-3.5-flash",
-                      feedback: "step-3.5-flash",
-                      flashcard: "step-3.5-flash",
-                      phrase: "step-3.5-flash"
+                      chat: "stepfun-ai/step-3.5-flash",
+                      grammar: "stepfun-ai/step-3.5-flash",
+                      feedback: "stepfun-ai/step-3.5-flash",
+                      flashcard: "stepfun-ai/step-3.5-flash",
+                      phrase: "stepfun-ai/step-3.5-flash"
                     },
                     {
                       name: "Custom Setup",
@@ -351,35 +351,16 @@ export default function AITuning() {
               </div>
 
               {/* Endpoint configuration */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                <div>
-                  <span className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest block mb-2">API Endpoint URL</span>
-                  <input
-                    type="text"
-                    className="w-full p-4 rounded-xl border border-white/10 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 text-xs bg-slate-900/60 text-slate-200 font-mono font-bold leading-none"
-                    placeholder="e.g. https://integrate.api.nvidia.com/v1/chat/completions"
-                    value={settings.llmEndpoint}
-                    onChange={(e) => setSettings({ ...settings, llmEndpoint: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <span className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest block mb-2">Provider Custom API Key (Optional)</span>
-                  <input
-                    type="password"
-                    className="w-full p-4 rounded-xl border border-white/10 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 text-xs bg-slate-900/60 text-slate-200 font-mono font-bold leading-none"
-                    placeholder="Enter key to override standard server system key..."
-                    value={settings.llmApiKey}
-                    onChange={(e) => setSettings({ ...settings, llmApiKey: e.target.value })}
-                  />
-                </div>
+              <div className="pt-2">
+                <span className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest block mb-2">API Endpoint URL</span>
+                <input
+                  type="text"
+                  className="w-full p-4 rounded-xl border border-white/10 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 text-xs bg-slate-900/60 text-slate-200 font-mono font-bold leading-none"
+                  placeholder="e.g. https://integrate.api.nvidia.com/v1/chat/completions"
+                  value={settings.llmEndpoint}
+                  onChange={(e) => setSettings({ ...settings, llmEndpoint: e.target.value })}
+                />
               </div>
-
-              {settings.llmEndpoint !== "https://api.groq.com/openai/v1/chat/completions" && !settings.llmApiKey && (
-                <div className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-bold px-5 py-4 rounded-2xl mt-2 leading-relaxed uppercase tracking-wider flex items-center gap-2">
-                  <span>⚠️</span>
-                  <span>Warning: You have selected a custom API Endpoint but haven't provided a Custom API Key. The server will fall back to the default Groq API Key, which will cause authentication failures (401/500) if the endpoint is not Groq!</span>
-                </div>
-              )}
 
               {/* Granular Dropdowns with Annotations */}
               <div className="space-y-4 pt-4 border-t border-white/5">

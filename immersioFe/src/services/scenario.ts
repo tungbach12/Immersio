@@ -41,7 +41,7 @@ export interface ChatOutputResponse {
 
 export interface FinishSessionResponse {
   feedback: string;
-  suggestedFlashcards: { front: string; back: string; explanation?: string }[];
+  suggestedFlashcards: { front: string; back: string; explanation?: string; tag?: string }[];
 }
 
 const BASE_URL = "http://localhost:5249/api/scenarios";
@@ -117,7 +117,7 @@ export const scenarioService = {
     return response.json();
   },
 
-  async generateCustomFlashcards(sessionId: string, options: string[]): Promise<{ front: string; back: string; explanation?: string }[]> {
+  async generateCustomFlashcards(sessionId: string, options: string[]): Promise<{ front: string; back: string; explanation?: string; tag?: string }[]> {
     const response = await authService.fetchWithAuth(`${BASE_URL}/sessions/${sessionId}/flashcards`, {
       method: "POST",
       headers: {

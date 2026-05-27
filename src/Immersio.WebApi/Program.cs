@@ -64,6 +64,8 @@ builder.Services.AddScoped<IPronunciationService, PronunciationService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IImageUploadService, CloudinaryService>();
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.AddHttpClient<IPayOsService, PayOsService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
 // ── Swagger ──────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();

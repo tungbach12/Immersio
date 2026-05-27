@@ -7,6 +7,7 @@ namespace Immersio.Application.Interfaces
     {
         DbSet<User> Users { get; }
         DbSet<RefreshToken> RefreshTokens { get; }
+        DbSet<PasswordResetCode> PasswordResetCodes { get; }
         DbSet<Deck> Decks { get; }
         DbSet<Card> Cards { get; }
         DbSet<Scenario> Scenarios { get; }

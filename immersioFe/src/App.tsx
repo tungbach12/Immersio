@@ -5,6 +5,7 @@ import Intro from "@/pages/Intro";
 import Onboarding from "@/pages/Onboarding";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
 import StudentDashboard from "@/pages/student/Dashboard";
 import Scenarios from "@/pages/student/Scenarios";
 import ScenarioDetail from "@/pages/student/ScenarioDetail";
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/intro" element={<Intro />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/onboarding" element={<Onboarding />} />
         
         {/* Student Routes */}

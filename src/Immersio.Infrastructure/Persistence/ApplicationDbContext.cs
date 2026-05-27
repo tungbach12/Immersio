@@ -10,6 +10,7 @@ namespace Immersio.Infrastructure.Persistence
 
         public DbSet<User> Users => Set<User>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+        public DbSet<PasswordResetCode> PasswordResetCodes => Set<PasswordResetCode>();
         public DbSet<Deck> Decks => Set<Deck>();
         public DbSet<Card> Cards => Set<Card>();
         public DbSet<Scenario> Scenarios => Set<Scenario>();

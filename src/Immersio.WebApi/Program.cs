@@ -63,6 +63,7 @@ builder.Services.AddScoped<IScenarioService, ScenarioService>();
 builder.Services.AddScoped<IPronunciationService, PronunciationService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IImageUploadService, CloudinaryService>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
 // ── Swagger ──────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();

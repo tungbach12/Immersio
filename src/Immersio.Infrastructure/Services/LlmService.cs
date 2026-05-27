@@ -393,8 +393,8 @@ namespace Immersio.Infrastructure.Services
                         foreach (var item in listProp.EnumerateArray())
                         {
                             var type = item.TryGetProperty("type", out var ty) ? ty.GetString() : "vocab";
-                            var frontJson = item.GetRawText();
-                            
+
+                            string front = "";
                             string back = "";
                             string explanation = "";
                             string tag = type;
@@ -405,8 +405,9 @@ namespace Immersio.Infrastructure.Services
                                 {
                                     var word = contentProp.TryGetProperty("word", out var w) ? w.GetString() : "";
                                     var meaning = contentProp.TryGetProperty("meaning", out var m) ? m.GetString() : "";
+                                    front = word ?? "";
                                     back = meaning ?? "";
-                                    
+
                                     var def = contentProp.TryGetProperty("definition_en", out var d) ? d.GetString() : "";
                                     explanation = $"Definition: {def}\nWord: {word}";
                                 }
@@ -414,26 +415,33 @@ namespace Immersio.Infrastructure.Services
                                 {
                                     var title = contentProp.TryGetProperty("title", out var t) ? t.GetString() : "";
                                     var usage = contentProp.TryGetProperty("usage", out var u) ? u.GetString() : "";
-                                    back = title ?? "";
+                                    front = title ?? "";
+                                    back = usage ?? "";
                                     explanation = $"Usage: {usage}";
                                 }
                                 else if (type == "sentence")
                                 {
                                     var translation = contentProp.TryGetProperty("translation", out var tr) ? tr.GetString() : "";
                                     var full = contentProp.TryGetProperty("full_sentence", out var f) ? f.GetString() : "";
+                                    front = full ?? "";
                                     back = translation ?? "";
                                     explanation = $"Sentence: {full}";
                                 }
                             }
 
+                            // Fallbacks so a card is never built from raw JSON.
+                            if (string.IsNullOrWhiteSpace(front))
+                            {
+                                front = string.IsNullOrWhiteSpace(back) ? "Review" : back;
+                            }
                             if (string.IsNullOrWhiteSpace(back))
                             {
                                 back = "Review";
                             }
 
-                            if (!string.IsNullOrWhiteSpace(frontJson))
+                            if (!string.IsNullOrWhiteSpace(front))
                             {
-                                flashcards.Add(new AddCardDto(frontJson, back, explanation, tag));
+                                flashcards.Add(new AddCardDto(front, back, explanation, tag));
                             }
                         }
                     }
@@ -562,8 +570,8 @@ namespace Immersio.Infrastructure.Services
                         foreach (var item in listProp.EnumerateArray())
                         {
                             var type = item.TryGetProperty("type", out var ty) ? ty.GetString() : "vocab";
-                            var frontJson = item.GetRawText();
-                            
+
+                            string front = "";
                             string back = "";
                             string explanation = "";
                             string tag = type;
@@ -574,8 +582,9 @@ namespace Immersio.Infrastructure.Services
                                 {
                                     var word = contentProp.TryGetProperty("word", out var w) ? w.GetString() : "";
                                     var meaning = contentProp.TryGetProperty("meaning", out var m) ? m.GetString() : "";
+                                    front = word ?? "";
                                     back = meaning ?? "";
-                                    
+
                                     var def = contentProp.TryGetProperty("definition_en", out var d) ? d.GetString() : "";
                                     explanation = $"Definition: {def}\nWord: {word}";
                                 }
@@ -583,26 +592,33 @@ namespace Immersio.Infrastructure.Services
                                 {
                                     var title = contentProp.TryGetProperty("title", out var t) ? t.GetString() : "";
                                     var usage = contentProp.TryGetProperty("usage", out var u) ? u.GetString() : "";
-                                    back = title ?? "";
+                                    front = title ?? "";
+                                    back = usage ?? "";
                                     explanation = $"Usage: {usage}";
                                 }
                                 else if (type == "sentence")
                                 {
                                     var translation = contentProp.TryGetProperty("translation", out var tr) ? tr.GetString() : "";
                                     var full = contentProp.TryGetProperty("full_sentence", out var f) ? f.GetString() : "";
+                                    front = full ?? "";
                                     back = translation ?? "";
                                     explanation = $"Sentence: {full}";
                                 }
                             }
 
+                            // Fallbacks so a card is never built from raw JSON.
+                            if (string.IsNullOrWhiteSpace(front))
+                            {
+                                front = string.IsNullOrWhiteSpace(back) ? "Review" : back;
+                            }
                             if (string.IsNullOrWhiteSpace(back))
                             {
                                 back = "Review";
                             }
 
-                            if (!string.IsNullOrWhiteSpace(frontJson))
+                            if (!string.IsNullOrWhiteSpace(front))
                             {
-                                flashcards.Add(new AddCardDto(frontJson, back, explanation, tag));
+                                flashcards.Add(new AddCardDto(front, back, explanation, tag));
                             }
                         }
                     }

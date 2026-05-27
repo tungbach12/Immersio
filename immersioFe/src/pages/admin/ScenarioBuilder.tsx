@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { scenarioService, Scenario, ScenarioItem } from "@/services/scenario";
 import { adminService } from "@/services/admin";
+import { API_BASE } from "@/services/auth";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { 
@@ -68,7 +69,7 @@ export default function ScenarioBuilder() {
     try {
       const textToSpeak = initialMessage || "Hello! This is a preview of my voice.";
       const token = localStorage.getItem("token") || "";
-      const response = await fetch("http://localhost:5249/api/practice/tts", {
+      const response = await fetch(`${API_BASE}/api/practice/tts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

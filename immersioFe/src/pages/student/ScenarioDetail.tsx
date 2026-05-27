@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { scenarioService, Scenario } from "@/services/scenario";
 import { getDecks, addCardsToDeck, addDeck, Deck, Flashcard } from "@/services/decks";
+import { API_BASE } from "@/services/auth";
 
 type ChatMessage = {
   role: "user" | "model";
@@ -188,7 +189,7 @@ export default function ScenarioDetail() {
       const activeLang = langOverride || targetLang || scenario?.language;
       const selectedVoice = getVoiceForLanguage(activeLang, scenario?.voiceId);
       const token = localStorage.getItem("token") || "";
-      const response = await fetch("http://localhost:5249/api/practice/tts", {
+      const response = await fetch(`${API_BASE}/api/practice/tts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

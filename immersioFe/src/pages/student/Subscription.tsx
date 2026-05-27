@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { authService, UserDto } from "@/services/auth";
+import { authService, UserDto, API_BASE } from "@/services/auth";
 
 const plans = [
   {
@@ -170,7 +170,7 @@ export default function Subscription() {
   const processDirectUpgrade = async (tier: string, cycle: string) => {
     setSyncing(true);
     try {
-      const response = await authService.fetchWithAuth("http://localhost:5249/api/subscription/upgrade", {
+      const response = await authService.fetchWithAuth(`${API_BASE}/api/subscription/upgrade`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tier, billingCycle: cycle })
@@ -219,7 +219,7 @@ export default function Subscription() {
       // Simulated secure 1.5s gateway delay
       await new Promise(resolve => setTimeout(resolve, 1500));
 
-      const response = await authService.fetchWithAuth("http://localhost:5249/api/subscription/upgrade", {
+      const response = await authService.fetchWithAuth(`${API_BASE}/api/subscription/upgrade`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tier: selectedPlan.name, billingCycle })

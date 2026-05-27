@@ -62,6 +62,7 @@ builder.Services.AddHttpClient<ILLMService, LlmService>();
 builder.Services.AddScoped<IScenarioService, ScenarioService>();
 builder.Services.AddScoped<IPronunciationService, PronunciationService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IImageUploadService, CloudinaryService>();
 
 // ── Swagger ──────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();

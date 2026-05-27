@@ -28,6 +28,10 @@ services:
     environment:
       - ConnectionStrings__DefaultConnection=Host=postgres-db;Port=5432;Database=ImmersioDb;Username=postgres;Password=${DB_PASSWORD:-your_secure_password_here}
       - ASPNETCORE_ENVIRONMENT=Production
+    env_file:
+      - .env
+      - path: secrets.env
+        required: false
     ports:
       - "127.0.0.1:5249:5249"
     depends_on:

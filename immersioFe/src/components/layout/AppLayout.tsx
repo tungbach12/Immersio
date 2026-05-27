@@ -2,21 +2,35 @@ import { useState, useEffect } from "react";
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Home, BookOpen, User, BarChart2, Layers, Cpu,
-  Bell, LogOut, Sparkles, ShoppingBag
+  Home,
+  BookOpen,
+  Settings,
+  User,
+  Menu,
+  X,
+  BarChart2,
+  Layers,
+  Cpu,
+  Bell,
+  LogOut,
+  Sparkles,
+  Crown,
+  Book,
+  Brain,
+  Mic
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { authService, UserDto } from "@/services/auth";
 
-const NM_RAISED = { boxShadow: '6px 6px 12px #D5C9B8, -6px -6px 12px #FFFFFF' } as const;
-const NM_RAISED_SM = { boxShadow: '4px 4px 8px #D5C9B8, -4px -4px 8px #FFFFFF' } as const;
-const NM_INSET_SM = { boxShadow: 'inset 2px 2px 4px #D5C9B8, inset -2px -2px 4px #FFFFFF' } as const;
-
 export default function AppLayout() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
-  const isScenarioDetail = location.pathname.includes("/scenarios/") && !location.pathname.endsWith("/scenarios");
+
+  const segments = location.pathname.split("/").filter(Boolean);
+  const isScenarioDetail = segments[0] === "student" && 
+                           segments[1] === "scenarios" && 
+                           segments.length > 2;
 
   const [user, setUser] = useState<UserDto | null>(null);
 
@@ -40,8 +54,9 @@ export default function AppLayout() {
   const studentLinks = [
     { icon: Home, label: "Home", path: "/student/dashboard" },
     { icon: BookOpen, label: "Learn", path: "/student/scenarios" },
-    { icon: Sparkles, label: "Practice", path: "/student/practice" },
-    { icon: ShoppingBag, label: "Store", path: "/student/store" },
+    { icon: Brain, label: "Smart Cards", path: "/student/flashcards" },
+    { icon: Mic, label: "Vocal Lab", path: "/student/vocal-lab" },
+    { icon: Book, label: "Dictionary", path: "/student/dictionary" },
     { icon: User, label: "Profile", path: "/student/profile" },
   ];
 
@@ -62,57 +77,87 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDF6EC] flex flex-col md:flex-row overflow-hidden text-[#3E2723] relative" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
-
-      {/* Background warmth */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-[#FDF6EC]">
+    <div className="h-screen bg-[#030712] flex flex-col md:flex-row overflow-hidden font-body text-slate-100 relative">
+      {/* Background Decorative Blobs */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-[#030712]">
         <motion.div
-          animate={{ x: [0, 50, 0], y: [0, -30, 0] }}
+          animate={{ x: [0, 60, 0], y: [0, -40, 0], rotate: [0, 45, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-[5%] -left-[10%] w-[60%] h-[60%] bg-indigo-500/10 rounded-full blur-[120px]"
+        />
+        <motion.div
+          animate={{ x: [0, -50, 0], y: [0, 60, 0], rotate: [0, -45, 0] }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[5%] -right-[10%] w-[55%] h-[55%] bg-fuchsia-500/15 rounded-full blur-[100px]"
+        />
+        <motion.div
+          animate={{ x: [0, 40, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }}
           transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-[10%] -left-[10%] w-[55%] h-[55%] bg-[#C4956A]/8 rounded-full blur-[100px]"
+          className="absolute -bottom-[15%] left-[15%] w-[65%] h-[60%] bg-blue-500/15 rounded-full blur-[130px]"
         />
-        <motion.div
-          animate={{ x: [0, -40, 0], y: [0, 50, 0] }}
-          transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[5%] -right-[10%] w-[50%] h-[50%] bg-[#8B5E3C]/6 rounded-full blur-[90px]"
-        />
-        <motion.div
-          animate={{ x: [0, 30, 0], y: [0, 20, 0], scale: [1, 1.08, 1] }}
-          transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
-          className="absolute -bottom-[10%] left-[20%] w-[60%] h-[50%] bg-[#C4956A]/5 rounded-full blur-[110px]"
-        />
-      </div>
 
+        {/* Dynamic Multi-color Core */}
+        <motion.div
+          animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.2, 0.1] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[40%] left-[30%] w-[40%] h-[40%] bg-gradient-to-tr from-violet-500/20 via-pink-500/20 to-amber-500/20 rounded-full blur-[110px]"
+        />
+
+        {/* High Saturation Floating Particles */}
+        <motion.div
+          animate={{ y: [0, -120, 0], x: [0, 30, 0], opacity: [0, 0.6, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[80%] right-[20%] w-6 h-6 rounded-full bg-indigo-600 blur-md shadow-[0_0_20px_rgba(79,70,229,0.5)]"
+        />
+        <motion.div
+          animate={{ y: [0, -100, 0], x: [0, -20, 0], opacity: [0, 0.5, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear", delay: 3 }}
+          className="absolute top-[20%] left-[15%] w-5 h-5 rounded-full bg-pink-600 blur-md shadow-[0_0_20px_rgba(219,39,119,0.5)]"
+        />
+        <motion.div
+          animate={{ y: [0, -150, 0], opacity: [0, 0.4, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "linear", delay: 1 }}
+          className="absolute top-[50%] right-[40%] w-4 h-4 rounded-full bg-cyan-500 blur-md shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+        />
+
+        {/* Subtle Grid Pattern - Increased visibility slightly */}
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.035]" />
+      </div>
       {/* Desktop Sidebar */}
       {!isScenarioDetail && (
-        <aside className="hidden md:flex w-80 flex-col bg-[#FDF6EC] z-20 border-r border-[#E8DDD0]">
-          <div className="p-10 flex items-center gap-3">
-            <div className="rounded-xl p-1.5" style={NM_RAISED_SM}>
-              <img src="/logo.png" alt="IMMERSIO Logo" className="h-10 w-auto object-contain rounded-lg" />
-            </div>
-            <span className="text-xl text-[#8B5E3C]" style={{ fontFamily: "'Noto Serif Display', serif" }}>IMMERSIO</span>
+        <aside className="hidden md:flex w-80 flex-col h-full bg-slate-950/80 backdrop-blur-3xl border-r border-white/5 z-20">
+          <div className="p-10 flex items-center gap-4">
+            <img src="/logo.png" alt="IMMERSIO Logo" className="h-12 w-auto object-contain" />
+            <span className="text-xl font-black italic tracking-tighter text-white">IMMERSIO</span>
           </div>
 
-          <nav className="flex-1 px-6 py-4 space-y-2">
+          <nav className="flex-1 px-6 py-4 space-y-3">
             {links.map((link) => {
               const isActive = location.pathname === link.path;
               return (
                 <Link to={link.path} key={link.path}>
                   <div
                     className={cn(
-                      "flex items-center gap-4 px-6 py-4 rounded-xl transition-all duration-350 group relative overflow-hidden",
-                      isActive ? "bg-[#8B5E3C] text-white" : "text-[#6D4C41] hover:bg-[#FAF0E1]"
+                      "flex items-center gap-4 px-6 py-5 rounded-[1.5rem] transition-all duration-500 group relative overflow-hidden border border-transparent",
+                      isActive
+                        ? "bg-white/10 text-white shadow-lg border-white/10"
+                        : "text-slate-400 hover:bg-white/5 hover:text-white"
                     )}
-                    style={isActive ? { boxShadow: '4px 4px 10px #D5C9B8, -4px -4px 10px #FFFFFF' } : {}}
                   >
                     <link.icon
-                      size={18}
+                      size={20}
                       className={cn(
-                        "transition-all duration-300 shrink-0",
-                        isActive ? "text-[#F0D0A8]" : "text-[#A0856A] group-hover:text-[#8B5E3C]"
+                        "transition-all duration-500",
+                        isActive ? "text-indigo-400 scale-110" : "text-slate-400 group-hover:text-white"
                       )}
                     />
-                    <span className="font-medium text-sm tracking-tight">{link.label}</span>
+                    <span className="font-bold text-sm tracking-tight">{link.label}</span>
+                    {isActive && (
+                      <motion.div
+                        layoutId="active-glow"
+                        className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-transparent pointer-events-none"
+                      />
+                    )}
                   </div>
                 </Link>
               );
@@ -120,33 +165,12 @@ export default function AppLayout() {
           </nav>
 
           <div className="p-8">
-            <div className="bg-[#FDF6EC] rounded-2xl p-7 mb-5" style={NM_RAISED}>
-              <div className="flex items-center gap-4 mb-5">
-                <div
-                  className="w-12 h-12 rounded-xl bg-gradient-vibrant flex items-center justify-center text-white font-semibold text-sm"
-                  style={NM_RAISED_SM}
-                >
-                  {user ? getInitials(user.username) : "?"}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[#3E2723] truncate" style={{ fontFamily: "'Noto Serif Display', serif" }}>{user?.username ?? "—"}</p>
-                  <p className="text-[10px] font-semibold text-[#C4956A] uppercase tracking-widest mt-0.5">{user?.subscriptionTier ? `${user.subscriptionTier} Learner` : "—"}</p>
-                </div>
-              </div>
-              <Link to="/student/subscription">
-                <button
-                  className="w-full rounded-xl bg-[#8B5E3C] hover:bg-[#6B4226] text-white font-semibold uppercase tracking-widest text-[10px] h-11 transition-all duration-300"
-                  style={NM_RAISED_SM}
-                >
-                  View Plans
-                </button>
-              </Link>
-            </div>
+
             <Link to="/">
-              <button className="w-full flex items-center justify-start gap-3 px-4 py-3 text-[#A0856A] hover:text-rose-600 hover:bg-rose-50 rounded-xl font-medium text-sm transition-all duration-200">
-                <LogOut size={16} />
+              <Button variant="ghost" className="w-full justify-start text-slate-400 hover:text-red-400 hover:bg-red-950/20 rounded-2xl font-bold text-sm h-12">
+                <LogOut size={18} className="mr-3" />
                 Log Out
-              </button>
+              </Button>
             </Link>
           </div>
         </aside>
@@ -154,22 +178,17 @@ export default function AppLayout() {
 
       {/* Mobile Top Header */}
       {!isScenarioDetail && (
-        <header
-          className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#FDF6EC] z-40 flex items-center justify-between px-6"
-          style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="rounded-xl p-1" style={NM_RAISED_SM}>
-              <img src="/logo.png" alt="IMMERSIO Logo" className="h-8 w-auto object-contain rounded-lg" />
-            </div>
-            <span className="text-base text-[#8B5E3C]" style={{ fontFamily: "'Noto Serif Display', serif" }}>IMMERSIO</span>
+        <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-3xl border-b border-white/5 z-40 flex items-center justify-between px-6 transition-all duration-300">
+          <div className="flex items-center gap-3">
+             <img src="/logo.png" alt="IMMERSIO Logo" className="h-9 w-auto object-contain" />
+             <span className="text-base font-black italic tracking-tighter text-white">IMMERSIO</span>
           </div>
           <div className="flex items-center gap-3">
-            <button className="w-9 h-9 rounded-xl bg-[#FDF6EC] flex items-center justify-center text-[#A0856A] hover:text-[#8B5E3C] transition-colors" style={NM_RAISED_SM}>
-              <Bell size={16} />
+            <button className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:text-indigo-400 hover:bg-white/10 transition-all">
+              <Bell size={18} />
             </button>
             <Link to="/student/profile">
-              <div className="w-9 h-9 rounded-xl bg-gradient-vibrant flex items-center justify-center text-white font-semibold text-[10px]" style={NM_RAISED_SM}>
+              <div className="w-9 h-9 rounded-xl bg-gradient-vibrant flex items-center justify-center text-white font-black text-[10px] shadow-lg shadow-indigo-200/50">
                 {user ? getInitials(user.username) : "?"}
               </div>
             </Link>
@@ -200,31 +219,35 @@ export default function AppLayout() {
         </div>
       </main>
 
-      {/* Mobile Bottom Nav */}
+      {/* Mobile Bottom Navigation - Floating style */}
       {!isScenarioDetail && (
         <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-3rem)] max-w-md z-50">
-          <nav
-            className="h-16 bg-[#FDF6EC] rounded-full flex items-center justify-around px-2"
-            style={{ boxShadow: '8px 8px 20px #D5C9B8, -8px -8px 20px #FFFFFF' }}
-          >
+          <nav className="h-16 bg-slate-950/90 backdrop-blur-2xl rounded-[2rem] flex items-center justify-around px-2 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 ring-1 ring-white/5">
             {links.map((link) => {
               const isActive = location.pathname === link.path;
               return (
                 <Link to={link.path} key={link.path} className="relative flex-1 group">
-                  <div className="flex flex-col items-center justify-center relative h-full gap-1">
+                  <div className="flex flex-col items-center justify-center relative h-full">
                     {isActive && (
                       <motion.div
-                        layoutId="mobile-active-bg"
-                        className="absolute inset-x-1 inset-y-1 rounded-full bg-[#8B5E3C]"
-                        style={{ boxShadow: '3px 3px 8px #D5C9B8, -3px -3px 8px #FFFFFF' }}
-                      />
+                        layoutId="nav-glow"
+                        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                      >
+                        <div className="w-10 h-10 bg-indigo-500/20 blur-xl rounded-full" />
+                      </motion.div>
                     )}
                     <div className={cn(
-                      "relative z-10 transition-all duration-300 flex items-center justify-center",
-                      isActive ? "text-white" : "text-[#A0856A] group-hover:text-[#8B5E3C]"
+                      "transition-all duration-300 flex items-center justify-center",
+                      isActive ? "text-indigo-400 -translate-y-1 scale-110" : "text-slate-500 group-hover:text-slate-300"
                     )}>
-                      <link.icon size={19} strokeWidth={isActive ? 2.5 : 2} />
+                      <link.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                     </div>
+                    {isActive && (
+                      <motion.div 
+                        layoutId="nav-dot"
+                        className="w-1 h-1 bg-indigo-400 rounded-full mt-1 border-[0.5px] border-indigo-300/50 shadow-[0_0_8px_rgba(129,140,248,0.8)]"
+                      />
+                    )}
                   </div>
                 </Link>
               );

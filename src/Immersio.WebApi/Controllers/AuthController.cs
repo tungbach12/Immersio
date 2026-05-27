@@ -1,4 +1,5 @@
 using Immersio.Application.DTOs.Auth;
+using Immersio.Application.DTOs.Common;
 using Immersio.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,7 @@ namespace Immersio.WebApi.Controllers
             CancellationToken cancellationToken)
         {
             var result = await _authService.RegisterAsync(request, cancellationToken);
-            return Created(string.Empty, result);
+            return Created(string.Empty, ApiResponse<AuthResponse>.SuccessResult(result));
         }
 
         [HttpPost("login")]
@@ -32,7 +33,16 @@ namespace Immersio.WebApi.Controllers
             CancellationToken cancellationToken)
         {
             var result = await _authService.LoginAsync(request, cancellationToken);
-            return Ok(result);
+            return Ok(ApiResponse<AuthResponse>.SuccessResult(result));
+        }
+
+        [HttpPost("google")]
+        public async Task<IActionResult> LoginWithGoogle(
+            [FromBody] GoogleLoginRequest request,
+            CancellationToken cancellationToken)
+        {
+            var result = await _authService.LoginWithGoogleAsync(request, cancellationToken);
+            return Ok(ApiResponse<AuthResponse>.SuccessResult(result));
         }
 
         [HttpPost("refresh")]
@@ -41,7 +51,7 @@ namespace Immersio.WebApi.Controllers
             CancellationToken cancellationToken)
         {
             var result = await _authService.RefreshTokenAsync(request, cancellationToken);
-            return Ok(result);
+            return Ok(ApiResponse<AuthResponse>.SuccessResult(result));
         }
 
         [HttpPost("revoke")]
@@ -51,7 +61,7 @@ namespace Immersio.WebApi.Controllers
             CancellationToken cancellationToken)
         {
             await _authService.RevokeTokenAsync(request, cancellationToken);
-            return NoContent();
+            return Ok(ApiResponse.SuccessResult("Token revoked successfully"));
         }
 
         [HttpGet("me")]
@@ -60,13 +70,13 @@ namespace Immersio.WebApi.Controllers
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdStr, out var userId))
-                return Unauthorized();
+                return Unauthorized(ApiResponse.FailureResult("Invalid user identity."));
 
             var user = await _authService.GetUserByIdAsync(userId, cancellationToken);
             if (user is null)
-                return NotFound();
+                return NotFound(ApiResponse.FailureResult("User not found."));
 
-            return Ok(user);
+            return Ok(ApiResponse<UserDto>.SuccessResult(user));
         }
     }
 }

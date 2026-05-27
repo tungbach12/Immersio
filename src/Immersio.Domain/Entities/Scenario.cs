@@ -19,6 +19,7 @@ namespace Immersio.Domain.Entities
         public string AvatarUrl { get; private set; } = null!;
         public bool IsNavigation { get; private set; }
         public bool IsDeleted { get; private set; }
+        public string? VoiceId { get; private set; }
 
         // Navigation
         public ICollection<ScenarioItem> Items { get; private set; } = new List<ScenarioItem>();
@@ -37,7 +38,8 @@ namespace Immersio.Domain.Entities
             string contextPrompt, 
             string initialMessage, 
             string avatarUrl, 
-            bool isNavigation)
+            bool isNavigation,
+            string? voiceId = null)
         {
             if (string.IsNullOrWhiteSpace(title))
                 throw new ArgumentException("Title cannot be empty.", nameof(title));
@@ -60,11 +62,42 @@ namespace Immersio.Domain.Entities
             AvatarUrl = avatarUrl;
             IsNavigation = isNavigation;
             IsDeleted = false;
+            VoiceId = voiceId;
         }
 
         public void AddItem(string name, decimal price, string imageUrl, string? icon = null)
         {
             Items.Add(new ScenarioItem(Id, name, price, imageUrl, icon));
+        }
+
+        public void Update(
+            string title, 
+            string language, 
+            string level, 
+            string category, 
+            string description, 
+            double rating, 
+            string duration, 
+            string imageUrl, 
+            string contextPrompt, 
+            string initialMessage, 
+            string avatarUrl, 
+            bool isNavigation,
+            string? voiceId)
+        {
+            Title = title;
+            Language = language;
+            Level = level;
+            Category = category;
+            Description = description;
+            Rating = rating;
+            Duration = duration;
+            ImageUrl = imageUrl;
+            ContextPrompt = contextPrompt;
+            InitialMessage = initialMessage;
+            AvatarUrl = avatarUrl;
+            IsNavigation = isNavigation;
+            VoiceId = voiceId;
         }
 
         public void Delete()

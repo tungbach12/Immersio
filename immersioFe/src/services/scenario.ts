@@ -1,4 +1,4 @@
-import { authService } from "./auth";
+import { authService, API_BASE } from "./auth";
 
 export interface ScenarioItem {
   id: string;
@@ -25,6 +25,7 @@ export interface Scenario {
   bg: string;
   modes: ("2d" | "ar")[];
   isNavigation?: boolean;
+  voiceId?: string;
   items?: ScenarioItem[];
 }
 
@@ -40,10 +41,10 @@ export interface ChatOutputResponse {
 
 export interface FinishSessionResponse {
   feedback: string;
-  suggestedFlashcards: { front: string; back: string; explanation?: string }[];
+  suggestedFlashcards: { front: string; back: string; explanation?: string; tag?: string }[];
 }
 
-const BASE_URL = "http://localhost:5249/api/scenarios";
+const BASE_URL = `${API_BASE}/api/scenarios`;
 
 export const scenarioService = {
   async getScenarios(): Promise<Scenario[]> {
@@ -64,13 +65,13 @@ export const scenarioService = {
     return this.mapDtoToModel(data);
   },
 
-  async startSession(scenarioId: string): Promise<string> {
+  async startSession(scenarioId: string, targetLanguage?: string): Promise<{ sessionId: string; initialMessage: string }> {
     const response = await authService.fetchWithAuth(`${BASE_URL}/sessions/start`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ scenarioId }),
+      body: JSON.stringify({ scenarioId, targetLanguage }),
     });
 
     if (!response.ok) {
@@ -82,7 +83,10 @@ export const scenarioService = {
     }
 
     const data = await response.json();
-    return data.sessionId;
+    return {
+      sessionId: data.sessionId,
+      initialMessage: data.initialMessage,
+    };
   },
 
   async sendMessage(sessionId: string, message: string): Promise<ChatOutputResponse> {
@@ -113,7 +117,7 @@ export const scenarioService = {
     return response.json();
   },
 
-  async generateCustomFlashcards(sessionId: string, options: string[]): Promise<{ front: string; back: string; explanation?: string }[]> {
+  async generateCustomFlashcards(sessionId: string, options: string[]): Promise<{ front: string; back: string; explanation?: string; tag?: string }[]> {
     const response = await authService.fetchWithAuth(`${BASE_URL}/sessions/${sessionId}/flashcards`, {
       method: "POST",
       headers: {
@@ -147,6 +151,7 @@ export const scenarioService = {
       bg: dto.imageUrl,
       modes: dto.isNavigation ? ["ar"] : ["2d", "ar"],
       isNavigation: dto.isNavigation,
+      voiceId: dto.voiceId,
       items: dto.items?.map((item: any) => ({
         id: item.id,
         name: item.name,

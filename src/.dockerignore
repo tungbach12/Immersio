@@ -1,0 +1,17 @@
+# Ignore build artifacts and temporary files
+**/bin/
+**/obj/
+**/.vs/
+**/.idea/
+**/.vscode/
+**/*.user
+**/*.suo
+
+# Ignore local database files or certificates
+**/*.db
+**/*.db-journal
+**/*.pfx
+
+# Ignore docker files themselves
+Dockerfile
+.dockerignore

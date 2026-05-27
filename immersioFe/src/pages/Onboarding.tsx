@@ -64,6 +64,7 @@ export default function Onboarding() {
     if (step === 1 && selectedRole) {
       setStep(2);
     } else if (step === 2 && selectedLanguage) {
+      localStorage.setItem("onboarding_language", selectedLanguage);
       navigate("/student/dashboard");
     }
   };

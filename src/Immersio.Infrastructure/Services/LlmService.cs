@@ -10,7 +10,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Immersio.Application.DTOs.Scenario;
 using Immersio.Application.DTOs.Srs;
+using Immersio.Application.DTOs.Practice;
 using Immersio.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace Immersio.Infrastructure.Services
@@ -18,14 +20,82 @@ namespace Immersio.Infrastructure.Services
     public class LlmService : ILLMService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _apiKey;
-        private const string GroqEndpoint = "https://api.groq.com/openai/v1/chat/completions";
-        private const string DefaultModel = "llama-3.3-70b-versatile";
+        private readonly IConfiguration _configuration;
+        private readonly IApplicationDbContext _context;
+        private const string NvidiaEndpoint = "https://integrate.api.nvidia.com/v1/chat/completions";
+        private const string DefaultModel = "meta/llama-4-maverick-17b-128e-instruct";
 
-        public LlmService(HttpClient httpClient, IConfiguration configuration)
+        public LlmService(HttpClient httpClient, IConfiguration configuration, IApplicationDbContext context)
         {
             _httpClient = httpClient;
-            _apiKey = configuration["Groq:ApiKey"] ?? throw new ArgumentNullException("Groq API key is not configured.");
+            _configuration = configuration;
+            _context = context;
+        }
+
+        private async Task<(string ModelName, string Endpoint, string ApiKey)> GetModelConfigAsync(string modelKey, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var modelSetting = await _context.SystemSettings
+                    .FirstOrDefaultAsync(s => s.Key == modelKey, cancellationToken);
+                var endpointSetting = await _context.SystemSettings
+                    .FirstOrDefaultAsync(s => s.Key == "LlmEndpoint", cancellationToken);
+
+                var modelName = !string.IsNullOrWhiteSpace(modelSetting?.Value) ? modelSetting.Value : DefaultModel;
+                var endpoint = !string.IsNullOrWhiteSpace(endpointSetting?.Value) ? endpointSetting.Value : NvidiaEndpoint;
+                
+                string apiKey = "";
+                if (endpoint.Contains("groq.com", StringComparison.OrdinalIgnoreCase))
+                {
+                    apiKey = _configuration["Groq:ApiKey"] ?? "";
+                }
+                else if (endpoint.Contains("nvidia.com", StringComparison.OrdinalIgnoreCase) || endpoint.Contains("nvidia", StringComparison.OrdinalIgnoreCase))
+                {
+                    apiKey = _configuration["Nvidia:ApiKey"] ?? "";
+                }
+                else if (endpoint.Contains("stepfun.com", StringComparison.OrdinalIgnoreCase) || endpoint.Contains("stepfun", StringComparison.OrdinalIgnoreCase))
+                {
+                    apiKey = _configuration["StepFun:ApiKey"] ?? "";
+                }
+                else
+                {
+                    apiKey = _configuration["Groq:ApiKey"] ?? "";
+                }
+
+                Console.WriteLine($"\n[AI DIAGNOSTICS] {DateTime.Now:HH:mm:ss} | Triggering AI Service: '{modelKey}'");
+                Console.WriteLine($"  -> Active Model:   {modelName}");
+                Console.WriteLine($"  -> Target Server:  {endpoint}");
+
+                return (modelName, endpoint, apiKey);
+            }
+            catch (Exception ex)
+            {
+                var defaultKey = _configuration["Nvidia:ApiKey"] ?? _configuration["Groq:ApiKey"] ?? "";
+                Console.WriteLine($"\n[AI DIAGNOSTICS] Warning: Failed to resolve database AI settings (using fallback). Error: {ex.Message}");
+                Console.WriteLine($"  -> Fallback Model: {DefaultModel}");
+                Console.WriteLine($"  -> Fallback Server:{NvidiaEndpoint}");
+                return (DefaultModel, NvidiaEndpoint, defaultKey);
+            }
+        }
+
+        private void SetJsonContent(HttpRequestMessage request, object requestBody)
+        {
+            var json = JsonSerializer.Serialize(requestBody);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            request.Content = content;
+        }
+
+        private async Task LogErrorAsync(string operationName, string endpoint, string modelName, HttpResponseMessage response, CancellationToken cancellationToken)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            Console.WriteLine($"\n==================================================");
+            Console.WriteLine($"[LlmService ERROR - {operationName}]");
+            Console.WriteLine($"Endpoint: {endpoint}");
+            Console.WriteLine($"Model: {modelName}");
+            Console.WriteLine($"Status: {(int)response.StatusCode} ({response.StatusCode})");
+            Console.WriteLine($"Response Body: {errorContent}");
+            Console.WriteLine($"==================================================\n");
         }
 
         public async Task<string> GenerateChatResponseAsync(
@@ -62,24 +132,38 @@ namespace Immersio.Infrastructure.Services
                 messagesPayload.Add(new { role = "user", content = userMessage });
             }
 
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelChat", cancellationToken);
+
             var requestBody = new
             {
-                model = DefaultModel,
+                model = modelName,
                 messages = messagesPayload,
                 temperature = 0.7,
-                max_completion_tokens = 1024,
+                max_tokens = 1024,
                 stream = false
             };
 
-            var request = new HttpRequestMessage(HttpMethod.Post, GroqEndpoint);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-            request.Content = JsonContent.Create(requestBody);
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
 
-            var response = await _httpClient.SendAsync(request, cancellationToken);
-            response.EnsureSuccessStatusCode();
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("GenerateChatResponseAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
 
-            var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
-            return chatResponse?.Choices?.FirstOrDefault()?.Message?.Content ?? "I am sorry, I couldn't understand that.";
+                var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
+                return chatResponse?.Choices?.FirstOrDefault()?.Message?.Content ?? "I am sorry, I couldn't understand that.";
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to generate chat response: {ex.Message}");
+                return "I am sorry, I am having trouble connecting to my mind right now. Please try again in a moment.";
+            }
         }
 
         public async Task<CorrectionResultDto> AnalyzeGrammarAsync(
@@ -87,14 +171,21 @@ namespace Immersio.Infrastructure.Services
             string targetLanguage, 
             CancellationToken cancellationToken)
         {
-            var systemPrompt = $"Analyze the sentence spoken by a language learner in {targetLanguage}.\n" +
-                               $"Return a JSON object with \"corrected\" (natural version) and \"explanation\" (brief note explaining why or \"Perfect!\").\n" +
-                               $"The output must be strictly valid JSON. Example:\n" +
-                               $"{{\n  \"corrected\": \"Good morning, how are you?\",\n  \"explanation\": \"Added a comma for natural phrasing.\"\n}}";
+            var systemPrompt = $"You are an expert language teacher and a lenient speech-to-text grammar evaluator for language learners speaking {targetLanguage}.\n" +
+                               $"Your primary task is to review the user's spoken sentence and determine if it has serious grammatical errors (e.g., incorrect tense, wrong verb conjugation, incorrect word order, or completely inappropriate word choice that distorts the meaning).\n\n" +
+                               $"CRITICAL RULES:\n" +
+                               $"1. STRICT LENIENCY FOR SPOKEN SPEECH: Spoken language is naturally informal and fragmented. NEVER correct minor punctuation, missing commas, periods, capitalization, or apostrophes (e.g., 'im' instead of 'I'm', or lack of question marks). These are NOT grammar errors.\n" +
+                               $"2. NO OVER-CORRECTION: If the user's sentence is natural, understandable, and commonly used by native speakers in daily conversation (even if simple, colloquial, or using casual slang), you MUST mark it as correct. Do not rephrase it to sound like a formal book.\n" +
+                               $"3. CORRECTION DIRECTION: If there is a genuine and serious error, correct it to be a natural spoken phrase in {targetLanguage} that preserves the user's original intent. Avoid complex or overly formal vocabulary in the correction.\n" +
+                               $"4. EXPLANATION: If there is no error, the explanation MUST be exactly 'Perfect!'. If there is an error, write a short, encouraging explanation in Vietnamese (Tiếng Việt) describing the mistake clearly and how to avoid it (keep it under 2 sentences).\n" +
+                               $"5. Output format: You must return a valid JSON object only, with no markdown wrappers or backticks. Example:\n" +
+                               $"{{\n  \"corrected\": \"(corrected sentence if errors exist, otherwise the exact original input)\",\n  \"explanation\": \"(EXACTLY 'Perfect!' if correct, otherwise a short Vietnamese explanation of the error)\"\n}}";
+
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelGrammar", cancellationToken);
 
             var requestBody = new
             {
-                model = DefaultModel,
+                model = modelName,
                 messages = new[]
                 {
                     new { role = "system", content = systemPrompt },
@@ -107,12 +198,16 @@ namespace Immersio.Infrastructure.Services
 
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, GroqEndpoint);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-                request.Content = JsonContent.Create(requestBody);
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
 
                 var response = await _httpClient.SendAsync(request, cancellationToken);
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("AnalyzeGrammarAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
 
                 var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
                 var contentJson = chatResponse?.Choices?.FirstOrDefault()?.Message?.Content;
@@ -146,9 +241,11 @@ namespace Immersio.Infrastructure.Services
             var historyText = string.Join("\n", history.Select(m => $"{m.Role}: {m.Text}"));
             var userPrompt = $"Context: {contextPrompt}\n\nHistory:\n{historyText}";
 
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelFeedback", cancellationToken);
+
             var requestBody = new
             {
-                model = DefaultModel,
+                model = modelName,
                 messages = new[]
                 {
                     new { role = "system", content = systemPrompt },
@@ -158,15 +255,27 @@ namespace Immersio.Infrastructure.Services
                 stream = false
             };
 
-            var request = new HttpRequestMessage(HttpMethod.Post, GroqEndpoint);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-            request.Content = JsonContent.Create(requestBody);
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
 
-            var response = await _httpClient.SendAsync(request, cancellationToken);
-            response.EnsureSuccessStatusCode();
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("GenerateSessionFeedbackAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
 
-            var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
-            return chatResponse?.Choices?.FirstOrDefault()?.Message?.Content ?? "Great job practicing today!";
+                var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
+                return chatResponse?.Choices?.FirstOrDefault()?.Message?.Content ?? "Great job practicing today!";
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to generate session feedback: {ex.Message}");
+                return "Great job practicing today! I'm currently unable to generate detailed feedback, but keep up the good work!";
+            }
         }
 
         public async Task<List<AddCardDto>> GenerateFlashcardsAsync(
@@ -174,20 +283,78 @@ namespace Immersio.Infrastructure.Services
             string targetLanguage, 
             CancellationToken cancellationToken)
         {
-            var systemPrompt = $"Analyze the conversation between a language learner and an AI in {targetLanguage}.\n" +
-                               $"Identify 3 to 5 key vocabulary terms, grammar corrections, or useful idioms that the student struggled with or could benefit from reviewing.\n" +
-                               $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must have:\n" +
-                               $"- \"front\": The word, phrase or sentence in {targetLanguage}\n" +
-                               $"- \"back\": The translation or definition in Vietnamese (Tiếng Việt)\n" +
-                               $"- \"explanation\": A brief explanation or grammatical tip\n\n" +
+            var systemPrompt = $"You are an expert language acquisition assistant. Analyze the conversation history between the language learner (USER) and the AI (ASSISTANT) in {targetLanguage}.\n" +
+                               $"Identify a dynamic number of cards (from 3 up to 15) covering key vocabulary terms, grammar corrections, or useful idioms/expressions that the student struggled with or could benefit from reviewing based EXCLUSIVELY on the USER's turns and the corrections provided to them.\n\n" +
+                               $"CRITICAL RULES:\n" +
+                               $"1. SOURCE RESTRICTION: Every single flashcard must be directly derived from the actual words, phrases, or errors that occurred in the USER's dialog turns. DO NOT generate random vocabulary or make up unrelated words that were never in the conversation.\n" +
+                               $"2. NO OVERLY ROBOTIC OR NITPICKY CORRECTIONS: Focus ONLY on significant grammatical errors or unnatural speaking habits/phrasings. Do NOT be overly strict or nitpicky on minor things that make the system feel too mechanical.\n" +
+                               $"3. NO TRIVIAL CARDS: Do not create flashcards for extremely basic words (e.g., 'hello', 'yes', 'no') unless they made a major error with them.\n" +
+                               $"4. DYNAMIC CARD COUNT: Generate more cards (up to 15) for longer or richer histories. Generate fewer cards (minimum 3) only if the history is extremely short.\n" +
+                               $"5. POLYMORPHIC JSON STRUCTURE: You must categorize every card into one of three exact types ('vocab', 'grammar', 'sentence') and output it adhering strictly to this schema:\n\n" +
+                               $"   - TYPE 1: 'vocab' (For vocabulary terms the user struggled with or tried to use)\n" +
+                               $"     * Schema:\n" +
+                               $"       {{\n" +
+                               $"         \"type\": \"vocab\",\n" +
+                               $"         \"meta\": {{ \"tags\": [\"{targetLanguage.ToLower()}\", \"vocab\", \"academic\"] }},\n" +
+                               $"         \"content\": {{\n" +
+                               $"           \"word\": \"meticulous\",\n" +
+                               $"           \"part_of_speech\": \"adj\",\n" +
+                               $"           \"phonetic\": \"/məˈtɪk.jə.ləs/\",\n" +
+                               $"           \"audio_url\": \"\",\n" +
+                               $"           \"meaning\": \"Rất cẩn thận, tỉ mỉ, chú ý đến từng chi tiết nhỏ.\",\n" +
+                               $"           \"definition_en\": \"Very careful and precise; showing great attention to detail.\",\n" +
+                               $"           \"examples\": [\n" +
+                               $"             {{ \"sentence\": \"Many hours of meticulous preparation have gone into writing the book.\", \"translation\": \"Nhiều giờ chuẩn bị tỉ mỉ đã được dành cho việc viết cuốn sách.\" }}\n" +
+                               $"           ],\n" +
+                               $"           \"synonyms\": [\"thorough\", \"scrupulous\", \"detailed\"],\n" +
+                               $"           \"antonyms\": [\"careless\", \"negligent\"]\n" +
+                               $"         }}\n" +
+                               $"       }}\n\n" +
+                               $"   - TYPE 2: 'grammar' (For sentences containing grammatical errors made by the user)\n" +
+                               $"     * Schema:\n" +
+                               $"       {{\n" +
+                               $"         \"type\": \"grammar\",\n" +
+                               $"         \"meta\": {{ \"tags\": [\"{targetLanguage.ToLower()}\", \"grammar\"] }},\n" +
+                               $"         \"content\": {{\n" +
+                               $"           \"title\": \"Simple Past vs Present Perfect (Thì Quá khứ đơn)\",\n" +
+                               $"           \"formula\": [\n" +
+                               $"             {{ \"form\": \"Khẳng định\", \"structure\": \"S + V2/ed\" }},\n" +
+                               $"             {{ \"form\": \"Phủ định\", \"structure\": \"S + did + not + V_inf\" }}\n" +
+                               $"           ],\n" +
+                               $"           \"usage\": \"Diễn tả hành động đã xảy ra và chấm dứt hoàn toàn trong quá khứ.\",\n" +
+                               $"           \"signal_words\": [\"yesterday\", \"ago\", \"last year\"],\n" +
+                               $"           \"examples\": [\n" +
+                               $"             {{ \"sentence\": \"I went to school yesterday.\", \"translation\": \"Tôi đã đi học ngày hôm qua.\", \"note\": \"Dùng động từ bất quy tắc 'went' thay vì 'goes'.\" }}\n" +
+                               $"           ],\n" +
+                               $"           \"common_mistakes\": \"Tránh nhầm lẫn với quá khứ đơn khi có mốc thời gian cụ thể (Ví dụ: KHÔNG dùng 'I have seen him yesterday').\"\n" +
+                               $"         }}\n" +
+                               $"       }}\n" +
+                               $"       *Note: In grammar cards, the example sentence in 'content.examples' should be the corrected sentence.\"\n\n" +
+                               $"   - TYPE 3: 'sentence' (For phrasings, idioms, or collocations that the user can improve or study, using Cloze deletion)\n" +
+                               $"     * Schema:\n" +
+                               $"       {{\n" +
+                               $"         \"type\": \"sentence\",\n" +
+                               $"         \"meta\": {{ \"tags\": [\"{targetLanguage.ToLower()}\", \"collocation\"] }},\n" +
+                               $"         \"content\": {{\n" +
+                               $"           \"full_sentence\": \"We need to take into account all the factors before making a decision.\",\n" +
+                               $"           \"cloze_sentence\": \"We need to {{{{c1::take into account}}}} all the factors before making a decision.\",\n" +
+                               $"           \"translation\": \"Chúng ta cần cân nhắc/tính đến tất cả các yếu tố trước khi đưa ra quyết định.\",\n" +
+                               $"           \"target_phrase\": \"take into account\",\n" +
+                               $"           \"phrase_meaning\": \"Cân nhắc, tính đến một yếu tố nào đó khi xem xét một tình huống.\",\n" +
+                               $"           \"context_note\": \"Đồng nghĩa với 'take into consideration'.\"\n" +
+                               $"         }}\n" +
+                               $"       }}\n\n" +
+                               $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must strictly match one of the three structures above.\n\n" +
                                $"The output must be strictly valid JSON. Example:\n" +
-                               $"{{\n  \"flashcards\": [\n    {{\n      \"front\": \"Famichiki\",\n      \"back\": \"Gà rán của FamilyMart\",\n      \"explanation\": \"Món ăn nổi tiếng tại chuỗi tiện lợi Nhật Bản.\"\n    }}\n  ]\n}}";
+                               $"{{\n  \"flashcards\": [\n    {{\n      \"type\": \"vocab\",\n      \"meta\": {{ \"tags\": [\"english\", \"vocab\"] }},\n      \"content\": {{\n        \"word\": \"meticulous\",\n        \"part_of_speech\": \"adj\",\n        \"phonetic\": \"/məˈtɪk.jə.ləs/\",\n        \"audio_url\": \"\",\n        \"meaning\": \"Rất cẩn thận, tỉ mỉ, chú ý đến từng chi tiết nhỏ.\",\n        \"definition_en\": \"Very careful and precise; showing great attention to detail.\",\n        \"examples\": [\n          {{ \"sentence\": \"Many hours of meticulous preparation have gone into writing the book.\", \"translation\": \"Nhiều giờ chuẩn bị tỉ mỉ đã được dành cho việc viết cuốn sách.\" }}\n        ],\n        \"synonyms\": [\"thorough\", \"scrupulous\"],\n        \"antonyms\": [\"careless\"]\n      }}\n    }}\n  ]\n}}";
 
             var historyText = string.Join("\n", history.Select(m => $"{m.Role}: {m.Text}"));
 
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelFlashcard", cancellationToken);
+
             var requestBody = new
             {
-                model = DefaultModel,
+                model = modelName,
                 messages = new[]
                 {
                     new { role = "system", content = systemPrompt },
@@ -202,31 +369,79 @@ namespace Immersio.Infrastructure.Services
 
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, GroqEndpoint);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-                request.Content = JsonContent.Create(requestBody);
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
 
                 var response = await _httpClient.SendAsync(request, cancellationToken);
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("GenerateFlashcardsAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
 
                 var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
                 var contentJson = chatResponse?.Choices?.FirstOrDefault()?.Message?.Content;
 
                 if (!string.IsNullOrWhiteSpace(contentJson))
                 {
+                    contentJson = CleanJsonContent(contentJson);
                     using var doc = JsonDocument.Parse(contentJson);
                     var root = doc.RootElement;
                     if (root.TryGetProperty("flashcards", out var listProp) && listProp.ValueKind == JsonValueKind.Array)
                     {
                         foreach (var item in listProp.EnumerateArray())
                         {
-                            var front = item.TryGetProperty("front", out var f) ? f.GetString() : null;
-                            var back = item.TryGetProperty("back", out var b) ? b.GetString() : null;
-                            var explanation = item.TryGetProperty("explanation", out var e) ? e.GetString() : null;
+                            var type = item.TryGetProperty("type", out var ty) ? ty.GetString() : "vocab";
 
-                            if (!string.IsNullOrWhiteSpace(front) && !string.IsNullOrWhiteSpace(back))
+                            string front = "";
+                            string back = "";
+                            string explanation = "";
+                            string tag = type;
+
+                            if (item.TryGetProperty("content", out var contentProp))
                             {
-                                flashcards.Add(new AddCardDto(front, back, explanation));
+                                if (type == "vocab")
+                                {
+                                    var word = contentProp.TryGetProperty("word", out var w) ? w.GetString() : "";
+                                    var meaning = contentProp.TryGetProperty("meaning", out var m) ? m.GetString() : "";
+                                    front = word ?? "";
+                                    back = meaning ?? "";
+
+                                    var def = contentProp.TryGetProperty("definition_en", out var d) ? d.GetString() : "";
+                                    explanation = $"Definition: {def}\nWord: {word}";
+                                }
+                                else if (type == "grammar")
+                                {
+                                    var title = contentProp.TryGetProperty("title", out var t) ? t.GetString() : "";
+                                    var usage = contentProp.TryGetProperty("usage", out var u) ? u.GetString() : "";
+                                    front = title ?? "";
+                                    back = usage ?? "";
+                                    explanation = $"Usage: {usage}";
+                                }
+                                else if (type == "sentence")
+                                {
+                                    var translation = contentProp.TryGetProperty("translation", out var tr) ? tr.GetString() : "";
+                                    var full = contentProp.TryGetProperty("full_sentence", out var f) ? f.GetString() : "";
+                                    front = full ?? "";
+                                    back = translation ?? "";
+                                    explanation = $"Sentence: {full}";
+                                }
+                            }
+
+                            // Fallbacks so a card is never built from raw JSON.
+                            if (string.IsNullOrWhiteSpace(front))
+                            {
+                                front = string.IsNullOrWhiteSpace(back) ? "Review" : back;
+                            }
+                            if (string.IsNullOrWhiteSpace(back))
+                            {
+                                back = "Review";
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(front))
+                            {
+                                flashcards.Add(new AddCardDto(front, back, explanation, tag));
                             }
                         }
                     }
@@ -247,27 +462,76 @@ namespace Immersio.Infrastructure.Services
             CancellationToken cancellationToken)
         {
             var optionsCsv = string.Join(", ", options);
-            var systemPrompt = $"Analyze the language learning session history in {targetLanguage}.\n" +
-                               $"Focus EXCLUSIVELY on the USER's messages, corrections, and sentence improvements. DO NOT generate cards for the AI character's messages.\n\n" +
-                               $"You must generate custom flashcards covering these selected categories: [{optionsCsv}].\n\n" +
-                               $"CATEGORY INSTRUCTIONS:\n" +
-                               $"- 'grammar': Look at the user's messages that had grammatical/spelling errors and corrections. Create cards where Front is the corrected sentence/phrase in {targetLanguage}, Back is the translation/meaning in Vietnamese, and Explanation details what error was made and why the correction is correct.\n" +
-                               $"- 'vocabulary': Extract key vocabulary words, phrases, or idioms that the user used or attempted to use during their turns. Front is the word/phrase in {targetLanguage}, Back is the Vietnamese definition.\n" +
-                               $"- 'improvement': Look at the user's sentences (even correct ones) and propose more natural, idiomatic, or native ways to express those ideas. Front is the advanced/natural expression in {targetLanguage}, Back is the Vietnamese translation of the user's original intent.\n\n" +
-                               $"DETERMINATION OF CARD COUNT:\n" +
-                               $"Do not limit yourself to a fixed count. Generate a dynamic number of cards (from 1 up to 10+) based purely on the depth of the user's conversation and the number of mistakes, words, or improvements identified.\n\n" +
-                               $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must have:\n" +
-                               $"- \"front\": The phrase, sentence, or word in {targetLanguage}\n" +
-                               $"- \"back\": The definition or translation in Vietnamese (Tiếng Việt)\n" +
-                               $"- \"explanation\": A helpful grammatical tip or context note in Vietnamese\n\n" +
-                               $"The output must be strictly valid JSON. Example:\n" +
-                               $"{{\n  \"flashcards\": [\n    {{\n      \"front\": \"Famichiki\",\n      \"back\": \"Gà rán của FamilyMart\",\n      \"explanation\": \"Từ vựng phổ biến khi mua sắm tại Nhật.\"\n    }}\n  ]\n}}";
+            var systemPrompt = $"You are an expert language acquisition assistant. Analyze the conversation history between the language learner (USER) and the AI (ASSISTANT) in {targetLanguage}.\n" +
+                               $"You must generate custom flashcards covering these selected categories: [{optionsCsv}] based EXCLUSIVELY on the USER's turns and the corrections provided.\n\n" +
+                               $"CRITICAL RULES:\n" +
+                               $"1. SOURCE RESTRICTION: Every single flashcard must be directly derived from the actual words, phrases, or errors that occurred in the USER's dialog turns in the session. Absolutely DO NOT generate cards for the AI character's messages, and do not make up arbitrary words that were never mentioned.\n" +
+                               $"2. NO OVERLY ROBOTIC OR NITPICKY CORRECTIONS: Focus ONLY on significant grammatical errors or unnatural speaking habits/phrasings. Do NOT be overly strict or nitpicky on minor things that make the system feel too mechanical.\n" +
+                               $"3. CATEGORY COMPLIANCE & POLYMORPHIC JSON STRUCTURE: You must categorize every card into one of three exact types ('vocab', 'grammar', 'sentence') and output it adhering strictly to this schema, depending on the requested categories:\n\n" +
+                               $"   - If 'grammar' is selected, generate 'grammar' cards (For sentences containing grammatical errors made by the user):\n" +
+                               $"     * Schema:\n" +
+                               $"       {{\n" +
+                               $"         \"type\": \"grammar\",\n" +
+                               $"         \"meta\": {{ \"tags\": [\"{targetLanguage.ToLower()}\", \"grammar\"] }},\n" +
+                               $"         \"content\": {{\n" +
+                               $"           \"title\": \"Simple Past vs Present Perfect (Thì Quá khứ đơn)\",\n" +
+                               $"           \"formula\": [\n" +
+                               $"             {{ \"form\": \"Khẳng định\", \"structure\": \"S + V2/ed\" }},\n" +
+                               $"             {{ \"form\": \"Phủ định\", \"structure\": \"S + did + not + V_inf\" }}\n" +
+                               $"           ],\n" +
+                               $"           \"usage\": \"Diễn tả hành động đã xảy ra và chấm dứt hoàn toàn trong quá khứ.\",\n" +
+                               $"           \"signal_words\": [\"yesterday\", \"ago\", \"last year\"],\n" +
+                               $"           \"examples\": [\n" +
+                               $"             {{ \"sentence\": \"I went to school yesterday.\", \"translation\": \"Tôi đã đi học ngày hôm qua.\", \"note\": \"Dùng động từ bất quy tắc 'went' thay vì 'goes'.\" }}\n" +
+                               $"           ],\n" +
+                               $"           \"common_mistakes\": \"Tránh nhầm lẫn với quá khứ đơn khi có mốc thời gian cụ thể (Ví dụ: KHÔNG dùng 'I have seen him yesterday').\"\n" +
+                               $"         }}\n" +
+                               $"       }}\n\n" +
+                               $"   - If 'vocabulary' is selected, generate 'vocab' cards (For vocabulary terms the user struggled with or tried to use):\n" +
+                               $"     * Schema:\n" +
+                               $"       {{\n" +
+                               $"         \"type\": \"vocab\",\n" +
+                               $"         \"meta\": {{ \"tags\": [\"{targetLanguage.ToLower()}\", \"vocab\", \"academic\"] }},\n" +
+                               $"         \"content\": {{\n" +
+                               $"           \"word\": \"meticulous\",\n" +
+                               $"           \"part_of_speech\": \"adj\",\n" +
+                               $"           \"phonetic\": \"/məˈtɪk.jə.ləs/\",\n" +
+                               $"           \"audio_url\": \"\",\n" +
+                               $"           \"meaning\": \"Rất cẩn thận, tỉ mỉ, chú ý đến từng chi tiết nhỏ.\",\n" +
+                               $"           \"definition_en\": \"Very careful and precise; showing great attention to detail.\",\n" +
+                               $"           \"examples\": [\n" +
+                               $"             {{ \"sentence\": \"Many hours of meticulous preparation have gone into writing the book.\", \"translation\": \"Nhiều giờ chuẩn bị tỉ mỉ đã được dành cho việc viết cuốn sách.\" }}\n" +
+                               $"           ],\n" +
+                               $"           \"synonyms\": [\"thorough\", \"scrupulous\", \"detailed\"],\n" +
+                               $"           \"antonyms\": [\"careless\", \"negligent\"]\n" +
+                               $"         }}\n" +
+                               $"       }}\n\n" +
+                               $"   - If 'improvement' is selected, generate 'sentence' cards (For phrasings, idioms, or collocations that the user can improve or study, using Cloze deletion):\n" +
+                               $"     * Schema:\n" +
+                               $"       {{\n" +
+                               $"         \"type\": \"sentence\",\n" +
+                               $"         \"meta\": {{ \"tags\": [\"{targetLanguage.ToLower()}\", \"collocation\"] }},\n" +
+                               $"         \"content\": {{\n" +
+                               $"           \"full_sentence\": \"We need to take into account all the factors before making a decision.\",\n" +
+                               $"           \"cloze_sentence\": \"We need to {{{{c1::take into account}}}} all the factors before making a decision.\",\n" +
+                               $"           \"translation\": \"Chúng ta cần cân nhắc/tính đến tất cả các yếu tố trước khi đưa ra quyết định.\",\n" +
+                               $"           \"target_phrase\": \"take into account\",\n" +
+                               $"           \"phrase_meaning\": \"Cân nhắc, tính đến một yếu tố nào đó khi xem xét một tình huống.\",\n" +
+                               $"           \"context_note\": \"Đồng nghĩa với 'take into consideration'.\"\n" +
+                               $"         }}\n" +
+                               $"       }}\n\n" +
+                               $"4. NO TRIVIAL CARDS: Do not include basic words (e.g., 'hello', 'yes', 'no', 'good') unless they were corrected.\n" +
+                               $"5. DYNAMIC CARD COUNT: Generate a dynamic number of cards (from 3 up to 15) depending on how many valid elements can be extracted from the user's turns.\n\n" +
+                               $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must strictly match one of the three structures above.\n\n" +
+                               $"The output must be strictly valid JSON.";
 
             var historyText = string.Join("\n", history.Select(m => $"{m.Role}: {m.Text}"));
 
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelFlashcard", cancellationToken);
+
             var requestBody = new
             {
-                model = DefaultModel,
+                model = modelName,
                 messages = new[]
                 {
                     new { role = "system", content = systemPrompt },
@@ -282,31 +546,79 @@ namespace Immersio.Infrastructure.Services
 
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, GroqEndpoint);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-                request.Content = JsonContent.Create(requestBody);
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
 
                 var response = await _httpClient.SendAsync(request, cancellationToken);
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("GenerateCustomFlashcardsAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
 
                 var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
                 var contentJson = chatResponse?.Choices?.FirstOrDefault()?.Message?.Content;
 
                 if (!string.IsNullOrWhiteSpace(contentJson))
                 {
+                    contentJson = CleanJsonContent(contentJson);
                     using var doc = JsonDocument.Parse(contentJson);
                     var root = doc.RootElement;
                     if (root.TryGetProperty("flashcards", out var listProp) && listProp.ValueKind == JsonValueKind.Array)
                     {
                         foreach (var item in listProp.EnumerateArray())
                         {
-                            var front = item.TryGetProperty("front", out var f) ? f.GetString() : null;
-                            var back = item.TryGetProperty("back", out var b) ? b.GetString() : null;
-                            var explanation = item.TryGetProperty("explanation", out var e) ? e.GetString() : null;
+                            var type = item.TryGetProperty("type", out var ty) ? ty.GetString() : "vocab";
 
-                            if (!string.IsNullOrWhiteSpace(front) && !string.IsNullOrWhiteSpace(back))
+                            string front = "";
+                            string back = "";
+                            string explanation = "";
+                            string tag = type;
+
+                            if (item.TryGetProperty("content", out var contentProp))
                             {
-                                flashcards.Add(new AddCardDto(front, back, explanation));
+                                if (type == "vocab")
+                                {
+                                    var word = contentProp.TryGetProperty("word", out var w) ? w.GetString() : "";
+                                    var meaning = contentProp.TryGetProperty("meaning", out var m) ? m.GetString() : "";
+                                    front = word ?? "";
+                                    back = meaning ?? "";
+
+                                    var def = contentProp.TryGetProperty("definition_en", out var d) ? d.GetString() : "";
+                                    explanation = $"Definition: {def}\nWord: {word}";
+                                }
+                                else if (type == "grammar")
+                                {
+                                    var title = contentProp.TryGetProperty("title", out var t) ? t.GetString() : "";
+                                    var usage = contentProp.TryGetProperty("usage", out var u) ? u.GetString() : "";
+                                    front = title ?? "";
+                                    back = usage ?? "";
+                                    explanation = $"Usage: {usage}";
+                                }
+                                else if (type == "sentence")
+                                {
+                                    var translation = contentProp.TryGetProperty("translation", out var tr) ? tr.GetString() : "";
+                                    var full = contentProp.TryGetProperty("full_sentence", out var f) ? f.GetString() : "";
+                                    front = full ?? "";
+                                    back = translation ?? "";
+                                    explanation = $"Sentence: {full}";
+                                }
+                            }
+
+                            // Fallbacks so a card is never built from raw JSON.
+                            if (string.IsNullOrWhiteSpace(front))
+                            {
+                                front = string.IsNullOrWhiteSpace(back) ? "Review" : back;
+                            }
+                            if (string.IsNullOrWhiteSpace(back))
+                            {
+                                back = "Review";
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(front))
+                            {
+                                flashcards.Add(new AddCardDto(front, back, explanation, tag));
                             }
                         }
                     }
@@ -318,6 +630,351 @@ namespace Immersio.Infrastructure.Services
             }
 
             return flashcards;
+        }
+
+        public async Task<AiCefrFeedbackDto> GenerateCefrFeedbackAsync(
+            string currentLevel,
+            int overallScore,
+            List<string> completedScenarios,
+            List<int> recentSpeechScores,
+            int activeWordsCount,
+            CancellationToken cancellationToken)
+        {
+            var completedScenariosCsv = completedScenarios.Any() 
+                ? string.Join(", ", completedScenarios) 
+                : "None";
+            var speechScoresCsv = recentSpeechScores.Any() 
+                ? string.Join(", ", recentSpeechScores.Select(s => $"{s}%")) 
+                : "None";
+
+            var systemPrompt = "You are a professional, premium CEFR language assessment advisor.\n" +
+                               "Your task is to analyze the learner's study data and provide a highly personalized, encouraging CEFR evaluation report.\n\n" +
+                               "Return a JSON object containing:\n" +
+                               "- \"statusMessage\": A professional one-sentence diagnostic overview of their current language level and conversational fluency (in Vietnamese or mixed English/Vietnamese like 'Upper Intermediate - ...').\n" +
+                               "- \"suggestions\": A list of exactly 3 or 4 personalized suggestions/bullet points in Tiếng Việt. The bullet points MUST follow this exact structure:\n" +
+                               "  1. **Điểm mạnh**: [Analysis of their strengths, e.g. stable pronunciation at 85%+ or brave scenario attempts]\n" +
+                               "  2. **Điểm cần cải thiện**: [Analysis of pronunciation fluctuations or grammar complexity needed]\n" +
+                               "  3. **Hành động tiếp theo**: [Concrete learning recommendation, e.g. practice advanced scenarios or speak louder]\n\n" +
+                               "The output MUST be strictly valid JSON. Example:\n" +
+                               "{\n" +
+                               "  \"statusMessage\": \"Upper Intermediate - Khả năng phản xạ hội thoại tự nhiên và phát âm có độ chuẩn xác ổn định.\",\n" +
+                               "  \"suggestions\": [\n" +
+                               "    \"**Điểm mạnh**: Bạn phát âm rất rõ ràng và chuẩn xác trong các bài Vocal Lab (đạt trung bình trên 80%).\",\n" +
+                               "    \"**Điểm cần cải thiện**: Nên thử sức thêm ở các scenario có độ phức tạp cao hơn (C1/C2) để mở rộng cấu trúc câu.\",\n" +
+                               "    \"**Hành động tiếp theo**: Hãy luyện nói tối thiểu 3 bài nói tự do khác nhau để tăng cường vốn từ vựng chủ động.\"\n" +
+                               "  ]\n" +
+                               "}";
+
+            var userPrompt = $"Student Current CEFR Level: {currentLevel}\n" +
+                             $"Overall Score (out of 100): {overallScore}\n" +
+                             $"Completed Scenarios: [{completedScenariosCsv}]\n" +
+                             $"Recent Pronunciation Scores: [{speechScoresCsv}]\n" +
+                             $"Active Vocabulary Count: {activeWordsCount} words\n";
+
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelFeedback", cancellationToken);
+
+            var requestBody = new
+            {
+                model = modelName,
+                messages = new[]
+                {
+                    new { role = "system", content = systemPrompt },
+                    new { role = "user", content = userPrompt }
+                },
+                temperature = 0.5,
+                response_format = new { type = "json_object" },
+                stream = false
+            };
+
+            var defaultSuggestions = new List<string>
+            {
+                "**Điểm mạnh**: Bạn đang có tiến trình học tập rất tốt, hãy duy trì nhịp độ này nhé!",
+                "**Điểm cần cải thiện**: Chú ý thực hành đều đặn cả phần phát âm và hội thoại để nâng cao phản xạ.",
+                "**Hành động tiếp theo**: Luyện tập tối thiểu 1 scenario hội thoại mới và luyện phát âm thêm 5 câu mỗi ngày."
+            };
+            var defaultStatus = $"{currentLevel} - Khởi đầu rất tốt, hãy duy trì để nâng cao khả năng giao tiếp.";
+
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
+
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("GenerateCefrFeedbackAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
+
+                var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
+                var contentJson = chatResponse?.Choices?.FirstOrDefault()?.Message?.Content;
+
+                if (!string.IsNullOrWhiteSpace(contentJson))
+                {
+                    using var doc = JsonDocument.Parse(contentJson);
+                    var root = doc.RootElement;
+                    var status = root.TryGetProperty("statusMessage", out var statusProp) ? statusProp.GetString() : defaultStatus;
+                    
+                    var suggestionsList = new List<string>();
+                    if (root.TryGetProperty("suggestions", out var sugProp) && sugProp.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var item in sugProp.EnumerateArray())
+                        {
+                            var sugText = item.GetString();
+                            if (!string.IsNullOrWhiteSpace(sugText))
+                            {
+                                suggestionsList.Add(sugText);
+                            }
+                        }
+                    }
+
+                    if (suggestionsList.Any())
+                    {
+                        return new AiCefrFeedbackDto(status ?? defaultStatus, suggestionsList);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"AI CEFR diagnostic analysis failed: {ex.Message}");
+            }
+
+            return new AiCefrFeedbackDto(defaultStatus, defaultSuggestions);
+        }
+
+        public async Task<string> TranscribeAudioAsync(
+            byte[] audioBytes,
+            string filename,
+            CancellationToken cancellationToken)
+        {
+            const string GroqAudioEndpoint = "https://api.groq.com/openai/v1/audio/transcriptions";
+
+            using var form = new MultipartFormDataContent();
+            
+            // Add file content
+            var fileContent = new ByteArrayContent(audioBytes);
+            var contentType = filename.EndsWith(".webm") ? "audio/webm" 
+                            : filename.EndsWith(".wav") ? "audio/wav" 
+                            : "application/octet-stream";
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+            form.Add(fileContent, "file", filename);
+
+            // Add model parameter
+            form.Add(new StringContent("whisper-large-v3"), "model");
+            form.Add(new StringContent("en"), "language");
+
+            var (_, _, apiKey) = await GetModelConfigAsync("ModelChat", cancellationToken);
+
+            var request = new HttpRequestMessage(HttpMethod.Post, GroqAudioEndpoint);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+            request.Content = form;
+
+            try
+            {
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                response.EnsureSuccessStatusCode();
+
+                var jsonResult = await response.Content.ReadFromJsonAsync<GroqTranscriptionResponse>(cancellationToken: cancellationToken);
+                return jsonResult?.Text ?? string.Empty;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Groq Audio Transcription failed: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<GeneratedPhraseDto> GeneratePronunciationPhraseAsync(
+            string language,
+            string level,
+            string topic,
+            CancellationToken cancellationToken)
+        {
+            var systemPrompt = $"You are a language teacher creating pronunciation speaking exercises for a language learner.\n" +
+                               $"Create a single natural and interesting phrase in {language} for a learner at the {level} difficulty level, focused on the topic/context of '{topic}'.\n\n" +
+                               $"INSTRUCTIONS:\n" +
+                               $"- The phrase must be completely in {language}.\n" +
+                               $"- It should be natural and common in conversations.\n" +
+                               $"- The length should match the level: Beginner (1 short simple sentence), Intermediate (1-2 sentences), Advanced (2 sentences or a slightly complex/idiomatic expression).\n" +
+                               $"- Provide the meaning/translation in Tiếng Việt.\n" +
+                               $"- Provide a brief grammatical or cultural explanation or vocabulary tip in Tiếng Việt.\n\n" +
+                               $"Return a JSON object with strictly these keys:\n" +
+                               $"- \"phrase\": The generated phrase in {language}.\n" +
+                               $"- \"translation\": The Vietnamese translation.\n" +
+                               $"- \"explanation\": The brief tip/note in Vietnamese.\n\n" +
+                               $"The output must be strictly valid JSON. Example:\n" +
+                               $"{{\n  \"phrase\": \"I'd like to reserve a table for two, please.\",\n  \"translation\": \"Tôi muốn đặt trước một bàn cho hai người.\",\n  \"explanation\": \"Sử dụng 'I'd like to' là cách lịch sự để đưa ra yêu cầu.\"\n}}";
+
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelPhrase", cancellationToken);
+
+            var requestBody = new
+            {
+                model = modelName,
+                messages = new[]
+                {
+                    new { role = "system", content = systemPrompt },
+                    new { role = "user", content = $"Generate a phrase for {language} ({level}) about '{topic}'" }
+                },
+                temperature = 0.8,
+                response_format = new { type = "json_object" },
+                stream = false
+            };
+
+            var defaultPhrase = language.ToLower().Contains("ja") ? "こんにちは、元気ですか？"
+                             : language.ToLower().Contains("zh") ? "你好，你怎么样？"
+                             : "The quick brown fox jumps over the lazy dog.";
+            var defaultTranslation = language.ToLower().Contains("ja") ? "Xin chào, bạn khỏe không?"
+                                  : language.ToLower().Contains("zh") ? "Xin chào, bạn thế nào?"
+                                  : "Chú cáo nâu nhanh nhẹn nhảy qua con chó lười biếng.";
+            var defaultExplanation = "Một câu nói thông dụng.";
+
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
+
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("GeneratePronunciationPhraseAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
+
+                var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
+                var contentJson = chatResponse?.Choices?.FirstOrDefault()?.Message?.Content;
+
+                if (!string.IsNullOrWhiteSpace(contentJson))
+                {
+                    using var doc = JsonDocument.Parse(contentJson);
+                    var root = doc.RootElement;
+                    var phrase = root.TryGetProperty("phrase", out var p) ? p.GetString() : defaultPhrase;
+                    var translation = root.TryGetProperty("translation", out var t) ? t.GetString() : defaultTranslation;
+                    var explanation = root.TryGetProperty("explanation", out var e) ? e.GetString() : defaultExplanation;
+
+                    return new GeneratedPhraseDto(phrase ?? defaultPhrase, translation ?? defaultTranslation, explanation ?? defaultExplanation);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to generate pronunciation phrase: {ex.Message}");
+            }
+
+            return new GeneratedPhraseDto(defaultPhrase, defaultTranslation, defaultExplanation);
+        }
+
+        public async Task<DictionaryEntryDto> LookupWordAsync(
+            string word,
+            string targetLanguage,
+            CancellationToken cancellationToken)
+        {
+            var systemPrompt = $"You are an advanced bilingual dictionary service for language learners. " +
+                               $"Provide a highly detailed and accurate dictionary entry for the queried word/phrase in the target language '{targetLanguage}'.\n\n" +
+                               $"INSTRUCTIONS:\n" +
+                               $"- The output must be strictly in Vietnamese (Tiếng Việt) for the translation and example translation, and English for the definition.\n" +
+                               $"- Provide the international phonetic alphabet (IPA) representation for the phonetic property.\n" +
+                               $"- Choose the most common part of speech and definition for the word/phrase.\n" +
+                               $"- Provide a high-quality example sentence in '{targetLanguage}' demonstrating its typical conversational usage, followed by its Vietnamese translation.\n\n" +
+                               $"Return a JSON object with strictly these keys:\n" +
+                               $"- \"word\": The exact word/phrase queried.\n" +
+                               $"- \"translation\": The standard Vietnamese translation/meaning of the word/phrase.\n" +
+                               $"- \"phonetic\": The international phonetic alphabet (IPA) representation (e.g. /haʊ/, /kəˈmit/).\n" +
+                               $"- \"partOfSpeech\": The part of speech (e.g. noun, verb, adjective, adverb, phrase, idiom).\n" +
+                               $"- \"definition\": A clear, concise English definition of the word/phrase.\n" +
+                               $"- \"example\": A natural, common example sentence using the word in {targetLanguage}.\n" +
+                               $"- \"exampleTranslation\": The Vietnamese translation of the example sentence.\n\n" +
+                               $"The output must be strictly valid JSON. Example:\n" +
+                               $"{{\n  \"word\": \"accomplish\",\n  \"translation\": \"hoàn thành, đạt được\",\n  \"phonetic\": \"/əˈkʌm.plɪʃ/\",\n  \"partOfSpeech\": \"verb\",\n  \"definition\": \"To succeed in doing something, especially after a lot of effort.\",\n  \"example\": \"We can accomplish anything if we work together.\",\n  \"exampleTranslation\": \"Chúng ta có thể đạt được bất cứ điều gì nếu làm việc cùng nhau.\"\n}}";
+
+            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelChat", cancellationToken);
+
+            var requestBody = new
+            {
+                model = modelName,
+                messages = new[]
+                {
+                    new { role = "system", content = systemPrompt },
+                    new { role = "user", content = $"Lookup details for the word/phrase: {word}" }
+                },
+                temperature = 0.3,
+                response_format = new { type = "json_object" },
+                stream = false
+            };
+
+            var defaultPhonetic = "/.../";
+            var defaultTranslation = "Nghĩa của từ.";
+            var defaultPartOfSpeech = "noun";
+            var defaultDefinition = "Definition of the word.";
+            var defaultExample = "An example sentence.";
+            var defaultExampleTranslation = "Câu ví dụ.";
+
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                SetJsonContent(request, requestBody);
+
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    await LogErrorAsync("LookupWordAsync", endpoint, modelName, response, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                }
+
+                var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>(cancellationToken: cancellationToken);
+                var contentJson = chatResponse?.Choices?.FirstOrDefault()?.Message?.Content;
+
+                if (!string.IsNullOrWhiteSpace(contentJson))
+                {
+                    using var doc = JsonDocument.Parse(contentJson);
+                    var root = doc.RootElement;
+                    
+                    var trans = root.TryGetProperty("translation", out var t) ? t.GetString() : defaultTranslation;
+                    var phone = root.TryGetProperty("phonetic", out var p) ? p.GetString() : defaultPhonetic;
+                    var pos = root.TryGetProperty("partOfSpeech", out var ps) ? ps.GetString() : defaultPartOfSpeech;
+                    var def = root.TryGetProperty("definition", out var d) ? d.GetString() : defaultDefinition;
+                    var ex = root.TryGetProperty("example", out var e) ? e.GetString() : defaultExample;
+                    var exTrans = root.TryGetProperty("exampleTranslation", out var et) ? et.GetString() : defaultExampleTranslation;
+
+                    return new DictionaryEntryDto(
+                        Word: word,
+                        Translation: trans ?? defaultTranslation,
+                        Phonetic: phone ?? defaultPhonetic,
+                        PartOfSpeech: pos ?? defaultPartOfSpeech,
+                        Definition: def ?? defaultDefinition,
+                        Example: ex ?? defaultExample,
+                        ExampleTranslation: exTrans ?? defaultExampleTranslation
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to lookup dictionary entry: {ex.Message}");
+            }
+
+            return new DictionaryEntryDto(
+                Word: word,
+                Translation: defaultTranslation,
+                Phonetic: defaultPhonetic,
+                PartOfSpeech: defaultPartOfSpeech,
+                Definition: defaultDefinition,
+                Example: defaultExample,
+                ExampleTranslation: defaultExampleTranslation
+            );
+        }
+
+        private static string CleanJsonContent(string content)
+        {
+            if (string.IsNullOrWhiteSpace(content)) return content;
+            content = content.Trim();
+            if (content.StartsWith("```"))
+            {
+                var lines = content.Split('\n');
+                var cleanLines = lines.Where(l => !l.Trim().StartsWith("```")).ToArray();
+                content = string.Join("\n", cleanLines).Trim();
+            }
+            return content;
         }
     }
 
@@ -341,5 +998,11 @@ namespace Immersio.Infrastructure.Services
 
         [JsonPropertyName("content")]
         public string? Content { get; set; }
+    }
+
+    public class GroqTranscriptionResponse
+    {
+        [JsonPropertyName("text")]
+        public string? Text { get; set; }
     }
 }

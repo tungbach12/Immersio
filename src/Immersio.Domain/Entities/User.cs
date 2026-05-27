@@ -20,6 +20,8 @@ namespace Immersio.Domain.Entities
 
         public DateTime? SubscriptionExpiresAt { get; private set; }
 
+        public string Role { get; private set; } = "Student";
+
         public string ActiveSubscriptionTier => 
             (SubscriptionExpiresAt == null || SubscriptionExpiresAt > DateTime.UtcNow) ? SubscriptionTier : "Basic";
 
@@ -59,6 +61,13 @@ namespace Immersio.Domain.Entities
         {
             SubscriptionTier = tier;
             SubscriptionExpiresAt = expiresAt;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void SetRole(string role)
+        {
+            if (string.IsNullOrWhiteSpace(role)) return;
+            Role = role;
             UpdatedAt = DateTime.UtcNow;
         }
 

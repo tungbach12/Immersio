@@ -67,6 +67,7 @@ namespace Immersio.Application.Services
                     c.Front,
                     c.Back,
                     c.Explanation,
+                    c.Tag,
                     c.Repetitions,
                     c.EasinessFactor,
                     c.IntervalDays,
@@ -99,13 +100,13 @@ namespace Immersio.Application.Services
                 var cardsCreatedToday = await _context.Cards
                     .CountAsync(c => c.Deck.UserId == user.Id && c.CreatedAt >= today && !c.IsDeleted, cancellationToken);
 
-                if (cardsCreatedToday >= 10)
+                if (cardsCreatedToday >= 50)
                 {
-                    throw new ConflictException("You have reached your daily flashcard limit of 10. Please upgrade your subscription to add more flashcards.");
+                    throw new ConflictException("You have reached your daily flashcard limit of 50. Please upgrade your subscription to add more flashcards.");
                 }
             }
 
-            var card = new Card(deckId, cardDto.Front, cardDto.Back, cardDto.Explanation);
+            var card = new Card(deckId, cardDto.Front, cardDto.Back, cardDto.Explanation, cardDto.Tag);
             _context.Cards.Add(card);
             await _context.SaveChangesAsync(cancellationToken);
 
@@ -115,6 +116,7 @@ namespace Immersio.Application.Services
                 card.Front,
                 card.Back,
                 card.Explanation,
+                card.Tag,
                 card.Repetitions,
                 card.EasinessFactor,
                 card.IntervalDays,
@@ -148,12 +150,16 @@ namespace Immersio.Application.Services
             var addedCount = 0;
             foreach (var cardDto in cardDtos)
             {
-                if (string.Equals(tier, "Basic", StringComparison.OrdinalIgnoreCase) && (cardsCreatedToday + addedCount) >= 10)
+                if (string.Equals(tier, "Basic", StringComparison.OrdinalIgnoreCase) && (cardsCreatedToday + addedCount) >= 50)
                 {
-                    throw new ConflictException("You have reached your daily flashcard limit of 10. Please upgrade your subscription to add more flashcards.");
+                    if (cardsCreatedToday >= 50)
+                    {
+                        throw new ConflictException("You have reached your daily flashcard limit of 50. Please upgrade your subscription to add more flashcards.");
+                    }
+                    break; // Gracefully cap at 50 and save the successfully added cards!
                 }
 
-                var card = new Card(deckId, cardDto.Front, cardDto.Back, cardDto.Explanation);
+                var card = new Card(deckId, cardDto.Front, cardDto.Back, cardDto.Explanation, cardDto.Tag);
                 _context.Cards.Add(card);
                 addedCount++;
             }
@@ -181,6 +187,7 @@ namespace Immersio.Application.Services
                 card.Front,
                 card.Back,
                 card.Explanation,
+                card.Tag,
                 card.Repetitions,
                 card.EasinessFactor,
                 card.IntervalDays,

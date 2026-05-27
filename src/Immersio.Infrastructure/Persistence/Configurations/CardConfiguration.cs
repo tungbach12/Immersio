@@ -23,6 +23,9 @@ namespace Immersio.Infrastructure.Persistence.Configurations
             builder.Property(c => c.Explanation)
                 .HasMaxLength(4000);
 
+            builder.Property(c => c.Tag)
+                .HasMaxLength(100);
+
             // Spaced Repetition fields configurations
             builder.Property(c => c.Repetitions)
                 .IsRequired();

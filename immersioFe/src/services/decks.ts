@@ -1,10 +1,11 @@
-import { authService } from "./auth";
+import { authService, API_BASE } from "./auth";
 
 export interface Flashcard {
   id: string;
   front: string;
   back: string;
   explanation?: string;
+  tag?: string;
   mastery?: number; // 1-5 level mapped from backend Repetitions
   repetitions?: number;
   easinessFactor?: number;
@@ -21,7 +22,7 @@ export interface Deck {
   dueCardsCount?: number;
 }
 
-const BASE_URL = "http://localhost:5249/api/flashcards";
+const BASE_URL = `${API_BASE}/api/flashcards`;
 
 export async function getDecks(): Promise<Deck[]> {
   const response = await authService.fetchWithAuth(`${BASE_URL}/decks`);
@@ -71,6 +72,7 @@ export async function addCardsToDeck(deckId: string, cards: Omit<Flashcard, "id"
       front: c.front,
       back: c.back,
       explanation: c.explanation,
+      tag: c.tag,
     }))),
   });
 

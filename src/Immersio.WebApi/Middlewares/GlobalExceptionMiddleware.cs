@@ -1,4 +1,5 @@
 using Immersio.Domain.Exceptions;
+using Immersio.Application.DTOs.Common;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
@@ -35,66 +36,30 @@ namespace Immersio.WebApi.Middlewares
 
         private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            var problemDetails = exception switch
+            var (statusCode, message, errors) = exception switch
             {
-                UnauthorizedException ex => new ProblemDetails
-                {
-                    Status = StatusCodes.Status401Unauthorized,
-                    Title = "Unauthorized",
-                    Detail = ex.Message,
-                    Type = "https://tools.ietf.org/html/rfc7807"
-                },
-                NotFoundException ex => new ProblemDetails
-                {
-                    Status = StatusCodes.Status404NotFound,
-                    Title = "Not Found",
-                    Detail = ex.Message,
-                    Type = "https://tools.ietf.org/html/rfc7807"
-                },
-                ConflictException ex => new ProblemDetails
-                {
-                    Status = StatusCodes.Status409Conflict,
-                    Title = "Conflict",
-                    Detail = ex.Message,
-                    Type = "https://tools.ietf.org/html/rfc7807"
-                },
-                Domain.Exceptions.ValidationException ex => CreateValidationProblemDetails(ex),
-                _ => new ProblemDetails
-                {
-                    Status = StatusCodes.Status500InternalServerError,
-                    Title = "Internal Server Error",
-                    Detail = _environment.IsDevelopment() ? exception.Message : "An unexpected error occurred.",
-                    Type = "https://tools.ietf.org/html/rfc7807"
-                }
+                UnauthorizedException ex => (StatusCodes.Status401Unauthorized, ex.Message, (object?)null),
+                NotFoundException ex => (StatusCodes.Status404NotFound, ex.Message, (object?)null),
+                ConflictException ex => (StatusCodes.Status409Conflict, ex.Message, (object?)null),
+                Domain.Exceptions.ValidationException ex => (StatusCodes.Status422UnprocessableEntity, "Validation Error", (object?)ex.Errors),
+                _ => (StatusCodes.Status500InternalServerError, _environment.IsDevelopment() ? exception.Message : "An unexpected error occurred.", (object?)null)
             };
 
-            if (_environment.IsDevelopment() && problemDetails.Status == StatusCodes.Status500InternalServerError)
+            context.Response.StatusCode = statusCode;
+            context.Response.ContentType = "application/json";
+
+            ApiResponse response;
+            if (_environment.IsDevelopment() && statusCode == StatusCodes.Status500InternalServerError)
             {
-                problemDetails.Extensions["stackTrace"] = exception.StackTrace;
+                response = new ApiResponse(false, null, message, new { stackTrace = exception.StackTrace });
+            }
+            else
+            {
+                response = ApiResponse.FailureResult(message, errors);
             }
 
-            problemDetails.Instance = context.Request.Path;
-
-            context.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
-            context.Response.ContentType = "application/problem+json";
-
             var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-            await context.Response.WriteAsJsonAsync(problemDetails, options);
-        }
-
-        private static ProblemDetails CreateValidationProblemDetails(Domain.Exceptions.ValidationException ex)
-        {
-            var problemDetails = new ProblemDetails
-            {
-                Status = StatusCodes.Status422UnprocessableEntity,
-                Title = "Validation Error",
-                Detail = ex.Message,
-                Type = "https://tools.ietf.org/html/rfc7807"
-            };
-
-            problemDetails.Extensions["errors"] = ex.Errors;
-
-            return problemDetails;
+            await context.Response.WriteAsJsonAsync(response, options);
         }
     }
 }

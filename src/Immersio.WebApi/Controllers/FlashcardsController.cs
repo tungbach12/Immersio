@@ -1,4 +1,5 @@
 using Immersio.Application.DTOs.Srs;
+using Immersio.Application.DTOs.Common;
 using Immersio.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,10 +30,10 @@ namespace Immersio.WebApi.Controllers
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdStr, out var userId))
-                return Unauthorized();
+                return Unauthorized(ApiResponse.FailureResult("Invalid user identity."));
 
             var result = await _srsService.CreateDeckAsync(userId, name, cancellationToken);
-            return CreatedAtAction(nameof(GetDecks), result);
+            return CreatedAtAction(nameof(GetDecks), ApiResponse<DeckDto>.SuccessResult(result));
         }
 
         [HttpGet("decks")]
@@ -40,10 +41,10 @@ namespace Immersio.WebApi.Controllers
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdStr, out var userId))
-                return Unauthorized();
+                return Unauthorized(ApiResponse.FailureResult("Invalid user identity."));
 
             var result = await _srsService.GetDecksAsync(userId, cancellationToken);
-            return Ok(result);
+            return Ok(ApiResponse<IEnumerable<DeckDto>>.SuccessResult(result));
         }
 
         [HttpDelete("decks/{deckId:guid}")]
@@ -52,7 +53,7 @@ namespace Immersio.WebApi.Controllers
             CancellationToken cancellationToken)
         {
             await _srsService.DeleteDeckAsync(deckId, cancellationToken);
-            return NoContent();
+            return Ok(ApiResponse.SuccessResult("Deck deleted successfully."));
         }
 
         [HttpGet("decks/{deckId:guid}/review")]
@@ -61,7 +62,7 @@ namespace Immersio.WebApi.Controllers
             CancellationToken cancellationToken)
         {
             var result = await _srsService.GetReviewCardsAsync(deckId, cancellationToken);
-            return Ok(result);
+            return Ok(ApiResponse<IEnumerable<CardDto>>.SuccessResult(result));
         }
 
         [HttpPost("decks/{deckId:guid}/cards")]
@@ -71,7 +72,7 @@ namespace Immersio.WebApi.Controllers
             CancellationToken cancellationToken)
         {
             var addedCount = await _srsService.AddCardsAsync(deckId, cards, cancellationToken);
-            return Ok(new { Count = addedCount });
+            return Ok(ApiResponse<object>.SuccessResult(new { Count = addedCount }));
         }
 
         [HttpPost("cards/{cardId:guid}/review")]
@@ -81,7 +82,7 @@ namespace Immersio.WebApi.Controllers
             CancellationToken cancellationToken)
         {
             var result = await _srsService.ReviewCardAsync(cardId, request.Quality, cancellationToken);
-            return Ok(result);
+            return Ok(ApiResponse<CardDto>.SuccessResult(result));
         }
 
         [HttpDelete("cards/{cardId:guid}")]
@@ -90,7 +91,7 @@ namespace Immersio.WebApi.Controllers
             CancellationToken cancellationToken)
         {
             await _srsService.DeleteCardAsync(cardId, cancellationToken);
-            return NoContent();
+            return Ok(ApiResponse.SuccessResult("Card deleted successfully."));
         }
     }
 }

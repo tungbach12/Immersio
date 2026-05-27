@@ -1,4 +1,6 @@
 using Immersio.Application.Interfaces;
+using Immersio.Application.DTOs.Common;
+using Immersio.Application.DTOs.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -24,7 +26,7 @@ namespace Immersio.WebApi.Controllers
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdStr, out var userId))
-                return Unauthorized();
+                return Unauthorized(ApiResponse.FailureResult("Invalid user identity."));
 
             var updatedUser = await _authService.UpgradeSubscriptionAsync(
                 userId, 
@@ -32,7 +34,7 @@ namespace Immersio.WebApi.Controllers
                 request.BillingCycle, 
                 cancellationToken);
 
-            return Ok(updatedUser);
+            return Ok(ApiResponse<UserDto>.SuccessResult(updatedUser));
         }
     }
 

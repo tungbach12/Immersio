@@ -20,5 +20,16 @@ namespace Immersio.Application.Interfaces
         Task<CefrAnalysisDto> AnalyzeCefrLevelAsync(
             Guid userId,
             CancellationToken cancellationToken = default);
+
+        Task<PronunciationAssessmentResultDto> AssessPronunciationAsync(
+            Guid userId,
+            byte[] audioBytes,
+            string filename,
+            string targetPhrase,
+            CancellationToken cancellationToken = default);
+
+        Task<GeneratedPhraseDto> GeneratePhraseAsync(
+            GeneratePhraseRequest request,
+            CancellationToken cancellationToken = default);
     }
 }

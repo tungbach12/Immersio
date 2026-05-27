@@ -8,6 +8,7 @@ export interface UserDto {
   experiencePoints?: number;
   learningHours?: number;
   currentLanguageLevel?: string;
+  role?: string;
 }
 
 export interface AuthResponse {
@@ -16,7 +17,9 @@ export interface AuthResponse {
   user: UserDto;
 }
 
-const BASE_URL = "http://localhost:5249/api/auth";
+const isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+export const API_BASE = isLocal ? "http://localhost:5249" : "";
+const BASE_URL = `${API_BASE}/api/auth`;
 
 export const authService = {
   getAccessToken(): string | null {
@@ -62,7 +65,8 @@ export const authService = {
       throw new Error(err.detail || "Registration failed");
     }
 
-    const data: AuthResponse = await response.json();
+    const res = await response.json();
+    const data: AuthResponse = res.data;
     this.setSession(data.accessToken, data.refreshToken, data.user);
     return data;
   },
@@ -81,7 +85,28 @@ export const authService = {
       throw new Error(err.detail || "Login failed");
     }
 
-    const data: AuthResponse = await response.json();
+    const res = await response.json();
+    const data: AuthResponse = res.data;
+    this.setSession(data.accessToken, data.refreshToken, data.user);
+    return data;
+  },
+
+  async loginWithGoogle(credential: string): Promise<AuthResponse> {
+    const response = await fetch(`${BASE_URL}/google`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ credential }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Google login failed" }));
+      throw new Error(err.detail || "Google login failed");
+    }
+
+    const res = await response.json();
+    const data: AuthResponse = res.data;
     this.setSession(data.accessToken, data.refreshToken, data.user);
     return data;
   },
@@ -107,7 +132,8 @@ export const authService = {
       throw new Error("Session expired, please login again");
     }
 
-    const data: AuthResponse = await response.json();
+    const res = await response.json();
+    const data: AuthResponse = res.data;
     this.setSession(data.accessToken, data.refreshToken, data.user);
     return data.accessToken;
   },
@@ -135,6 +161,8 @@ export const authService = {
   async fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
     let token = this.getAccessToken();
     if (!token) {
+      this.clearSession();
+      window.location.href = "/login";
       throw new Error("No active session");
     }
 
@@ -159,6 +187,18 @@ export const authService = {
         window.location.href = "/login";
         throw refreshErr;
       }
+    }
+
+    // Intercept response.json() to unwrap success responses automatically
+    if (response.ok) {
+      const originalJson = response.json.bind(response);
+      response.json = async () => {
+        const jsonVal = await originalJson();
+        if (jsonVal && typeof jsonVal === "object" && jsonVal.success === true && "data" in jsonVal) {
+          return jsonVal.data;
+        }
+        return jsonVal;
+      };
     }
 
     return response;

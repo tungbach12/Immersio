@@ -13,14 +13,67 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleGoogleCredentialResponse = async (response: any) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await authService.loginWithGoogle(response.credential);
+      if (res.user.role === "Admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/student/dashboard");
+      }
+    } catch (err: any) {
+      setError(err.message || "Đăng nhập Google thất bại.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    const initializeGoogle = () => {
+      const google = (window as any).google;
+      if (google) {
+        google.accounts.id.initialize({
+          client_id: (import.meta as any).env.VITE_GOOGLE_CLIENT_ID || "1008059045041-qnqdmeo0rq9ln1kv3u379247c1391caf.apps.googleusercontent.com",
+          callback: handleGoogleCredentialResponse,
+        });
+        google.accounts.id.renderButton(
+          document.getElementById("google-signin-btn"),
+          { 
+            theme: "filled_blue", 
+            size: "large", 
+            width: 320,
+            shape: "pill"
+          }
+        );
+      }
+    };
+
+    initializeGoogle();
+
+    const interval = setInterval(() => {
+      if ((window as any).google) {
+        initializeGoogle();
+        clearInterval(interval);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
-      await authService.login(email, password);
-      navigate("/student/dashboard");
+      const res = await authService.login(email, password);
+      if (res.user.role === "Admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/student/dashboard");
+      }
     } catch (err: any) {
       setError(err.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
     } finally {
@@ -29,46 +82,47 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden font-sans">
       {/* Back Button */}
       <Link 
-        to="/intro" 
+        to="/" 
         className="absolute top-8 left-8 z-50 flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
       >
-        <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-all">
-          <ArrowLeft size={20} />
+        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 group-hover:border-white/20 transition-all shadow-md">
+          <ArrowLeft size={18} />
         </div>
-        <span className="text-sm font-bold uppercase tracking-widest hidden md:block">Back to Home</span>
+        <span className="text-xs font-black uppercase tracking-widest hidden md:block">Quay lại trang chủ</span>
       </Link>
 
-      {/* Background Decorations */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px] animate-pulse delay-700" />
+      {/* Dynamic Background Glowing Spots */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[150px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/10 rounded-full blur-[150px] animate-pulse delay-1000" />
       </div>
 
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
         className="w-full max-w-md relative z-10"
       >
-        <div className="bg-slate-900/50 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 md:p-10 shadow-2xl">
+        <div className="bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl">
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
             <motion.div 
               whileHover={{ scale: 1.05 }}
-              className="mb-4 p-4 bg-white rounded-3xl shadow-xl border border-white/20"
+              className="mb-4 p-3.5 bg-white rounded-2xl shadow-xl border border-white/10"
             >
-              <img src="/logo.png" alt="IMMERSIO Logo" className="h-16 w-auto object-contain rounded-2xl" />
+              <img src="/logo.png" alt="IMMERSIO Logo" className="h-12 w-auto object-contain rounded-xl" />
             </motion.div>
-            <p className="text-slate-400 text-sm mt-2">Welcome back to the future of learning</p>
+            <h1 className="text-2xl font-black text-white italic uppercase tracking-tight text-center">Đăng nhập</h1>
+            <p className="text-slate-400 text-xs font-semibold mt-1">Chào mừng bạn quay lại với IMMERSIO</p>
           </div>
 
           {error && (
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-xs font-bold text-center leading-relaxed"
+              className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-[10px] font-bold text-center leading-relaxed"
             >
               {error}
             </motion.div>
@@ -76,17 +130,17 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
+              <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Địa chỉ Email</label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-blue-500 transition-colors">
-                  <Mail size={18} />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+                  <Mail size={16} />
                 </div>
                 <input 
                   type="email" 
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-800/50 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                  className="w-full h-14 bg-slate-950/80 border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder:text-slate-700 text-xs font-bold focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300"
                   placeholder="name@example.com"
                 />
               </div>
@@ -94,19 +148,19 @@ export default function Login() {
 
             <div className="space-y-2">
               <div className="flex justify-between items-center ml-1">
-                <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Password</label>
-                <a href="#" className="text-xs font-bold text-blue-500 hover:text-blue-400 transition">Forgot?</a>
+                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Mật khẩu</label>
+                <a href="#" className="text-[10px] font-black text-indigo-400 hover:text-indigo-300 transition uppercase tracking-wider">Quên mật khẩu?</a>
               </div>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-blue-500 transition-colors">
-                  <Lock size={18} />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+                  <Lock size={16} />
                 </div>
                 <input 
                   type={showPassword ? "text" : "password"} 
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-800/50 border border-white/5 rounded-2xl py-4 pl-12 pr-12 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                  className="w-full h-14 bg-slate-950/80 border border-white/10 rounded-2xl pl-12 pr-12 text-white placeholder:text-slate-700 text-xs font-bold focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300"
                   placeholder="••••••••"
                 />
                 <button 
@@ -114,21 +168,21 @@ export default function Login() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
             <Button 
               type="submit" 
-              className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg shadow-xl shadow-blue-600/20 group"
+              className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-indigo-600/30 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-[0.98] transition-all duration-300"
               disabled={isLoading}
             >
               {isLoading ? (
-                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
               ) : (
-                <span className="flex items-center gap-2">
-                  Sign In <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                <span className="flex items-center justify-center gap-2">
+                  Đăng nhập <ArrowRight size={14} />
                 </span>
               )}
             </Button>
@@ -139,25 +193,18 @@ export default function Login() {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-white/5"></div>
               </div>
-              <span className="relative bg-slate-900/50 px-4 text-xs font-bold uppercase tracking-widest text-slate-500">Or continue with</span>
+              <span className="relative bg-slate-950 px-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Hoặc tiếp tục với</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl py-3 text-white transition-all">
-                <Chrome size={20} />
-                <span className="text-sm font-bold">Google</span>
-              </button>
-              <button className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl py-3 text-white transition-all">
-                <Github size={20} />
-                <span className="text-sm font-bold">GitHub</span>
-              </button>
+            <div className="flex flex-col items-center justify-center w-full">
+              <div id="google-signin-btn" className="w-full min-h-[46px] flex justify-center"></div>
             </div>
           </div>
 
-          <p className="text-center mt-10 text-slate-400 text-sm">
-            Don't have an account?{" "}
-            <Link to="/register" className="text-blue-500 font-bold hover:text-blue-400 transition underline underline-offset-4">
-              Create one for free
+          <p className="text-center mt-8 text-slate-400 text-xs font-semibold">
+            Chưa có tài khoản?{" "}
+            <Link to="/register" className="text-indigo-400 font-black hover:text-indigo-300 transition underline underline-offset-4 uppercase tracking-wider text-[10px]">
+              Tạo tài khoản miễn phí
             </Link>
           </p>
         </div>

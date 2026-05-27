@@ -9,6 +9,7 @@ namespace Immersio.Domain.Entities
         public string Front { get; private set; } = null!;
         public string Back { get; private set; } = null!;
         public string? Explanation { get; private set; }
+        public string? Tag { get; private set; }
 
         // Spaced Repetition System (SRS) parameters - SuperMemo-2
         public int Repetitions { get; private set; }
@@ -25,7 +26,7 @@ namespace Immersio.Domain.Entities
 
         private Card() { } // EF Core
 
-        public Card(Guid deckId, string front, string back, string? explanation = null)
+        public Card(Guid deckId, string front, string back, string? explanation = null, string? tag = null)
         {
             if (string.IsNullOrWhiteSpace(front))
                 throw new ArgumentException("Front content cannot be empty.", nameof(front));
@@ -37,6 +38,7 @@ namespace Immersio.Domain.Entities
             Front = front;
             Back = back;
             Explanation = explanation;
+            Tag = tag;
 
             // Initial SM-2 parameters
             Repetitions = 0;

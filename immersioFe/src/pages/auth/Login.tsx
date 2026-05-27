@@ -35,7 +35,7 @@ export default function Login() {
       const google = (window as any).google;
       if (google) {
         google.accounts.id.initialize({
-          client_id: (import.meta as any).env.VITE_GOOGLE_CLIENT_ID || "1008059045041-qnqdmeo0rq9ln1kv3u379247c1391caf.apps.googleusercontent.com",
+          client_id: (import.meta as any).env.VITE_GOOGLE_CLIENT_ID || "292647291155-7bfaa0cioukmqmah4g5lhg9qqcd1mu26.apps.googleusercontent.com",
           callback: handleGoogleCredentialResponse,
         });
         google.accounts.id.renderButton(

@@ -1,3 +1,4 @@
+using Immersio.Application.Common;
 using Immersio.Application.DTOs.Auth;
 using Immersio.Application.Interfaces;
 using Immersio.Domain.Entities;
@@ -5,26 +6,33 @@ using Immersio.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Google.Apis.Auth;
+using System.Security.Cryptography;
 
 namespace Immersio.Application.Services
 {
     public class AuthService : IAuthService
     {
+        private const int OtpExpiryMinutes = 10;
+        private const int MaxOtpAttempts = 5;
+
         private readonly IApplicationDbContext _context;
         private readonly ITokenService _tokenService;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
         public AuthService(
             IApplicationDbContext context,
             ITokenService tokenService,
             IPasswordHasher passwordHasher,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IEmailService emailService)
         {
             _context = context;
             _tokenService = tokenService;
             _passwordHasher = passwordHasher;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
         public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
@@ -57,6 +65,9 @@ namespace Immersio.Application.Services
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync(cancellationToken);
+
+            var welcome = EmailTemplates.Welcome(user.Username);
+            await TrySendEmailAsync(user.Email, welcome, cancellationToken);
 
             var accessToken = _tokenService.GenerateAccessToken(user);
 
@@ -235,7 +246,104 @@ namespace Immersio.Application.Services
             user.UpdateSubscription(tier, expiresAt);
             await _context.SaveChangesAsync(cancellationToken);
 
+            var receipt = EmailTemplates.PaymentConfirmation(user.Username, tier, billingCycle, expiresAt);
+            await TrySendEmailAsync(user.Email, receipt, cancellationToken);
+
             return MapToDto(user);
+        }
+
+        public async Task ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
+        {
+            var email = request.Email?.Trim() ?? string.Empty;
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
+
+            // Always behave the same regardless of whether the email exists (avoid account enumeration).
+            if (user is null)
+                return;
+
+            // Invalidate any previously issued, still-active codes for this email.
+            var activeCodes = await _context.PasswordResetCodes
+                .Where(c => c.Email == email && c.UsedAt == null && c.ExpiresAt > DateTime.UtcNow)
+                .ToListAsync(cancellationToken);
+            foreach (var code in activeCodes)
+                code.MarkUsed();
+
+            var otp = GenerateOtp();
+            var resetCode = new PasswordResetCode(
+                email,
+                _passwordHasher.Hash(otp),
+                DateTime.UtcNow.AddMinutes(OtpExpiryMinutes));
+
+            _context.PasswordResetCodes.Add(resetCode);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            var content = EmailTemplates.PasswordResetOtp(otp, OtpExpiryMinutes);
+            await TrySendEmailAsync(email, content, cancellationToken);
+        }
+
+        public async Task ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
+        {
+            var email = request.Email?.Trim() ?? string.Empty;
+
+            var resetCode = await _context.PasswordResetCodes
+                .Where(c => c.Email == email && c.UsedAt == null)
+                .OrderByDescending(c => c.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (resetCode is null || resetCode.IsExpired)
+                throw new UnauthorizedException("Mã OTP không hợp lệ hoặc đã hết hạn.");
+
+            if (resetCode.AttemptCount >= MaxOtpAttempts)
+            {
+                resetCode.MarkUsed();
+                await _context.SaveChangesAsync(cancellationToken);
+                throw new UnauthorizedException("Bạn đã nhập sai quá nhiều lần. Vui lòng yêu cầu mã mới.");
+            }
+
+            if (!_passwordHasher.Verify(request.Otp ?? string.Empty, resetCode.CodeHash))
+            {
+                resetCode.RegisterAttempt();
+                await _context.SaveChangesAsync(cancellationToken);
+                throw new UnauthorizedException("Mã OTP không hợp lệ hoặc đã hết hạn.");
+            }
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
+
+            if (user is null)
+                throw new UnauthorizedException("Mã OTP không hợp lệ hoặc đã hết hạn.");
+
+            user.ResetPassword(_passwordHasher.Hash(request.NewPassword));
+            resetCode.MarkUsed();
+
+            // Revoke all active refresh tokens so existing sessions are invalidated.
+            var activeTokens = await _context.RefreshTokens
+                .Where(rt => rt.UserId == user.Id && rt.RevokedAt == null)
+                .ToListAsync(cancellationToken);
+            foreach (var token in activeTokens)
+                token.Revoke();
+
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        private static string GenerateOtp()
+        {
+            return RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
+        }
+
+        private async Task TrySendEmailAsync(string toEmail, EmailTemplates.EmailContent content, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _emailService.SendEmailAsync(toEmail, content.Subject, content.HtmlBody, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                // Email delivery should never break the core flow (register / payment / reset request).
+                Console.WriteLine($"[Email] Failed to send '{content.Subject}' to {toEmail}: {ex.Message}");
+            }
         }
 
         private static UserDto MapToDto(User user)

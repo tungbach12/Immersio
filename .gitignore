@@ -34,3 +34,6 @@ dist-ssr/
 src/Immersio.WebApi/appsettings.json
 src/Immersio.WebApi/appsettings.Development.json
 src/Immersio.WebApi/appsettings.Production.json
+
+## Stray IDE duplicate config files
+appsettings.* copy.json

@@ -111,6 +111,36 @@ export const authService = {
     return data;
   },
 
+  async forgotPassword(email: string): Promise<void> {
+    const response = await fetch(`${BASE_URL}/forgot-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Gửi yêu cầu thất bại" }));
+      throw new Error(err.detail || err.message || "Gửi yêu cầu thất bại");
+    }
+  },
+
+  async resetPassword(email: string, otp: string, newPassword: string): Promise<void> {
+    const response = await fetch(`${BASE_URL}/reset-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, otp, newPassword }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Đặt lại mật khẩu thất bại" }));
+      throw new Error(err.detail || err.message || "Đặt lại mật khẩu thất bại");
+    }
+  },
+
   async refreshToken(): Promise<string> {
     const accessToken = this.getAccessToken();
     const refreshToken = this.getRefreshToken();

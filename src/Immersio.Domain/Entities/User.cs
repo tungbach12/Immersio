@@ -71,6 +71,13 @@ namespace Immersio.Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
+        public void ResetPassword(string newPasswordHash)
+        {
+            if (string.IsNullOrWhiteSpace(newPasswordHash)) return;
+            PasswordHash = newPasswordHash;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
         public void AddExperience(int exp)
         {
             if (exp < 0) return;

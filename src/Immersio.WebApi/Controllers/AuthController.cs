@@ -64,6 +64,25 @@ namespace Immersio.WebApi.Controllers
             return Ok(ApiResponse.SuccessResult("Token revoked successfully"));
         }
 
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(
+            [FromBody] ForgotPasswordRequest request,
+            CancellationToken cancellationToken)
+        {
+            await _authService.ForgotPasswordAsync(request, cancellationToken);
+            return Ok(ApiResponse.SuccessResult(
+                "Nếu email tồn tại trong hệ thống, mã OTP đặt lại mật khẩu đã được gửi."));
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(
+            [FromBody] ResetPasswordRequest request,
+            CancellationToken cancellationToken)
+        {
+            await _authService.ResetPasswordAsync(request, cancellationToken);
+            return Ok(ApiResponse.SuccessResult("Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại."));
+        }
+
         [HttpGet("me")]
         [Authorize]
         public async Task<IActionResult> Me(CancellationToken cancellationToken)

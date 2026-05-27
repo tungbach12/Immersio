@@ -1,10 +1,11 @@
-import { motion, AnimatePresence } from "motion/react";
-import { Check, Sparkles, Zap, Shield, Star, Crown, ArrowRight, X, CreditCard, Loader2 } from "lucide-react";
+import { motion } from "motion/react";
+import { Check, Sparkles, Zap, Shield, Star, Crown, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { authService, UserDto, API_BASE } from "@/services/auth";
+import { subscriptionService } from "@/services/subscription";
 
 const plans = [
   {
@@ -105,17 +106,8 @@ export default function Subscription() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [user, setUser] = useState<UserDto | null>(null);
   const [syncing, setSyncing] = useState(true);
-  
-  // Checkout Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvc, setCardCvc] = useState("");
-  const [cardName, setCardName] = useState("");
-  const [processingPayment, setProcessingPayment] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [processingPlan, setProcessingPlan] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Initial load from session cache
@@ -140,8 +132,7 @@ export default function Subscription() {
 
   const formatPrice = (plan: typeof plans[0]) => {
     if (plan.price === "Free") return "Free";
-    const val = getPriceValue(plan);
-    return `${(val / 1000).toFixed(3)}.000đ`;
+    return `${getPriceValue(plan).toLocaleString("vi-VN")}đ`;
   };
 
   const handlePlanSelect = (plan: typeof plans[0]) => {
@@ -149,26 +140,19 @@ export default function Subscription() {
     if (plan.name.toLowerCase() === activeTier.toLowerCase()) {
       return; // Already subscribed
     }
-    
-    // For free basic plan, directly invoke upgrade API without modal
+
+    // Free Basic plan: switch directly without a payment gateway
     if (plan.name === "Basic") {
       processDirectUpgrade("Basic", "free");
       return;
     }
 
-    setSelectedPlan(plan);
-    setIsModalOpen(true);
-    setCardNumber("");
-    setCardExpiry("");
-    setCardCvc("");
-    setCardName("");
-    setPaymentSuccess(false);
-    setProcessingPayment(false);
-    setErrorMessage("");
+    startVnPayCheckout(plan);
   };
 
   const processDirectUpgrade = async (tier: string, cycle: string) => {
     setSyncing(true);
+    setError(null);
     try {
       const response = await authService.fetchWithAuth(`${API_BASE}/api/subscription/upgrade`, {
         method: "POST",
@@ -177,66 +161,29 @@ export default function Subscription() {
       });
 
       if (!response.ok) {
-        throw new Error("Upgrade failed on server.");
+        throw new Error("Không thể đổi gói.");
       }
 
       const updatedUser: UserDto = await response.json();
       authService.updateUser(updatedUser);
       setUser(updatedUser);
     } catch (e: any) {
-      console.error(e);
-      alert(e.message || "Failed to switch plan.");
+      setError(e.message || "Không thể đổi gói.");
     } finally {
       setSyncing(false);
     }
   };
 
-  const handlePaymentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedPlan) return;
-
-    if (cardNumber.replace(/\s/g, "").length < 16) {
-      setErrorMessage("Please enter a valid 16-digit card number.");
-      return;
-    }
-    if (cardExpiry.length < 5) {
-      setErrorMessage("Please enter a valid expiry date (MM/YY).");
-      return;
-    }
-    if (cardCvc.length < 3) {
-      setErrorMessage("Please enter a valid 3-digit security code.");
-      return;
-    }
-    if (!cardName.trim()) {
-      setErrorMessage("Please enter the cardholder's name.");
-      return;
-    }
-
-    setProcessingPayment(true);
-    setErrorMessage("");
-
+  // Real payment: create a VNPay order on the backend, then redirect to the gateway.
+  const startVnPayCheckout = async (plan: typeof plans[0]) => {
+    setProcessingPlan(plan.name);
+    setError(null);
     try {
-      // Simulated secure 1.5s gateway delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      const response = await authService.fetchWithAuth(`${API_BASE}/api/subscription/upgrade`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier: selectedPlan.name, billingCycle })
-      });
-
-      if (!response.ok) {
-        throw new Error("Payment went through but account sync failed. Please contact support.");
-      }
-
-      const updatedUser: UserDto = await response.json();
-      authService.updateUser(updatedUser);
-      setUser(updatedUser);
-      setPaymentSuccess(true);
-    } catch (err: any) {
-      setErrorMessage(err.message || "An unexpected error occurred during transaction processing.");
-    } finally {
-      setProcessingPayment(false);
+      const paymentUrl = await subscriptionService.createPayment(plan.name, billingCycle);
+      window.location.href = paymentUrl;
+    } catch (e: any) {
+      setError(e.message || "Không tạo được yêu cầu thanh toán.");
+      setProcessingPlan(null);
     }
   };
 
@@ -267,14 +214,14 @@ export default function Subscription() {
           Unlock the full potential of IMMERSIO. Master languages faster with our most advanced AI models and fully immersive roleplay scenarios.
         </p>
 
-        {/* Billing Toggle - Refined */}
+        {/* Billing Toggle */}
         <div className="mt-12 flex items-center justify-center gap-6">
           <span className={cn("text-[10px] md:text-xs font-black uppercase tracking-[0.2em] transition-colors", billingCycle === "monthly" ? "text-white" : "text-slate-500")}>Monthly</span>
-          <button 
+          <button
             onClick={() => setBillingCycle(billingCycle === "monthly" ? "yearly" : "monthly")}
             className="w-16 h-8 bg-slate-800 rounded-full relative p-1 transition-all hover:bg-slate-700 shadow-inner group"
           >
-            <motion.div 
+            <motion.div
               animate={{ x: billingCycle === "monthly" ? 0 : 32 }}
               className="w-6 h-6 bg-indigo-500 rounded-full shadow-lg group-hover:scale-110 transition-transform"
             />
@@ -283,11 +230,22 @@ export default function Subscription() {
             Yearly <span className="text-emerald-400 ml-2 bg-emerald-500/10 px-2.5 py-1 rounded-lg text-[9px] font-black border border-emerald-500/20">-20% OFF</span>
           </span>
         </div>
+
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-8 max-w-md mx-auto p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-xs font-bold"
+          >
+            {error}
+          </motion.div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24 relative z-10">
         {plans.map((plan, idx) => {
           const isCurrent = plan.name.toLowerCase() === activeTier.toLowerCase();
+          const isProcessing = processingPlan === plan.name;
           return (
             <motion.div
               key={plan.name}
@@ -296,11 +254,11 @@ export default function Subscription() {
               transition={{ delay: idx * 0.1 }}
               className={cn(plan.popular && "md:scale-105")}
             >
-              <Card 
+              <Card
                 className={cn(
                   "h-full flex flex-col relative overflow-hidden border transition-all duration-700 rounded-[3rem] bg-slate-950/45 backdrop-blur-2xl group",
-                  plan.popular 
-                    ? "border-indigo-500/60 shadow-glow" 
+                  plan.popular
+                    ? "border-indigo-500/60 shadow-glow"
                     : "border-white/5 hover:border-indigo-500/20 shadow-2xl shadow-black/40",
                   isCurrent && "border-emerald-500/80 shadow-[0_0_30px_rgba(16,185,129,0.2)]"
                 )}
@@ -316,19 +274,19 @@ export default function Subscription() {
                     <Check size={10} strokeWidth={4} /> Current
                   </div>
                 )}
-                
+
                 <CardContent className="p-8 md:p-10 flex-1 flex flex-col relative overflow-hidden">
                   {(plan.popular || isCurrent) && <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl -mr-16 -mt-16" />}
-                  
+
                   <div className={cn(
                     "w-12 h-12 rounded-2xl flex items-center justify-center mb-8 shadow-xl transition-transform group-hover:rotate-12",
                     isCurrent ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" :
-                    plan.color === "indigo" ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30" : 
+                    plan.color === "indigo" ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30" :
                     plan.color === "amber" ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "bg-slate-800 text-slate-400"
                   )}>
                     <plan.icon size={24} strokeWidth={2.5} />
                   </div>
-                  
+
                   <h3 className="text-2xl font-black text-white mb-2 italic tracking-tight">{plan.name}</h3>
                   <div className="flex items-baseline gap-2 mb-4">
                     <span className="text-3xl md:text-4xl font-black text-white tracking-tighter">
@@ -337,38 +295,44 @@ export default function Subscription() {
                     {plan.price !== "Free" && <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">{plan.period}</span>}
                   </div>
                   <p className="text-slate-400 text-xs font-medium mb-10 leading-relaxed opacity-80">{plan.description}</p>
-                  
+
                   <div className="space-y-4 mb-12 flex-1">
                     {plan.features.map((feature) => (
                       <div key={feature} className="flex items-start gap-4 group/item">
-                        <div className={cn("mt-1 rounded-full p-1 shadow-sm shrink-0 group-hover/item:scale-125 transition-transform", isCurrent ? "bg-emerald-500" : "bg-emerald-500")}>
+                        <div className="mt-1 rounded-full p-1 shadow-sm shrink-0 group-hover/item:scale-125 transition-transform bg-emerald-500">
                           <Check size={8} className="text-white" strokeWidth={5} />
                         </div>
                         <span className="text-xs text-slate-300 font-bold leading-tight group-hover/item:text-white transition-colors uppercase tracking-tight">{feature}</span>
                       </div>
                     ))}
                   </div>
-                  
-                  <Button 
+
+                  <Button
                     onClick={() => handlePlanSelect(plan)}
-                    disabled={isCurrent}
+                    disabled={isCurrent || isProcessing}
                     className={cn(
-                      "w-full h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-300 shadow-2xl active:scale-95",
+                      "w-full h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-300 shadow-2xl active:scale-95 flex items-center justify-center gap-2",
                       isCurrent
                         ? "bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed"
-                        : plan.popular 
-                          ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-glow" 
+                        : plan.popular
+                          ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-glow"
                           : "bg-white hover:bg-slate-100 text-slate-950"
                     )}
                   >
-                    {isCurrent ? "Active Plan" : plan.buttonText}
+                    {isProcessing ? (
+                      <><Loader2 className="animate-spin" size={16} /> Đang chuyển đến cổng thanh toán...</>
+                    ) : (
+                      isCurrent ? "Active Plan" : plan.buttonText
+                    )}
                   </Button>
                 </CardContent>
               </Card>
             </motion.div>
           );
         })}
-      </div>      {/* Detailed Comparison Table - Ultra Clean App Look */}
+      </div>
+
+      {/* Detailed Comparison Table */}
       <div className="mt-24 md:mt-36 relative">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-black text-white italic tracking-tight mb-4">Deep Comparison</h2>
@@ -407,7 +371,7 @@ export default function Subscription() {
                     </td>
                     <td className="p-8 border-b border-white/5 bg-amber-500/5">
                       <div className="text-xs md:text-sm text-amber-200 font-black flex items-center gap-2">
-                         <Crown size={12} className="text-amber-400 shrink-0" /> {row.premium}
+                        <Crown size={12} className="text-amber-400 shrink-0" /> {row.premium}
                       </div>
                     </td>
                   </tr>
@@ -422,10 +386,12 @@ export default function Subscription() {
             </p>
           </div>
         </div>
-      </div>iv      {/* Trust Badges - Modern Layout */}
+      </div>
+
+      {/* Trust Badges */}
       <div className="mt-24 md:mt-40 grid grid-cols-2 lg:grid-cols-4 gap-12 border-t border-white/5 pt-20">
         {[
-          { icon: Shield, title: "Guaranteed", desc: "Stripe Secured" },
+          { icon: Shield, title: "Bảo mật", desc: "PayOS · VietQR" },
           { icon: Zap, title: "Instant Access", desc: "Unlock now" },
           { icon: Star, title: "Free Trial", desc: "7-Day Pro" },
           { icon: Crown, title: "No Commits", desc: "Cancel anytime" },
@@ -441,220 +407,6 @@ export default function Subscription() {
           </div>
         ))}
       </div>
-
-      {/* RETAIL PRESET CHECKOUT MODAL - VERY PREMIUM */}
-      <AnimatePresence>
-        {isModalOpen && selectedPlan && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => { if (!processingPayment && !paymentSuccess) setIsModalOpen(false); }}
-              className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
-            />
-
-            {/* Modal Body */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: "spring", duration: 0.5 }}
-              className="bg-slate-950 rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/10 w-full max-w-xl overflow-hidden relative z-10"
-            >
-              {/* Close Button */}
-              {(!processingPayment && !paymentSuccess) && (
-                <button 
-                  onClick={() => setIsModalOpen(false)}
-                  className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors z-20"
-                >
-                  <X size={18} strokeWidth={2.5} />
-                </button>
-              )}
-
-              {paymentSuccess ? (
-                /* Success Screen */
-                <div className="p-10 text-center flex flex-col items-center">
-                  <motion.div 
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", damping: 12, delay: 0.1 }}
-                    className="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-8 border border-emerald-500/30"
-                  >
-                    <Check size={48} strokeWidth={4} className="animate-pulse" />
-                  </motion.div>
-
-                  <h3 className="text-3xl font-black text-white italic tracking-tight mb-4">Payment Approved!</h3>
-                  <p className="text-slate-300 text-sm font-semibold uppercase tracking-wider mb-8 bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20 text-emerald-300">
-                    Welcome to Immersio {selectedPlan.name}
-                  </p>
-                  
-                  <div className="w-full bg-slate-900/60 rounded-3xl p-6 border border-white/5 text-left mb-8 space-y-3">
-                    <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      <span>Subscribed Tier</span>
-                      <span className="text-white font-extrabold">{selectedPlan.name}</span>
-                    </div>
-                    <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      <span>Billing Frequency</span>
-                      <span className="text-white font-extrabold capitalize">{billingCycle}</span>
-                    </div>
-                    <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-wider border-t border-white/5 pt-3">
-                      <span>Charged Amount</span>
-                      <span className="text-indigo-400 font-black">{formatPrice(selectedPlan)}</span>
-                    </div>
-                  </div>
-
-                  <Button 
-                    onClick={() => setIsModalOpen(false)}
-                    className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-glow"
-                  >
-                    Start Learning Now
-                  </Button>
-                </div>
-              ) : (
-                /* Checkout Form Screen */
-                <form onSubmit={handlePaymentSubmit} className="p-8 md:p-10 flex flex-col gap-6">
-                  <div>
-                    <h3 className="text-2xl font-black text-white italic tracking-tight leading-none mb-2">Upgrade to {selectedPlan.name}</h3>
-                    <p className="text-slate-400 text-xs font-medium">Billed {billingCycle} at <span className="text-indigo-400 font-bold">{formatPrice(selectedPlan)}</span></p>
-                  </div>
-
-                  {/* Simulated Debit Card - Super Sleek Glassmorphism */}
-                  <div className="w-full h-48 rounded-[2rem] bg-gradient-to-tr from-indigo-700 via-indigo-600 to-indigo-900 p-6 flex flex-col justify-between text-white shadow-xl shadow-indigo-900/30 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl" />
-                    
-                    <div className="flex justify-between items-start">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Card Member</span>
-                        <span className="text-sm font-bold tracking-widest uppercase truncate max-w-[200px]">
-                          {cardName || "YOUR NAME"}
-                        </span>
-                      </div>
-                      <Crown className="text-white/40 fill-white/10" size={32} />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <span className="text-lg font-black tracking-[0.25em] font-mono leading-none">
-                        {cardNumber.padEnd(16, "•").replace(/(.{4})/g, "$1 ").trim().slice(0, 23) || "•••• •••• •••• ••••"}
-                      </span>
-                      <div className="flex justify-between items-end">
-                        <div className="flex gap-6">
-                          <div className="flex flex-col">
-                            <span className="text-[7px] font-black uppercase tracking-widest opacity-60">Expires</span>
-                            <span className="text-xs font-bold font-mono">{cardExpiry || "MM/YY"}</span>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[7px] font-black uppercase tracking-widest opacity-60">CVC</span>
-                            <span className="text-xs font-bold font-mono">{cardCvc || "•••"}</span>
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-black tracking-[0.2em] opacity-40 uppercase">VISA</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {errorMessage && (
-                    <div className="bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-bold px-5 py-3 rounded-2xl leading-relaxed">
-                      {errorMessage}
-                    </div>
-                  )}
-
-                  {/* Form fields */}
-                  <div className="space-y-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Cardholder Name</label>
-                      <input 
-                        type="text" 
-                        placeholder="John Doe" 
-                        required
-                        value={cardName}
-                        onChange={(e) => setCardName(e.target.value.toUpperCase())}
-                        disabled={processingPayment}
-                        className="h-12 px-4 rounded-xl border border-white/10 bg-slate-900/60 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-semibold uppercase tracking-wider text-white disabled:bg-slate-950/80 placeholder:text-slate-600"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Card Number</label>
-                      <div className="relative">
-                        <input 
-                          type="text" 
-                          maxLength={19}
-                          placeholder="4111 2222 3333 4444" 
-                          required
-                          value={cardNumber}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, "");
-                            setCardNumber(val);
-                          }}
-                          disabled={processingPayment}
-                          className="h-12 pl-12 pr-4 w-full rounded-xl border border-white/10 bg-slate-900/60 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-bold font-mono text-white disabled:bg-slate-950/80 placeholder:text-slate-600"
-                        />
-                        <CreditCard size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Expiry Date</label>
-                        <input 
-                          type="text" 
-                          maxLength={5}
-                          placeholder="MM/YY" 
-                          required
-                          value={cardExpiry}
-                          onChange={(e) => {
-                            let val = e.target.value.replace(/\D/g, "");
-                            if (val.length > 2) {
-                              val = `${val.slice(0, 2)}/${val.slice(2, 4)}`;
-                            }
-                            setCardExpiry(val);
-                          }}
-                          disabled={processingPayment}
-                          className="h-12 px-4 rounded-xl border border-white/10 bg-slate-900/60 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-bold font-mono text-white disabled:bg-slate-950/80 placeholder:text-slate-600"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">CVC Code</label>
-                        <input 
-                          type="password" 
-                          maxLength={3}
-                          placeholder="•••" 
-                          required
-                          value={cardCvc}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, "");
-                            setCardCvc(val);
-                          }}
-                          disabled={processingPayment}
-                          className="h-12 px-4 rounded-xl border border-white/10 bg-slate-900/60 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-bold font-mono text-white disabled:bg-slate-950/80 placeholder:text-slate-600"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button 
-                    type="submit"
-                    disabled={processingPayment}
-                    className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-glow flex items-center justify-center gap-2 mt-4"
-                  >
-                    {processingPayment ? (
-                      <>
-                        <Loader2 className="animate-spin text-white" size={16} /> Authenticating...
-                      </>
-                    ) : (
-                      <>
-                        Pay & Upgrade Now <ArrowRight size={14} />
-                      </>
-                    )}
-                  </Button>
-                </form>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

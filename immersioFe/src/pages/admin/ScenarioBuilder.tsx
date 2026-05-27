@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { scenarioService, Scenario, ScenarioItem } from "@/services/scenario";
 import { adminService } from "@/services/admin";
 import { API_BASE } from "@/services/auth";
+import { uploadImage } from "@/services/upload";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { 
@@ -53,7 +54,28 @@ export default function ScenarioBuilder() {
   const [duration, setDuration] = useState("10 mins");
   const [imageUrl, setImageUrl] = useState("/ScenariosImage/Ordering coffee background.jpg");
   const [avatarUrl, setAvatarUrl] = useState("/ScenariosImage/Ordering coffee character.png");
+  const [uploadingBg, setUploadingBg] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [initialMessage, setInitialMessage] = useState("");
+
+  const handleImageUpload = async (
+    file: File | undefined,
+    setUrl: (u: string) => void,
+    setBusy: (b: boolean) => void,
+  ) => {
+    if (!file) return;
+    setBusy(true);
+    setUploadError(null);
+    try {
+      const url = await uploadImage(file, "immersio/scenarios");
+      setUrl(url);
+    } catch (err: any) {
+      setUploadError(err.message || "Upload failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
   const [contextPrompt, setContextPrompt] = useState("");
   const [isNavigation, setIsNavigation] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -425,25 +447,52 @@ export default function ScenarioBuilder() {
                 </div>
 
                 <div className="flex flex-col gap-1.5 col-span-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Background Image URL</label>
-                  <input 
-                    type="text" 
-                    required
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    className="h-11 px-4 rounded-xl border border-white/10 bg-slate-900/60 text-xs font-mono focus:outline-none focus:border-indigo-500 text-slate-300"
-                  />
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Background Image</label>
+                  <div className="flex items-center gap-2">
+                    {imageUrl && (
+                      <img src={imageUrl} alt="bg preview" className="h-11 w-16 rounded-lg object-cover border border-white/10" />
+                    )}
+                    <input
+                      type="text"
+                      required
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="Upload or paste a URL"
+                      className="flex-1 h-11 px-4 rounded-xl border border-white/10 bg-slate-900/60 text-xs font-mono focus:outline-none focus:border-indigo-500 text-slate-300"
+                    />
+                    <label className="h-11 px-3 flex items-center gap-1.5 rounded-xl border border-indigo-500/40 bg-indigo-500/10 text-indigo-300 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-indigo-500/20 whitespace-nowrap">
+                      {uploadingBg ? <Loader2 size={14} className="animate-spin" /> : <Image size={14} />}
+                      {uploadingBg ? "..." : "Upload"}
+                      <input type="file" accept="image/*" className="hidden"
+                        onChange={(e) => handleImageUpload(e.target.files?.[0], setImageUrl, setUploadingBg)} />
+                    </label>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5 col-span-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Character Avatar URL</label>
-                  <input 
-                    type="text" 
-                    required
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    className="h-11 px-4 rounded-xl border border-white/10 bg-slate-900/60 text-xs font-mono focus:outline-none focus:border-indigo-500 text-slate-300"
-                  />
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Character Avatar</label>
+                  <div className="flex items-center gap-2">
+                    {avatarUrl && (
+                      <img src={avatarUrl} alt="avatar preview" className="h-11 w-11 rounded-lg object-cover border border-white/10" />
+                    )}
+                    <input
+                      type="text"
+                      required
+                      value={avatarUrl}
+                      onChange={(e) => setAvatarUrl(e.target.value)}
+                      placeholder="Upload or paste a URL"
+                      className="flex-1 h-11 px-4 rounded-xl border border-white/10 bg-slate-900/60 text-xs font-mono focus:outline-none focus:border-indigo-500 text-slate-300"
+                    />
+                    <label className="h-11 px-3 flex items-center gap-1.5 rounded-xl border border-indigo-500/40 bg-indigo-500/10 text-indigo-300 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-indigo-500/20 whitespace-nowrap">
+                      {uploadingAvatar ? <Loader2 size={14} className="animate-spin" /> : <Image size={14} />}
+                      {uploadingAvatar ? "..." : "Upload"}
+                      <input type="file" accept="image/*" className="hidden"
+                        onChange={(e) => handleImageUpload(e.target.files?.[0], setAvatarUrl, setUploadingAvatar)} />
+                    </label>
+                  </div>
+                  {uploadError && (
+                    <span className="text-[10px] font-bold text-rose-400 ml-1">{uploadError}</span>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-1.5 col-span-2">

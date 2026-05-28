@@ -221,8 +221,12 @@ export default function ScenarioDetail() {
       currentAudioRef.current = audio;
       setCurrentAudio(audio);
       await audio.play();
-    } catch (e) {
+    } catch (e: any) {
       if (!isMountedRef.current) return;
+      if (e.name === "NotAllowedError" || (e.message && e.message.includes("user didn't interact"))) {
+        console.warn("TTS Autoplay blocked by browser. User interaction is required before audio can play.");
+        return;
+      }
       console.error("Azure TTS Playback failed, falling back to browser SpeechSynthesis:", e);
       try {
         window.speechSynthesis.cancel();

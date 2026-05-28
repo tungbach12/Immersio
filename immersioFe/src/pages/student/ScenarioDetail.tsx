@@ -955,7 +955,7 @@ export default function ScenarioDetail() {
         <div className="flex-1 relative z-20 flex flex-col justify-end pb-8 px-4 w-full h-full overflow-hidden">
 
           {/* Breathing Visual Novel Character Avatar */}
-          <div className="absolute left-0 sm:left-[2%] md:left-[5%] lg:left-[10%] xl:left-[15%] w-auto z-10 flex items-end justify-center pointer-events-none origin-bottom-left" style={{ bottom: '53vh', height: '50vh' }}>
+          <div className="absolute left-1/2 -translate-x-1/2 w-auto z-10 flex items-end justify-center pointer-events-none origin-bottom" style={{ bottom: '22vh', height: '68vh' }}>
             <motion.img
               src={scenario.avatar}
               alt="Scenario Character Avatar"

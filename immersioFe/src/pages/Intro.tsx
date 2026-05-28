@@ -1,26 +1,26 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Zap, 
-  CheckCircle, 
-  Star, 
-  Layers, 
-  Gamepad2, 
-  UserCircle2, 
-  Sparkles, 
-  Mic, 
-  Volume2, 
-  Facebook, 
-  Twitter, 
-  Instagram, 
-  Youtube, 
-  Send, 
-  Mail, 
-  ArrowRight, 
-  Menu, 
-  X, 
-  Play, 
-  Globe2, 
+import {
+  Zap,
+  CheckCircle,
+  Star,
+  Layers,
+  Gamepad2,
+  UserCircle2,
+  Sparkles,
+  Mic,
+  Volume2,
+  Facebook,
+  Twitter,
+  Instagram,
+  Youtube,
+  Send,
+  Mail,
+  ArrowRight,
+  Menu,
+  X,
+  Play,
+  Globe2,
   Award,
   Brain,
   Activity,
@@ -69,9 +69,9 @@ const Intro = () => {
                 Launch Online Free
               </button>
             </Link>
-            
+
             {/* Mobile Menu Toggle */}
-            <button 
+            <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition"
             >
@@ -104,27 +104,27 @@ const Intro = () => {
       {/* Hero Section */}
       <section className="relative pt-32 md:pt-44 pb-28 px-6 md:px-8 overflow-hidden z-10">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          
+
           <div className="lg:col-span-6 space-y-8 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-4 py-2 rounded-full text-xs font-bold mx-auto lg:mx-0 shadow-inner">
               <Zap size={14} className="animate-pulse" /> Voice-Interactive AI Language Learning
             </div>
-            
+
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[1.08] tracking-tight text-white italic uppercase">
               Speak to <br />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400 pr-4">
                 Conquer
               </span>
             </h1>
-            
+
             <p className="text-sm md:text-base text-slate-400 leading-relaxed max-w-lg mx-auto lg:mx-0 font-semibold">
               Học ngoại ngữ thông qua các tình huống nhập vai thực tế. Trò chuyện tự nhiên với nhân vật AI trong thế giới cốt truyện tương tác sống động, chấm điểm chuẩn xác đến từng nguyên âm, phụ âm bản xứ.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link to="/register">
                 <button className="group flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:shadow-2xl hover:shadow-indigo-600/30 transition duration-300 shadow-xl shadow-blue-500/10 w-full sm:w-auto hover:-translate-y-0.5">
-                  Bắt đầu nói ngay 
+                  Bắt đầu nói ngay
                   <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition duration-300">
                     <Mic size={14} className="text-cyan-300" />
                   </div>
@@ -153,20 +153,20 @@ const Intro = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Right Hero Side: Premium Dashboard/AI conversation interface Mockup */}
           <div className="lg:col-span-6 relative">
             <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500 to-indigo-500 rounded-[2.5rem] blur-3xl opacity-20 transform -rotate-3 animate-pulse-slow"></div>
-            
+
             {/* Premium Futuristic AI Voice Visual Asset */}
             <div className="relative z-10 bg-slate-900/40 backdrop-blur-2xl p-2.5 rounded-[2.5rem] shadow-2xl border border-white/10 overflow-hidden transform lg:scale-105 transition-all duration-500 hover:scale-[1.07]">
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10 pointer-events-none" />
-              <img 
-                src="/hero_voice_ai.png" 
-                alt="IMMERSIO AI Voice Cognitive Core" 
+              <img
+                src="/hero_voice_ai.png"
+                alt="IMMERSIO AI Voice Cognitive Core"
                 className="w-full h-auto object-cover rounded-[2rem] filter brightness-110 contrast-105"
               />
-              
+
               {/* Overlay Premium Label */}
               <div className="absolute bottom-6 left-6 right-6 z-20 bg-slate-950/70 backdrop-blur-md border border-white/10 p-5 rounded-2xl">
                 <div className="flex items-center gap-2.5 mb-1.5">
@@ -181,10 +181,10 @@ const Intro = () => {
         </div>
       </section>
 
-      {/* AI Cognitive Core Grid Features section */}
+      {/* AI Cognitive Core Grid Features section  */}
       <section id="features" className="py-32 px-6 bg-slate-900/30 relative overflow-hidden border-t border-b border-white/5 z-10">
         <div className="max-w-7xl mx-auto">
-          
+
           <div className="text-center mb-20 space-y-4">
             <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-inner">
               Lõi phân tích AI bậc cao
@@ -206,11 +206,10 @@ const Intro = () => {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as any)}
-                className={`flex items-center gap-2.5 h-12 px-6 rounded-2xl font-black text-[10px] uppercase tracking-wider transition-all duration-300 active:scale-95 border ${
-                  activeTab === tab.key 
-                    ? 'bg-indigo-600 border-indigo-500 text-white shadow-xl shadow-indigo-600/30' 
+                className={`flex items-center gap-2.5 h-12 px-6 rounded-2xl font-black text-[10px] uppercase tracking-wider transition-all duration-300 active:scale-95 border ${activeTab === tab.key
+                    ? 'bg-indigo-600 border-indigo-500 text-white shadow-xl shadow-indigo-600/30'
                     : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
-                }`}
+                  }`}
               >
                 {tab.icon}
                 {tab.label}
@@ -421,20 +420,20 @@ const Intro = () => {
       <section id="vn-mode" className="py-28 px-6 bg-slate-950 overflow-hidden relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            
+
             {/* Premium Immersive Novel Story Portal Visual Asset */}
             <div className="relative">
               <div className="absolute inset-0 bg-blue-500/10 rounded-[2.5rem] blur-3xl opacity-20 transform rotate-6"></div>
-              
+
               <div className="relative bg-slate-900/40 backdrop-blur-2xl p-2.5 rounded-[2.5rem] shadow-2xl border border-white/10 overflow-hidden">
                 <div className="aspect-[16/10] relative bg-slate-950 rounded-[1.75rem] overflow-hidden border border-white/5">
-                  <img 
-                    src="/novel_portal_ai.png" 
-                    alt="IMMERSIO Cinematic Story Portal" 
+                  <img
+                    src="/novel_portal_ai.png"
+                    alt="IMMERSIO Cinematic Story Portal"
                     className="absolute inset-0 object-cover w-full h-full filter brightness-105 contrast-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent z-10 pointer-events-none" />
-                  
+
                   {/* Floating Overlay Badge representing the Cinematic stories */}
                   <div className="absolute bottom-4 left-4 right-4 z-20 bg-slate-950/80 backdrop-blur-md border border-white/5 p-4 rounded-xl">
                     <div className="flex items-center gap-2 mb-1">
@@ -461,7 +460,7 @@ const Intro = () => {
               <p className="text-sm md:text-base text-slate-400 leading-relaxed font-semibold">
                 Vượt xa các ứng dụng trắc nghiệm thông thường. Bạn chính là nhân vật chính của câu chuyện, quyết định các lối rẽ và hoàn thành thử thách giao tiếp bằng chính khẩu hình phát âm của bản thân.
               </p>
-              
+
               <div className="grid gap-6">
                 <div className="flex gap-4 p-5 bg-white/5 rounded-3xl border border-white/5 hover:bg-white/10 transition duration-300">
                   <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-md text-blue-400 shrink-0">
@@ -472,7 +471,7 @@ const Intro = () => {
                     <p className="text-xs text-slate-400 leading-relaxed mt-1.5 font-semibold">Nhân vật AI trả lời hoàn toàn tương thích và ngẫu biến dựa trên nội dung bạn nói.</p>
                   </div>
                 </div>
-                
+
                 <div className="flex gap-4 p-5 bg-white/5 rounded-3xl border border-white/5 hover:bg-white/10 transition duration-300">
                   <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-md text-indigo-400 shrink-0">
                     <Sparkles size={22} />
@@ -493,7 +492,7 @@ const Intro = () => {
       <section id="spaced-repetition" className="py-28 px-6 bg-slate-900/30 relative overflow-hidden border-t border-b border-white/5 z-10">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            
+
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3.5 py-1.5 rounded-full shadow-inner">
                 <Repeat size={18} />
@@ -505,7 +504,7 @@ const Intro = () => {
               <p className="text-sm md:text-base text-slate-400 leading-relaxed font-semibold">
                 Bất cứ cấu trúc sai ngữ pháp nào hay từ vựng mới nào bạn gặp phải trong kịch bản đều sẽ được phân tích, tạo thành thẻ ghi nhớ và được lên lịch ôn tập giãn cách một cách có khoa học để bám rễ sâu vào trí nhớ dài hạn.
               </p>
-              
+
               <div className="flex gap-6 mt-8">
                 <div className="flex-1 p-5 bg-white/5 rounded-2xl border border-white/5">
                   <span className="text-xl font-black text-white">4x</span>
@@ -520,10 +519,10 @@ const Intro = () => {
 
             <div className="relative flex justify-center">
               <div className="absolute inset-0 bg-purple-500/10 rounded-[2.5rem] blur-3xl opacity-30 transform -rotate-6"></div>
-              
+
               <div className="relative bg-slate-900 border border-white/10 rounded-[3rem] p-8 w-full max-w-md shadow-2xl flex flex-col gap-6">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Spaced Repetition System (SRS)</h4>
-                
+
                 <div className="space-y-4">
                   {[
                     { label: "Card #01 (Chủ đề Cafe)", interval: "Review in 1 day", progress: 95 },
@@ -560,7 +559,7 @@ const Intro = () => {
       {/* Subscription Pricing Tiers */}
       <section id="pricing" className="py-32 px-6 bg-slate-950 relative overflow-hidden z-10">
         <div className="max-w-7xl mx-auto">
-          
+
           <div className="text-center mb-24 space-y-4">
             <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-inner">
               Gói dịch vụ
@@ -572,13 +571,13 @@ const Intro = () => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            
+
             {/* Tier 1: Basic */}
             <div className="bg-slate-900/40 border border-white/5 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-white/10 transition-all duration-300 relative overflow-hidden group">
               <div>
                 <h4 className="text-xl font-black text-white italic uppercase">Basic tier</h4>
                 <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Luyện tập nền tảng</p>
-                
+
                 <div className="my-8 flex items-baseline gap-1">
                   <span className="text-4xl font-black text-white">0đ</span>
                   <span className="text-xs text-slate-500 font-bold uppercase">/ Free</span>
@@ -625,7 +624,7 @@ const Intro = () => {
               <div>
                 <h4 className="text-xl font-black text-white italic uppercase">Premium tier</h4>
                 <p className="text-[9px] text-indigo-400 font-black uppercase mt-1">Luyện tập tăng tốc</p>
-                
+
                 <div className="my-8 flex items-baseline gap-1">
                   <span className="text-4xl font-black text-white">199.000đ</span>
                   <span className="text-xs text-slate-500 font-bold uppercase">/ Tháng</span>
@@ -667,7 +666,7 @@ const Intro = () => {
               <div>
                 <h4 className="text-xl font-black text-white italic uppercase">Elite tier</h4>
                 <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Bản lĩnh thượng lưu</p>
-                
+
                 <div className="my-8 flex items-baseline gap-1">
                   <span className="text-4xl font-black text-white">499.000đ</span>
                   <span className="text-xs text-slate-500 font-bold uppercase">/ Tháng</span>
@@ -711,7 +710,7 @@ const Intro = () => {
       {/* Dynamic Call-To-Action (CTA) section */}
       <section className="py-28 px-6 bg-gradient-to-b from-indigo-950 to-slate-950 text-center relative overflow-hidden border-t border-white/5 z-10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent opacity-50"></div>
-        
+
         <div className="max-w-4xl mx-auto space-y-8 relative z-10">
           <h2 className="text-4xl md:text-5xl font-black leading-tight tracking-tight uppercase italic text-white">
             Sẵn sàng nhập vai để chinh phục giao tiếp?
@@ -794,9 +793,9 @@ const Intro = () => {
               </h6>
               <p className="text-xs text-slate-500 font-semibold">Đăng ký để nhận các kịch bản học tập mới nhất và ưu đãi sớm.</p>
               <div className="relative">
-                <input 
-                  type="email" 
-                  placeholder="Email của bạn..." 
+                <input
+                  type="email"
+                  placeholder="Email của bạn..."
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 transition shadow-inner font-semibold"
                 />
                 <button className="absolute right-1 top-1 bottom-1 bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 rounded-lg transition-colors">

@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Splash from "@/pages/Splash";
 import Intro from "@/pages/Intro";
@@ -20,9 +21,23 @@ import AITuning from "@/pages/admin/AITuning";
 import UsersManagement from "@/pages/admin/UsersManagement";
 import ScenarioBuilder from "@/pages/admin/ScenarioBuilder";
 
+function ThemeManager() {
+  const location = useLocation();
+  useEffect(() => {
+    const isAdmin = location.pathname.startsWith("/admin");
+    if (isAdmin) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [location]);
+  return null;
+}
+
 export default function App() {
   return (
     <Router>
+      <ThemeManager />
       <Routes>
         <Route path="/" element={<Intro />} />
         <Route path="/intro" element={<Intro />} />

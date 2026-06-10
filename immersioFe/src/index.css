@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@300;400;500;600&family=Montserrat:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,400;1,9..40,500&family=Archivo:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Montserrat", ui-sans-serif, system-ui, sans-serif;
@@ -9,10 +11,10 @@
   --font-dm: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-archivo: "Archivo", ui-sans-serif, system-ui, sans-serif;
 
-  /* Premium Vibrant Palette */
-  --color-primary: #6366f1; /* Indigo 500 */
-  --color-primary-dark: #4f46e5;
-  --color-primary-light: #818cf8;
+  /* Premium Dynamic Palette */
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
   
   --color-secondary: #0ea5e9; /* Sky 500 */
   --color-secondary-dark: #0284c7;
@@ -20,55 +22,273 @@
   --color-accent: #f59e0b; /* Amber 500 */
   --color-accent-light: #fbbf24;
 
-  --color-success: #10b981;
+  --color-success: #15803d; /* brand green leaf */
   --color-warning: #f59e0b;
   --color-destructive: #ef4444;
 
-  --color-background: #030712; /* slate-950 */
-  --color-surface: #0b0f19; /* dark blue-slate */
-  --color-surface-hover: #1e293b; /* slate-800 */
-  --color-card: #0b0f19;
-  --color-card-foreground: #f8fafc;
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  /* Map standard slate colors to our theme variables */
+  --color-slate-50: var(--slate-50);
+  --color-slate-100: var(--slate-100);
+  --color-slate-200: var(--slate-200);
+  --color-slate-300: var(--slate-300);
+  --color-slate-400: var(--slate-400);
+  --color-slate-500: var(--slate-500);
+  --color-slate-600: var(--slate-600);
+  --color-slate-700: var(--slate-700);
+  --color-slate-800: var(--slate-800);
+  --color-slate-850: var(--slate-850);
+  --color-slate-900: var(--slate-900);
+  --color-slate-950: var(--slate-950);
+
+  /* Map standard indigo colors to theme variables */
+  --color-indigo-50: var(--indigo-50);
+  --color-indigo-100: var(--indigo-100);
+  --color-indigo-200: var(--indigo-200);
+  --color-indigo-300: var(--indigo-300);
+  --color-indigo-400: var(--indigo-400);
+  --color-indigo-500: var(--indigo-500);
+  --color-indigo-600: var(--indigo-600);
+  --color-indigo-700: var(--indigo-700);
+  --color-indigo-800: var(--indigo-800);
+  --color-indigo-900: var(--indigo-900);
+  --color-indigo-950: var(--indigo-950);
+
+  /* Map standard blue colors to theme variables */
+  --color-blue-50: var(--blue-50);
+  --color-blue-100: var(--blue-100);
+  --color-blue-200: var(--blue-200);
+  --color-blue-300: var(--blue-300);
+  --color-blue-400: var(--blue-400);
+  --color-blue-500: var(--blue-500);
+  --color-blue-600: var(--blue-600);
+  --color-blue-700: var(--blue-700);
+  --color-blue-800: var(--blue-800);
+  --color-blue-900: var(--blue-900);
+  --color-blue-950: var(--blue-950);
+
+  /* Map additional colors to make background blobs theme-aware */
+  --color-fuchsia-50: var(--fuchsia-50);
+  --color-fuchsia-500: var(--fuchsia-500);
+  --color-violet-400: var(--violet-400);
+  --color-violet-500: var(--violet-500);
+  --color-violet-600: var(--violet-600);
+  --color-violet-650: var(--violet-650);
+  --color-violet-700: var(--violet-700);
+  --color-purple-500: var(--purple-500);
+  --color-purple-700: var(--purple-700);
+  --color-purple-800: var(--purple-800);
+  --color-pink-500: var(--pink-500);
+  --color-pink-600: var(--pink-650);
+
+
   
   --radius-xl: 1.25rem;
   --radius-2xl: 1.75rem;
   --radius-3xl: 2.5rem;
 
   /* Custom Shadow Intensity */
-  --shadow-premium: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.35);
+  --shadow-premium: var(--shadow-premium-val);
+  --shadow-glow: var(--shadow-glow-val);
+}
+
+:root {
+  /* Default: Bright / Warm Light Theme */
+  --background: #fdfaf7; /* Warm off-white */
+  --surface: #ffffff;
+  --surface-hover: #fcf4ec; /* Warm light orange hover */
+  --card: #ffffff;
+  --card-foreground: #432c25; /* Warm dark brown from the logo character's hair */
+
+  /* Theme-controlled primary colors */
+  --primary: #f25b29; /* Brand Orange from the logo */
+  --primary-dark: #d44517;
+  --primary-light: #f6835d;
+
+  /* Inverted slate colors for warm light theme (provides excellent contrast) */
+  --slate-50: #1a0f0b; /* pure dark brown/black */
+  --slate-100: #432c25; /* warm dark brown primary text (from logo) */
+  --slate-200: #573c35; /* dark brown secondary text */
+  --slate-300: #6d4e45; /* medium dark brown label text */
+  --slate-400: #7f6e69; /* muted brown-gray text */
+  --slate-500: #95847e; /* lighter muted brown-gray text */
+  --slate-600: #cbd5e1; /* standard gray border */
+  --slate-700: #e7d8d4; /* warm light border */
+  --slate-800: #f6ebe7; /* warm light gray-orange background */
+  --slate-850: #f6ebe7;
+  --slate-900: #ffffff; /* white cards */
+  --slate-950: #fdfaf7; /* warm page background */
+
+  /* Indigo maps to brand orange palette */
+  --indigo-50: #fff7ed;
+  --indigo-100: #ffedd5;
+  --indigo-200: #fddbca;
+  --indigo-300: #fdbb9c;
+  --indigo-400: #f6835d;
+  --indigo-500: #f25b29; /* Brand Orange */
+  --indigo-600: #d44517; /* Darker Brand Orange */
+  --indigo-700: #b8350f;
+  --indigo-800: #9c270d;
+  --indigo-900: #7f1d1d;
+  --indigo-950: #450a0a;
+
+  /* Blue maps to warm gold / coral palette */
+  --blue-50: #fffbeb;
+  --blue-100: #fef3c7;
+  --blue-200: #fde68a;
+  --blue-300: #fcd34d;
+  --blue-400: #fbbf24; /* Brand Gold Star */
+  --blue-500: #ff843d; /* Brand Coral */
+  --blue-600: #f25b29; /* Brand Orange */
+  --blue-700: #d44517;
+  --blue-800: #b8350f;
+  --blue-900: #9c270d;
+  --blue-950: #450a0a;
+
+  /* Fuchsia, Violet, Purple, Pink map to brand colors to prevent pink/violet leaks in light mode */
+  --fuchsia-50: #fffbeb;
+  --fuchsia-500: #fbbf24; /* brand gold */
+  
+  --violet-400: #ff9f68;
+  --violet-500: #ff843d; /* brand coral */
+  --violet-600: #f25b29; /* brand orange */
+  --violet-650: #e04f20;
+  --violet-700: #d44517; /* brand dark orange */
+  
+  --purple-500: #b45309; /* brand dark gold */
+  --purple-700: #92400e;
+  --purple-800: #78350f;
+  
+  --pink-500: #ff843d; /* brand coral */
+  --pink-650: #d44517; /* brand dark orange */
+
+
+
+  /* Custom glassmorphism variables for warm light theme */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(67, 44, 37, 0.08);
+  --glass-card-bg: rgba(255, 255, 255, 0.45);
+
+  --shadow-premium-val: 0 20px 50px -12px rgba(67, 44, 37, 0.06);
+  --shadow-glow-val: 0 0 30px rgba(242, 91, 41, 0.12);
+}
+
+.dark {
+  /* Dark / Admin Theme */
+  --background: #030712;
+  --surface: #0b0f19;
+  --surface-hover: #1e293b;
+  --card: #0b0f19;
+  --card-foreground: #f8fafc;
+
+  /* Indigo primary colors */
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --primary-light: #818cf8;
+
+  /* Original slate colors for dark theme */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-850: #111827;
+  --slate-900: #0f172a;
+  --slate-950: #030712;
+
+  /* Restore default tailwind indigo colors */
+  --indigo-50: #e0e7ff;
+  --indigo-100: #c7d2fe;
+  --indigo-200: #a5b4fc;
+  --indigo-300: #818cf8;
+  --indigo-400: #6366f1;
+  --indigo-500: #4f46e5;
+  --indigo-600: #4338ca;
+  --indigo-700: #3730a3;
+  --indigo-800: #312e81;
+  --indigo-900: #1e1b4b;
+  --indigo-950: #0f0f2e;
+
+  /* Restore default tailwind blue colors */
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+  --blue-950: #172554;
+
+  /* Restore default tailwind fuchsia, violet, purple, pink colors for dark mode */
+  --fuchsia-50: #fdf4ff;
+  --fuchsia-500: #d946ef;
+  
+  --violet-400: #a78bfa;
+  --violet-500: #8b5cf6;
+  --violet-600: #7c3aed;
+  --violet-650: #722ed1;
+  --violet-700: #6d28d9;
+  
+  --purple-500: #a855f7;
+  --purple-700: #7e22ce;
+  --purple-800: #6b21a8;
+  
+  --pink-500: #ec4899;
+  --pink-650: #db2777;
+
+
+
+  /* Custom glassmorphism variables for dark theme */
+  --glass-bg: rgba(11, 15, 25, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-card-bg: rgba(15, 23, 42, 0.45);
+
+  --shadow-premium-val: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+  --shadow-glow-val: 0 0 30px rgba(99, 102, 241, 0.35);
 }
 
 /* Custom Utilities for Glassmorphism */
 .glass {
-  background: rgba(11, 15, 25, 0.7);
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-premium);
 }
 
 .glass-dark {
-  background: rgba(15, 23, 42, 0.7);
+  background: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-premium);
 }
 
 .glass-card {
-  background: rgba(15, 23, 42, 0.45);
+  background: var(--glass-card-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-premium);
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
-  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: var(--shadow-premium);
+  border-color: var(--color-primary-light);
 }
 
 /* Hide scrollbar utility */
@@ -99,11 +319,11 @@ input[type="range"].modern-slider::-webkit-slider-thumb {
   height: 18px;
   width: 18px;
   border-radius: 50%;
-  background: #22d3ee; /* cyan-400 */
+  background: #f25b29; /* brand orange thumb */
   cursor: pointer;
   -webkit-appearance: none;
   margin-top: -6px;
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+  box-shadow: 0 0 10px rgba(242, 91, 41, 0.5);
   border: 2px solid white;
 }
 
@@ -137,7 +357,7 @@ input[type="range"].modern-slider:focus::-webkit-slider-runnable-track {
 body {
   font-family: var(--font-body);
   background-color: var(--color-background);
-  color: #f8fafc;
+  color: var(--color-card-foreground);
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -161,13 +381,13 @@ h1, h2, h3, h4, h5, h6 {
 
   /* Ultra Vibrant Gradients */
   .bg-gradient-vibrant {
-    background: linear-gradient(135deg, #4f46e5 0%, #9333ea 50%, #db2777 100%);
+    background: linear-gradient(135deg, #f25b29 0%, #db2777 50%, #9333ea 100%);
   }
   .bg-gradient-premium {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background: linear-gradient(135deg, var(--color-slate-800) 0%, var(--color-slate-900) 100%);
   }
   .bg-gradient-soft {
-    background: linear-gradient(135deg, #090d16 0%, #030712 100%);
+    background: linear-gradient(135deg, var(--color-slate-950) 0%, var(--color-background) 100%);
   }
 
   .accent-glow {
@@ -177,21 +397,29 @@ h1, h2, h3, h4, h5, h6 {
     content: "";
     position: absolute;
     inset: -3px;
-    background: linear-gradient(135deg, #4f46e5, #db2777);
+    background: linear-gradient(135deg, var(--primary), var(--fuchsia-500, #db2777));
     filter: blur(20px);
-    opacity: 0.25;
+    opacity: 0.15;
     z-index: -1;
     border-radius: inherit;
   }
 
   .high-contrast-shadow {
+    box-shadow: 0 25px 50px -12px rgba(242, 91, 41, 0.15);
+  }
+  .dark .high-contrast-shadow {
     box-shadow: 0 25px 50px -12px rgba(79, 70, 229, 0.25);
   }
 
   .border-glow {
+    border: 1.5px solid var(--slate-700);
+    box-shadow: inset 0 0 10px rgba(242, 91, 41, 0.05);
+  }
+  .dark .border-glow {
     border: 2px solid rgba(79, 70, 229, 0.3);
     box-shadow: inset 0 0 15px rgba(79, 70, 229, 0.1);
   }
+
 
   /* Noise texture overlay */
   .bg-noise {
@@ -286,3 +514,150 @@ h1, h2, h3, h4, h5, h6 {
     }
   }
 }
+
+/* In light mode, override text-white on plain text elements to keep them readable against bright backgrounds */
+:root:not(.dark) h1.text-white,
+:root:not(.dark) h2.text-white,
+:root:not(.dark) h3.text-white,
+:root:not(.dark) h4.text-white,
+:root:not(.dark) h5.text-white,
+:root:not(.dark) h6.text-white,
+:root:not(.dark) p.text-white,
+:root:not(.dark) input.text-white,
+:root:not(.dark) textarea.text-white,
+:root:not(.dark) select.text-white,
+:root:not(.dark) span.text-white:not(.bg-indigo-600):not(.bg-blue-600):not(.bg-gradient-to-r):not(.bg-gradient-vibrant):not(.bg-indigo-500):not(.bg-purple-600):not(.bg-emerald-500):not(.bg-amber-500):not(.bg-white\/20):not(.bg-white\/10),
+:root:not(.dark) div.text-white:not(.bg-indigo-600):not(.bg-blue-600):not(.bg-gradient-to-r):not(.bg-gradient-vibrant):not(.bg-indigo-500):not(.bg-purple-600):not(.bg-emerald-500):not(.bg-amber-500):not(.bg-white\/20):not(.bg-white\/10),
+:root:not(.dark) span.font-black.italic.tracking-tighter.text-white {
+  color: var(--slate-100) !important;
+}
+
+/* Ensure inputs and other fields have high contrast and matching backgrounds in light mode */
+:root:not(.dark) input,
+:root:not(.dark) textarea,
+:root:not(.dark) select {
+  background-color: var(--surface) !important;
+  color: var(--slate-100) !important;
+  border-color: var(--slate-700) !important;
+}
+
+/* Translucent color adjustments to avoid washed-out elements on light background */
+:root:not(.dark) .bg-white\/5 {
+  background-color: var(--slate-800) !important;
+}
+:root:not(.dark) .bg-white\/10 {
+  background-color: var(--slate-700) !important;
+}
+:root:not(.dark) .bg-white\/20 {
+  background-color: var(--slate-600) !important;
+}
+:root:not(.dark) .bg-black\/40 {
+  background-color: var(--slate-850) !important;
+}
+
+/* Translucent border overrides to use logo theme-compatible warm gray-brown border */
+:root:not(.dark) .border-white\/5,
+:root:not(.dark) .border-white\/10,
+:root:not(.dark) .border-white\/20 {
+  border-color: var(--slate-700) !important;
+}
+
+/* Flashcards Light Mode Overrides for clean physical card feel */
+:root:not(.dark) .preserve-3d > div {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid var(--slate-700) !important;
+  box-shadow: 0 15px 35px rgba(67, 44, 37, 0.08) !important;
+}
+:root:not(.dark) .preserve-3d > div * {
+  color: var(--slate-100) !important;
+}
+/* Ensure highlights/badges inside the card still have correct color tags */
+:root:not(.dark) .preserve-3d > div .text-emerald-400,
+:root:not(.dark) .preserve-3d > div .bg-emerald-500\/10 *,
+:root:not(.dark) .preserve-3d > div .bg-emerald-500\/10 {
+  color: #15803d !important;
+  background-color: rgba(21, 128, 61, 0.1) !important;
+}
+:root:not(.dark) .preserve-3d > div .text-indigo-300,
+:root:not(.dark) .preserve-3d > div .bg-indigo-500\/10 *,
+:root:not(.dark) .preserve-3d > div .bg-indigo-500\/10 {
+  color: #f25b29 !important;
+  background-color: rgba(242, 91, 41, 0.1) !important;
+}
+:root:not(.dark) .preserve-3d > div .text-amber-300,
+:root:not(.dark) .preserve-3d > div .bg-amber-500\/10 *,
+:root:not(.dark) .preserve-3d > div .bg-amber-500\/10 {
+  color: #b45309 !important;
+  background-color: rgba(180, 83, 9, 0.1) !important;
+}
+
+/* Light mode brand gradient overrides */
+:root:not(.dark) .bg-gradient-vibrant {
+  background: linear-gradient(135deg, #f25b29 0%, #ff843d 50%, #fbbf24 100%) !important;
+}
+
+/* Prevent light mode text-white overrides inside vibrant gradients */
+:root:not(.dark) .bg-gradient-vibrant h1.text-white,
+:root:not(.dark) .bg-gradient-vibrant h2.text-white,
+:root:not(.dark) .bg-gradient-vibrant h3.text-white,
+:root:not(.dark) .bg-gradient-vibrant h4.text-white,
+:root:not(.dark) .bg-gradient-vibrant h5.text-white,
+:root:not(.dark) .bg-gradient-vibrant h6.text-white,
+:root:not(.dark) .bg-gradient-vibrant p.text-white,
+:root:not(.dark) .bg-gradient-vibrant p.text-white\/70,
+:root:not(.dark) .bg-gradient-vibrant span.text-white,
+:root:not(.dark) .bg-gradient-vibrant div.text-white,
+:root:not(.dark) .bg-gradient-vibrant .text-white,
+:root:not(.dark) .bg-gradient-vibrant span.relative.z-10.italic.tracking-tighter {
+  color: #ffffff !important;
+}
+
+:root:not(.dark) .bg-gradient-vibrant .text-white\/70 {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Restore text-white inside dark mode containers even when root is light mode */
+.dark h1.text-white,
+.dark h2.text-white,
+.dark h3.text-white,
+.dark h4.text-white,
+.dark h5.text-white,
+.dark h6.text-white,
+.dark p.text-white,
+.dark input.text-white,
+.dark textarea.text-white,
+.dark select.text-white,
+.dark span.text-white,
+.dark div.text-white,
+.dark span.font-black.italic.tracking-tighter.text-white {
+  color: #ffffff !important;
+}
+
+/* Translucent color adjustments inside dark containers */
+.dark .bg-white\/5 {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+.dark .bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+.dark .bg-white\/20 {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+.dark .bg-black\/40 {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Translucent border overrides inside dark containers */
+.dark .border-white\/5 {
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+.dark .border-white\/10 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.dark .border-white\/20 {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+
+

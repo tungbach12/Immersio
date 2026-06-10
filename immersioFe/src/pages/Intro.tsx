@@ -125,8 +125,8 @@ const Intro = () => {
               <Link to="/register">
                 <button className="group flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:shadow-2xl hover:shadow-indigo-600/30 transition duration-300 shadow-xl shadow-blue-500/10 w-full sm:w-auto hover:-translate-y-0.5">
                   Bắt đầu nói ngay
-                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition duration-300">
-                    <Mic size={14} className="text-cyan-300" />
+                  <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center group-hover:scale-110 transition duration-300 shadow-sm">
+                    <Mic size={14} className="text-blue-600" />
                   </div>
                 </button>
               </Link>
@@ -140,15 +140,15 @@ const Intro = () => {
             {/* Quick Metrics */}
             <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/5 max-w-md mx-auto lg:mx-0">
               <div>
-                <p className="text-2xl md:text-3xl font-black text-blue-400">98%</p>
+                <p className="text-2xl md:text-3xl font-black text-amber-600 dark:text-blue-400">98%</p>
                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">Chuẩn âm vị</p>
               </div>
               <div>
-                <p className="text-2xl md:text-3xl font-black text-indigo-400">100+</p>
+                <p className="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-400">100+</p>
                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">Kịch bản nhập vai</p>
               </div>
               <div>
-                <p className="text-2xl md:text-3xl font-black text-cyan-400">CEFR</p>
+                <p className="text-2xl md:text-3xl font-black text-cyan-600 dark:text-cyan-400">CEFR</p>
                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">Chẩn đoán cấp độ</p>
               </div>
             </div>
@@ -222,7 +222,7 @@ const Intro = () => {
             {activeTab === 'phoneme' && (
               <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div className="space-y-6">
-                  <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-center text-blue-400">
+                  <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-center text-blue-700 dark:text-blue-400">
                     <Mic size={24} />
                   </div>
                   <h3 className="text-2xl md:text-3xl font-black text-white uppercase italic leading-none">Chấm điểm phát âm chi tiết âm vị</h3>
@@ -364,7 +364,7 @@ const Intro = () => {
             {activeTab === 'phrase' && (
               <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div className="space-y-6">
-                  <div className="w-12 h-12 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl flex items-center justify-center text-cyan-400">
+                  <div className="w-12 h-12 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl flex items-center justify-center text-cyan-600 dark:text-cyan-400">
                     <Sliders size={24} />
                   </div>
                   <h3 className="text-2xl md:text-3xl font-black text-white uppercase italic leading-none">Bộ tổng hợp câu giao tiếp theo yêu cầu</h3>
@@ -373,15 +373,15 @@ const Intro = () => {
                   </p>
                   <ul className="space-y-3 font-semibold text-xs text-slate-300">
                     <li className="flex items-center gap-3">
-                      <CheckCircle size={16} className="text-cyan-400 shrink-0" />
+                      <CheckCircle size={16} className="text-cyan-600 dark:text-cyan-400 shrink-0" />
                       <span>Thiết lập linh hoạt ngôn ngữ và độ khó tương thích.</span>
                     </li>
                     <li className="flex items-center gap-3">
-                      <CheckCircle size={16} className="text-cyan-400 shrink-0" />
+                      <CheckCircle size={16} className="text-cyan-600 dark:text-cyan-400 shrink-0" />
                       <span>Hỗ trợ dịch nghĩa, phân tích văn phạm kèm giọng nói mẫu.</span>
                     </li>
                     <li className="flex items-center gap-3">
-                      <CheckCircle size={16} className="text-cyan-400 shrink-0" />
+                      <CheckCircle size={16} className="text-cyan-600 dark:text-cyan-400 shrink-0" />
                       <span>Phù hợp chuẩn bị cấp tốc trước các buổi phỏng vấn, sự kiện.</span>
                     </li>
                   </ul>
@@ -463,7 +463,7 @@ const Intro = () => {
 
               <div className="grid gap-6">
                 <div className="flex gap-4 p-5 bg-white/5 rounded-3xl border border-white/5 hover:bg-white/10 transition duration-300">
-                  <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-md text-blue-400 shrink-0">
+                  <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-md text-blue-700 dark:text-blue-400 shrink-0">
                     <Mic size={22} />
                   </div>
                   <div>

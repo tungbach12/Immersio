@@ -123,7 +123,7 @@ export default function PayOsReturn() {
               </p>
               <Button
                 onClick={() => navigate("/student/subscription")}
-                className="w-full h-14 mt-8 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 font-black text-xs uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                className="w-full h-14 mt-8 rounded-2xl bg-white hover:bg-orange-50 dark:hover:bg-slate-100 text-slate-100 dark:text-slate-950 hover:text-primary font-black text-xs uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all border border-slate-700/50"
               >
                 Thử lại
               </Button>

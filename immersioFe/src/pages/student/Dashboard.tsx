@@ -29,11 +29,11 @@ const CEFR_CONFIG: Record<
   { gradient: string; glow: string; ring: string; label: string; emoji: string }
 > = {
   "Unassigned": {
-    gradient: "from-slate-400 via-slate-500 to-slate-600",
-    glow: "shadow-slate-400/40",
-    ring: "ring-slate-400/60",
-    label: "Not yet assessed",
-    emoji: "❓",
+    gradient: "from-[#432c25] via-[#5b3e34] to-[#f25b29]",
+    glow: "shadow-orange-500/20",
+    ring: "ring-orange-400/50 bg-white/10",
+    label: "Not yet assessed · Practice in Vocal Lab to begin",
+    emoji: "✨",
   },
   A1: {
     gradient: "from-slate-700 via-slate-600 to-slate-800",
@@ -149,7 +149,7 @@ export default function StudentDashboard() {
             <h1 className="text-2xl md:text-3xl font-display font-black text-slate-100 italic tracking-tight leading-tight">
               Hello,{" "}
               <span className="text-indigo-400">
-                {user?.username ?? "Learner"}!
+                {user?.username?.trim() || "Learner"}!
               </span>{" "}
               👋
             </h1>
@@ -218,7 +218,7 @@ export default function StudentDashboard() {
                 )}
               >
                 <span className="text-2xl font-black text-white tracking-tighter">
-                  {level}
+                  {level === "Unassigned" ? "?" : level}
                 </span>
               </div>
             </div>

@@ -626,7 +626,7 @@ export default function ScenarioDetail() {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-950 z-50 flex flex-col font-body select-none">
+    <div className="dark fixed inset-0 bg-slate-950 z-50 flex flex-col font-body select-none">
 
       {/* Background Graphic Layer */}
       <div className="absolute inset-0 z-0">
@@ -635,12 +635,12 @@ export default function ScenarioDetail() {
           alt="Scenario Background"
           className="w-full h-full object-cover opacity-35 filter brightness-75 contrast-125"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-transparent to-slate-950/95" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-transparent to-slate-950/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/90" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/70" />
       </div>
 
       {/* Modern Translucent Header */}
-      <div className="relative z-30 p-4 md:p-6 flex items-center justify-between bg-gradient-to-b from-slate-950/90 to-transparent">
+      <div className="relative z-30 p-4 md:p-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -653,11 +653,11 @@ export default function ScenarioDetail() {
 
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 shadow-2xl">
-              <span className="text-indigo-400 font-black text-xs uppercase tracking-widest">{targetLang || scenario.language}</span>
+              <span className="text-indigo-600 font-black text-xs uppercase tracking-widest">{targetLang || scenario.language}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
             </div>
             <div className="hidden sm:flex items-center gap-2 bg-slate-900/80 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 shadow-2xl">
-              <span className="text-white/60 font-bold text-xs uppercase tracking-widest">{scenario.level}</span>
+              <span className="text-slate-100 dark:text-white/60 font-bold text-xs uppercase tracking-widest">{scenario.level}</span>
             </div>
           </div>
         </div>

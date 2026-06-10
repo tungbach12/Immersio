@@ -185,7 +185,7 @@ export default function Profile() {
                 : `Enjoy your premium ${user?.subscriptionTier} access with increased scenario sessions and flashcard generation.`}
             </p>
             <Link to="/student/subscription">
-              <Button className="w-full rounded-[1.25rem] bg-white hover:bg-slate-50 text-slate-950 font-black uppercase tracking-widest text-[10px] h-16 shadow-2xl transition-transform active:scale-95 group/btn">
+              <Button className="w-full rounded-[1.25rem] bg-white hover:bg-orange-50 dark:hover:bg-slate-100 text-slate-100 dark:text-slate-950 hover:text-primary font-black uppercase tracking-widest text-[10px] h-16 shadow-2xl transition-transform active:scale-95 group/btn transition-colors border border-slate-700/50">
                 {(user?.subscriptionTier || "Basic").toLowerCase() === "basic" ? "Manage Membership" : "Manage Subscription"} <ArrowRight size={14} className="ml-2 group-hover/btn:translate-x-1 transition-transform" />
               </Button>
             </Link>

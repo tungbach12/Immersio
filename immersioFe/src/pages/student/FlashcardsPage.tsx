@@ -154,9 +154,6 @@ export default function FlashcardsPage() {
 
   return (
     <div className="w-full min-h-full bg-transparent relative overflow-hidden">
-      {/* Ambient background elements */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-500/10 via-indigo-500/5 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
 
       <AnimatePresence mode="wait">
         {view === "decks" && (

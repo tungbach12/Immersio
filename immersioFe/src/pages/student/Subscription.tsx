@@ -316,7 +316,7 @@ export default function Subscription() {
                         ? "bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed"
                         : plan.popular
                           ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-glow"
-                          : "bg-white hover:bg-slate-100 text-slate-950"
+                          : "bg-white hover:bg-orange-50 dark:hover:bg-slate-100 text-slate-100 dark:text-slate-950 hover:text-primary transition-colors border border-slate-700/50"
                     )}
                   >
                     {isProcessing ? (

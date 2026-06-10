@@ -76,16 +76,16 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
       <div className="max-w-4xl w-full">
         <div className="flex justify-center mb-8">
-          <img src="/logo.png" alt="IMMERSIO Logo" className="h-16 w-auto object-contain rounded-2xl" />
+          <img src="/logo.png" alt="IMMERSIO Logo" className="h-16 w-auto object-contain rounded-2xl animate-pulse" />
         </div>
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-display font-bold text-slate-900 mb-4 italic">
+          <h1 className="text-4xl font-display font-bold text-slate-100 mb-4 italic">
             {step === 1 ? "Tell us about yourself" : "What do you want to learn?"}
           </h1>
-          <p className="text-lg text-slate-500">
+          <p className="text-lg text-slate-400">
             {step === 1 
               ? "We'll personalize your learning experience based on your goals."
               : "Choose the language you want to master with IMMERSIO."}
@@ -104,32 +104,31 @@ export default function Onboarding() {
               >
                 <Card
                   className={cn(
-                    "h-full border-2 transition-all duration-300 rounded-[2rem]",
+                    "h-full border-2 transition-all duration-300 rounded-[2rem] bg-slate-900 border-slate-800",
                     selectedRole === role.id
-                      ? "border-indigo-600 ring-4 ring-indigo-100 shadow-xl"
-                      : "border-transparent hover:border-slate-200"
+                      ? "border-primary ring-4 ring-primary/20 shadow-xl"
+                      : "hover:border-slate-700"
                   )}
                 >
                   <CardContent className="p-8 flex flex-col items-center text-center h-full">
                     <div
                       className={cn(
-                        "w-20 h-20 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg",
-                        role.color
+                        "w-20 h-20 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg bg-primary"
                       )}
                     >
                       <role.icon size={32} />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">
+                    <h3 className="text-xl font-bold text-slate-100 mb-2">
                       {role.title}
                     </h3>
-                    <p className="text-slate-500 text-sm leading-relaxed">
+                    <p className="text-slate-400 text-sm leading-relaxed">
                       {role.description}
                     </p>
                     {selectedRole === role.id && (
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="mt-6 w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white"
+                        className="mt-6 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white"
                       >
                         <Check size={16} />
                       </motion.div>
@@ -151,32 +150,31 @@ export default function Onboarding() {
               >
                 <Card
                   className={cn(
-                    "h-full border-2 transition-all duration-300 rounded-[2rem]",
+                    "h-full border-2 transition-all duration-300 rounded-[2rem] bg-slate-900 border-slate-800",
                     selectedLanguage === lang.id
-                      ? "border-indigo-600 ring-4 ring-indigo-100 shadow-xl"
-                      : "border-transparent hover:border-slate-200"
+                      ? "border-primary ring-4 ring-primary/20 shadow-xl"
+                      : "hover:border-slate-700"
                   )}
                 >
                   <CardContent className="p-8 flex flex-col items-center text-center h-full">
                     <div
                       className={cn(
-                        "w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-lg",
-                        lang.color
+                        "w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-lg bg-primary"
                       )}
                     >
                       {lang.flag}
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-1">
+                    <h3 className="text-xl font-bold text-slate-100 mb-1">
                       {lang.title}
                     </h3>
-                    <p className="text-slate-500 font-medium mb-2">
+                    <p className="text-slate-400 font-medium mb-2">
                       {lang.native}
                     </p>
                     {selectedLanguage === lang.id && (
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="mt-4 w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white"
+                        className="mt-4 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white"
                       >
                         <Check size={16} />
                       </motion.div>
@@ -193,7 +191,7 @@ export default function Onboarding() {
             <Button
               variant="ghost"
               size="lg"
-              className="w-full sm:w-auto min-w-[150px] h-14 text-lg rounded-2xl font-bold text-slate-500"
+              className="w-full sm:w-auto min-w-[150px] h-14 text-lg rounded-2xl font-bold text-slate-400"
               onClick={handleBack}
             >
               Back
@@ -201,7 +199,7 @@ export default function Onboarding() {
           )}
           <Button
             size="lg"
-            className="w-full sm:w-auto min-w-[200px] h-14 text-lg rounded-2xl font-bold shadow-xl shadow-indigo-200"
+            className="w-full sm:w-auto min-w-[200px] h-14 text-lg rounded-2xl font-bold shadow-xl shadow-primary/20"
             disabled={step === 1 ? !selectedRole : !selectedLanguage}
             onClick={handleContinue}
           >
@@ -212,8 +210,8 @@ export default function Onboarding() {
         
         {/* Progress Dots */}
         <div className="flex justify-center gap-2 mt-8">
-          <div className={cn("w-2 h-2 rounded-full transition-all", step === 1 ? "w-8 bg-indigo-600" : "bg-slate-300")} />
-          <div className={cn("w-2 h-2 rounded-full transition-all", step === 2 ? "w-8 bg-indigo-600" : "bg-slate-300")} />
+          <div className={cn("w-2 h-2 rounded-full transition-all", step === 1 ? "w-8 bg-primary" : "bg-slate-350")} />
+          <div className={cn("w-2 h-2 rounded-full transition-all", step === 2 ? "w-8 bg-primary" : "bg-slate-350")} />
         </div>
       </div>
     </div>

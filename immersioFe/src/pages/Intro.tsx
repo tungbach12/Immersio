@@ -162,7 +162,7 @@ const Intro = () => {
             <div className="relative z-10 bg-slate-900/40 backdrop-blur-2xl p-2.5 rounded-[2.5rem] shadow-2xl border border-white/10 overflow-hidden transform lg:scale-105 transition-all duration-500 hover:scale-[1.07]">
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10 pointer-events-none" />
               <img
-                src="/hero_voice_ai.png"
+                src="/hero_voice_ai.png?v=tech"
                 alt="IMMERSIO AI Voice Cognitive Core"
                 className="w-full h-auto object-cover rounded-[2rem] filter brightness-110 contrast-105"
               />
@@ -428,7 +428,7 @@ const Intro = () => {
               <div className="relative bg-slate-900/40 backdrop-blur-2xl p-2.5 rounded-[2.5rem] shadow-2xl border border-white/10 overflow-hidden">
                 <div className="aspect-[16/10] relative bg-slate-950 rounded-[1.75rem] overflow-hidden border border-white/5">
                   <img
-                    src="/novel_portal_ai.png"
+                    src="/novel_portal_ai.png?v=tech"
                     alt="IMMERSIO Cinematic Story Portal"
                     className="absolute inset-0 object-cover w-full h-full filter brightness-105 contrast-105"
                   />

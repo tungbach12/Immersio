@@ -48,19 +48,21 @@ export default function Register() {
             shape: "pill"
           }
         );
+        return true;
       }
+      return false;
     };
 
-    initializeGoogle();
-
-    const interval = setInterval(() => {
-      if ((window as any).google) {
-        initializeGoogle();
-        clearInterval(interval);
-      }
-    }, 500);
-
-    return () => clearInterval(interval);
+    const isInitialized = initializeGoogle();
+    if (!isInitialized) {
+      const interval = setInterval(() => {
+        if ((window as any).google) {
+          initializeGoogle();
+          clearInterval(interval);
+        }
+      }, 500);
+      return () => clearInterval(interval);
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

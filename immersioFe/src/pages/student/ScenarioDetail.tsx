@@ -80,6 +80,7 @@ export default function ScenarioDetail() {
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [loadingScenario, setLoadingScenario] = useState(true);
+  const [currentEmotion, setCurrentEmotion] = useState<string>("idle");
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -133,6 +134,7 @@ export default function ScenarioDetail() {
       .then(async (data) => {
         if (!active) return;
         setScenario(data);
+        setCurrentEmotion("idle");
         setLoadingScenario(false);
         try {
           const res = await scenarioService.startSession(data.id, targetLang);
@@ -453,6 +455,10 @@ export default function ScenarioDetail() {
 
     try {
       const response = await scenarioService.sendMessage(sessionId, userMsg);
+
+      if (response.emotion) {
+        setCurrentEmotion(response.emotion.toLowerCase());
+      }
 
       // Update the user message item in history with its correction ONLY IF it was spoken!
       if (response.correction && isSpoken) {
@@ -961,7 +967,7 @@ export default function ScenarioDetail() {
           {/* Breathing Visual Novel Character Avatar */}
           <div className="absolute left-1/2 -translate-x-1/2 w-auto z-10 flex items-end justify-center pointer-events-none origin-bottom" style={{ bottom: '22vh', height: '68vh' }}>
             <motion.img
-              src={scenario.avatar}
+              src={(scenario && scenario.emotions && scenario.emotions[currentEmotion]) || scenario?.avatar || ""}
               alt="Scenario Character Avatar"
               animate={{
                 y: [0, -8, 0],

@@ -73,6 +73,7 @@ namespace Immersio.Application.Services
                         $"You are a professional language translator. Translate the following opening roleplay dialog sentence of a scenario into {language}. Return ONLY the direct translation, with absolutely no other comments, explanations or markdown quotation: \"{scenario.InitialMessage}\"",
                         Enumerable.Empty<SessionMessageDto>(),
                         "Translate",
+                        null,
                         cancellationToken);
                 }
                 catch
@@ -134,16 +135,57 @@ namespace Immersio.Application.Services
             {
                 prompt += $"\n\nCRITICAL INSTRUCTION: The conversation target language is '{language}'. You must respond in '{language}' only. Keep the character style and scenario context consistent.";
             }
-            var reply = await _llmService.GenerateChatResponseAsync(prompt, history, userMessage, cancellationToken);
+            var validEmotions = new List<string>();
+            if (!string.IsNullOrWhiteSpace(session.Scenario.EmotionsJson))
+            {
+                try
+                {
+                    var emotionsMap = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(session.Scenario.EmotionsJson);
+                    if (emotionsMap != null)
+                    {
+                        validEmotions.AddRange(emotionsMap.Keys.Select(k => k.ToLower()));
+                    }
+                }
+                catch
+                {
+                    // Ignore JSON parsing errors
+                }
+            }
+            if (validEmotions.Count == 0)
+            {
+                validEmotions.AddRange(new[] { "idle", "happy", "confused", "sad", "angry" });
+            }
+
+            var reply = await _llmService.GenerateChatResponseAsync(prompt, history, userMessage, validEmotions, cancellationToken);
             
+            // Parse emotion if present (e.g. "[EMOTION: happy]")
+            string emotion = "idle";
+            string cleanReply = reply;
+            var match = System.Text.RegularExpressions.Regex.Match(reply, @"\[EMOTION:\s*([^\]]+)\]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (match.Success)
+            {
+                var parsedEmotion = match.Groups[1].Value.Trim().ToLower();
+                if (validEmotions.Contains(parsedEmotion))
+                {
+                    emotion = parsedEmotion;
+                }
+                cleanReply = System.Text.RegularExpressions.Regex.Replace(reply, @"\[EMOTION:\s*[^\]]+\]", "").Trim();
+                cleanReply = cleanReply.TrimStart(':', ' ', '-', '*').Trim();
+            }
+
+            if (string.IsNullOrWhiteSpace(cleanReply))
+            {
+                cleanReply = reply;
+            }
+
             // 5. Append AI reply
-            var modelMsg = new SessionMessage(session.Id, "model", reply);
+            var modelMsg = new SessionMessage(session.Id, "model", cleanReply);
             _context.SessionMessages.Add(modelMsg);
             session.Messages.Add(modelMsg);
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            return new ChatOutputResponse(reply, isCorrect ? null : correction);
+            return new ChatOutputResponse(cleanReply, isCorrect ? null : correction, emotion);
         }
 
         public async Task<FinishSessionResponse> CompleteSessionAsync(Guid sessionId, CancellationToken cancellationToken)
@@ -246,7 +288,9 @@ namespace Immersio.Application.Services
                     contextPrompt: "You are Shinji, a barista at a friendly coffee shop. The user is a customer ordering coffee. Be polite, suggest milk or syrup options, and process the order. Keep responses short (1-2 sentences).",
                     initialMessage: "Hi there! What can I get for you today?",
                     avatarUrl: "/ScenariosImage/Ordering coffee character.png",
-                    isNavigation: false
+                    isNavigation: false,
+                    voiceId: null,
+                    emotionsJson: "{\"idle\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781174072/immersio/scenarios/ordering_coffee_character_idle_1781174070.png\",\"happy\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781174075/immersio/scenarios/ordering_coffee_character_happy_1781174073.png\",\"confused\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781174078/immersio/scenarios/ordering_coffee_character_confused_1781174075.png\",\"sad\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781174080/immersio/scenarios/ordering_coffee_character_sad_1781174078.png\",\"angry\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781174083/immersio/scenarios/ordering_coffee_character_angry_1781174081.png\"}"
                 ),
                 new Scenario(
                     title: "Ordering Dim Sum in Shanghai",
@@ -290,7 +334,8 @@ namespace Immersio.Application.Services
                 dto.InitialMessage,
                 dto.AvatarUrl,
                 dto.IsNavigation,
-                dto.VoiceId
+                dto.VoiceId,
+                dto.EmotionsJson
             );
 
             _context.Scenarios.Add(scenario);
@@ -321,7 +366,8 @@ namespace Immersio.Application.Services
                 dto.InitialMessage,
                 dto.AvatarUrl,
                 dto.IsNavigation,
-                dto.VoiceId
+                dto.VoiceId,
+                dto.EmotionsJson
             );
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -370,7 +416,8 @@ namespace Immersio.Application.Services
                 s.AvatarUrl,
                 s.IsNavigation,
                 s.VoiceId,
-                s.Items.Select(i => new ScenarioItemDto(i.Id, i.Name, i.Price, i.ImageUrl, i.Icon))
+                s.Items.Select(i => new ScenarioItemDto(i.Id, i.Name, i.Price, i.ImageUrl, i.Icon)),
+                s.EmotionsJson
             );
         }
     }

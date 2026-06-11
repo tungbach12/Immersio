@@ -455,14 +455,15 @@ export default function VocalLab() {
 
       {/* Recording action bar */}
       <div className="p-4 bg-slate-950/60 backdrop-blur-xl border-t border-white/10 shrink-0 flex items-center justify-between max-w-xl mx-auto w-full rounded-b-[2rem] shadow-2xl relative z-10">
-        <Button
-          variant="outline"
-          className="w-12 h-12 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-200 dark:text-slate-300 hover:text-white transition-all duration-300 border border-white/5 active:scale-90"
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-12 h-12 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-200 dark:text-slate-300 hover:text-white transition-all duration-300 border border-white/5 active:scale-90 disabled:opacity-40 disabled:pointer-events-none"
           onClick={handleAiGenerate}
           disabled={isRecording || isGenerating}
         >
           <SkipBack className="w-6 h-6" />
-        </Button>
+        </motion.button>
 
         <div className="relative group">
           <div className={cn(
@@ -483,14 +484,15 @@ export default function VocalLab() {
           </button>
         </div>
 
-        <Button
-          variant="outline"
-          className="w-12 h-12 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-200 dark:text-slate-300 hover:text-white transition-all duration-300 border border-white/5 active:scale-90"
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-12 h-12 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-200 dark:text-slate-300 hover:text-white transition-all duration-300 border border-white/5 active:scale-90 disabled:opacity-40 disabled:pointer-events-none"
           onClick={handleAiGenerate}
           disabled={isRecording || isGenerating}
         >
           <SkipForward className="w-6 h-6" />
-        </Button>
+        </motion.button>
       </div>
     </div>
   );

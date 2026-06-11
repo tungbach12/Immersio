@@ -662,8 +662,8 @@ export default function ScenarioDetail() {
               <span className="text-indigo-600 font-black text-xs uppercase tracking-widest">{targetLang || scenario.language}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
             </div>
-            <div className="hidden sm:flex items-center gap-2 bg-slate-900/80 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 shadow-2xl">
-              <span className="text-slate-100 dark:text-white/60 font-bold text-xs uppercase tracking-widest">{scenario.level}</span>
+            <div className="hidden sm:flex items-center gap-2 bg-slate-800 dark:bg-slate-900/80 backdrop-blur-xl px-4 py-2 rounded-2xl border border-slate-700/50 dark:border-white/10 shadow-premium">
+              <span className="text-slate-100 dark:text-slate-200 font-bold text-xs uppercase tracking-widest">{scenario.level}</span>
             </div>
           </div>
         </div>
@@ -986,7 +986,7 @@ export default function ScenarioDetail() {
           <div className="relative z-20 w-full max-w-4xl mx-auto flex flex-col gap-4 pointer-events-auto">
 
             {/* Scrolling Dialogue Panel */}
-            <div className="bg-slate-950/85 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-6 md:p-8 shadow-2xl min-h-[280px] flex flex-col justify-between max-h-[45vh]">
+            <div className="bg-slate-900/80 dark:bg-slate-950/85 backdrop-blur-3xl border border-slate-700/50 dark:border-white/10 rounded-[2.5rem] p-6 md:p-8 shadow-premium min-h-[280px] flex flex-col justify-between max-h-[45vh]">
 
               {/* Header card for Speech Lab */}
               <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-3 shrink-0">
@@ -1007,7 +1007,7 @@ export default function ScenarioDetail() {
                 {messages.map((msg, idx) => (
                   <div key={idx} className={cn("flex gap-3 max-w-[85%] animate-fade-in", msg.role === "user" ? "ml-auto justify-end" : "justify-start")}>
                     {msg.role !== "user" && (
-                      <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white shrink-0 border border-white/10 shadow-md">
+                      <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white shrink-0 border border-slate-200 dark:border-white/10 shadow-md">
                         <Sparkles size={12} />
                       </div>
                     )}
@@ -1016,10 +1016,10 @@ export default function ScenarioDetail() {
                       "p-3.5 rounded-2xl border text-xs md:text-sm font-semibold leading-relaxed shadow-sm relative group",
                       msg.role === "user"
                         ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-500/20 rounded-tr-none"
-                        : "bg-slate-900/40 border-slate-700/30 text-slate-100 dark:bg-white/5 dark:border-white/5 dark:text-slate-200 rounded-tl-none pr-12"
+                        : "bg-slate-800/50 dark:bg-white/5 border-slate-700/30 dark:border-white/5 text-slate-100 dark:text-slate-200 rounded-tl-none pr-12"
                     )}>
                       {msg.role !== "user" && (
-                        <p className="text-[9px] font-black text-indigo-400 mb-1 uppercase tracking-wide leading-none">
+                        <p className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 mb-1 uppercase tracking-wide leading-none">
                           {scenario.title.split(' ')[0]} (AI Barista)
                         </p>
                       )}
@@ -1034,7 +1034,7 @@ export default function ScenarioDetail() {
                       {/* Audio Button overlay on AI messages */}
                       {msg.role !== "user" && (
                         <button
-                          className="absolute bottom-2.5 right-2.5 w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/55 hover:text-white hover:bg-white/15 transition-all duration-200"
+                          className="absolute bottom-2.5 right-2.5 w-6 h-6 rounded-lg bg-slate-700/40 dark:bg-white/5 border border-slate-700/30 dark:border-white/10 flex items-center justify-center text-slate-100/70 dark:text-white/55 hover:text-slate-100 dark:hover:text-white hover:bg-slate-700/60 dark:hover:bg-white/15 transition-all duration-200"
                           onClick={() => playTextToSpeech(msg.text, targetLang)}
                         >
                           <Volume2 size={12} />
@@ -1084,7 +1084,7 @@ export default function ScenarioDetail() {
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
                   placeholder={isListening ? "Listening closely..." : "Type your response..."}
                   className={cn(
-                    "w-full h-16 bg-slate-950/85 border border-white/10 rounded-[2.2rem] px-6 pr-16 text-white font-bold text-sm placeholder:text-white/30 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500/50 backdrop-blur-2xl shadow-2xl transition-all",
+                    "w-full h-16 bg-slate-900/90 dark:bg-slate-950/85 border border-slate-700/60 dark:border-white/10 rounded-[2.2rem] px-6 pr-16 text-slate-100 dark:text-white font-bold text-sm placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500/50 backdrop-blur-2xl shadow-premium transition-all",
                     isListening && "ring-4 ring-red-500/20 bg-red-950/20 border-red-500/35"
                   )}
                 />
@@ -1108,10 +1108,10 @@ export default function ScenarioDetail() {
               <Button
                 onClick={() => setAutoSend(prev => !prev)}
                 className={cn(
-                  "h-16 rounded-[1.75rem] px-5 border border-white/10 flex items-center gap-2 font-black text-[10px] uppercase tracking-wider transition-all duration-300 active:scale-95 shadow-2xl shrink-0",
+                  "h-16 rounded-[1.75rem] px-5 border flex items-center gap-2 font-black text-[10px] uppercase tracking-wider transition-all duration-300 active:scale-95 shadow-premium shrink-0",
                   autoSend
-                    ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-600/20 border-indigo-500/30"
-                    : "bg-gradient-to-br from-slate-900 to-black hover:from-slate-800 hover:to-slate-950 text-white/50"
+                    ? "bg-primary hover:bg-primary-dark text-white border-primary-light/20 shadow-glow"
+                    : "bg-slate-800 hover:bg-slate-700 text-slate-100 border-slate-700/50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-black dark:text-white/50 dark:border-white/10"
                 )}
               >
                 <span className={cn("w-2 h-2 rounded-full", autoSend ? "bg-emerald-400 animate-pulse" : "bg-slate-600")} />
@@ -1122,10 +1122,10 @@ export default function ScenarioDetail() {
               <Button
                 size="icon"
                 className={cn(
-                  "rounded-[1.75rem] h-16 w-16 shrink-0 shadow-2xl transition-all relative overflow-hidden border border-white/10",
+                  "rounded-[1.75rem] h-16 w-16 shrink-0 shadow-premium transition-all relative overflow-hidden border",
                   isListening
-                    ? "bg-red-600 scale-110 ring-4 ring-red-500/30"
-                    : "bg-gradient-to-br from-slate-900 to-black hover:from-slate-800 hover:to-slate-950"
+                    ? "bg-red-500 hover:bg-red-600 text-white scale-110 ring-4 ring-red-500/20 border-red-400/30"
+                    : "bg-slate-800 hover:bg-slate-700 text-slate-100 border-slate-700/50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-black dark:text-white dark:border-white/10"
                 )}
                 onClick={(e) => {
                   e.preventDefault();
@@ -1144,7 +1144,7 @@ export default function ScenarioDetail() {
                     <div className="w-5 h-5 bg-white rounded-md" />
                   </motion.div>
                 ) : (
-                  <Mic size={24} className="text-white" />
+                  <Mic size={24} className="text-slate-100 dark:text-white" />
                 )}
               </Button>
             </div>

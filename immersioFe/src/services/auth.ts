@@ -9,6 +9,11 @@ export interface UserDto {
   learningHours?: number;
   currentLanguageLevel?: string;
   role?: string;
+  notifEmail?: boolean;
+  notifPush?: boolean;
+  notifStreak?: boolean;
+  notifTips?: boolean;
+  isPublic?: boolean;
 }
 
 export interface AuthResponse {
@@ -240,5 +245,24 @@ export const authService = {
       throw new Error("Failed to fetch user profile");
     }
     return response.json();
+  },
+
+  async updateSettings(settings: { notifEmail: boolean; notifPush: boolean; notifStreak: boolean; notifTips: boolean }): Promise<UserDto> {
+    const response = await this.fetchWithAuth(`${API_BASE}/api/auth/settings`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(settings),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Cập nhật cài đặt thất bại" }));
+      throw new Error(err.detail || "Cập nhật cài đặt thất bại");
+    }
+
+    const updatedUser = await response.json();
+    this.updateUser(updatedUser);
+    return updatedUser;
   }
 };

@@ -16,6 +16,8 @@ import FlashcardsPage from "@/pages/student/FlashcardsPage";
 import DictionaryPage from "@/pages/student/DictionaryPage";
 import Profile from "@/pages/student/Profile";
 import Subscription from "@/pages/student/Subscription";
+import Notifications from "@/pages/student/Notifications";
+import HelpCenter from "@/pages/student/Help";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AITuning from "@/pages/admin/AITuning";
 import UsersManagement from "@/pages/admin/UsersManagement";
@@ -34,9 +36,12 @@ function ThemeManager() {
   return null;
 }
 
+import { ToastProvider } from "@/components/ui/Toast";
+
 export default function App() {
   return (
-    <Router>
+    <ToastProvider>
+      <Router>
       <ThemeManager />
       <Routes>
         <Route path="/" element={<Intro />} />
@@ -58,6 +63,8 @@ export default function App() {
           <Route path="dictionary" element={<DictionaryPage />} />
           <Route path="profile" element={<Profile />} />
           <Route path="subscription" element={<Subscription />} />
+          <Route path="notifications" element={<Notifications />} />
+          <Route path="help" element={<HelpCenter />} />
           <Route index element={<Navigate to="dashboard" replace />} />
         </Route>
 
@@ -70,6 +77,7 @@ export default function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
         </Route>
       </Routes>
-    </Router>
+      </Router>
+    </ToastProvider>
   );
 }

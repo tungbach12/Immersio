@@ -346,6 +346,20 @@ namespace Immersio.Application.Services
             }
         }
 
+        public async Task<UserDto> UpdateSettingsAsync(Guid userId, UpdateSettingsRequest request, CancellationToken cancellationToken = default)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
+            if (user is null)
+                throw new NotFoundException("User", userId);
+
+            user.UpdateNotificationSettings(request.NotifEmail, request.NotifPush, request.NotifStreak, request.NotifTips);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return MapToDto(user);
+        }
+
         private static UserDto MapToDto(User user)
         {
             return new UserDto(
@@ -358,7 +372,12 @@ namespace Immersio.Application.Services
                 user.ExperiencePoints,
                 user.LearningHours,
                 user.CurrentLanguageLevel,
-                user.Role);
+                user.Role,
+                user.NotifEmail,
+                user.NotifPush,
+                user.NotifStreak,
+                user.NotifTips,
+                user.IsPublic);
         }
     }
 }

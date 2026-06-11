@@ -97,5 +97,19 @@ namespace Immersio.WebApi.Controllers
 
             return Ok(ApiResponse<UserDto>.SuccessResult(user));
         }
+
+        [HttpPost("settings")]
+        [Authorize]
+        public async Task<IActionResult> UpdateSettings(
+            [FromBody] UpdateSettingsRequest request,
+            CancellationToken cancellationToken)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized(ApiResponse.FailureResult("Invalid user identity."));
+
+            var updatedUser = await _authService.UpdateSettingsAsync(userId, request, cancellationToken);
+            return Ok(ApiResponse<UserDto>.SuccessResult(updatedUser));
+        }
     }
 }

@@ -421,23 +421,23 @@ export default function StudentDashboard() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative bg-gradient-to-r from-indigo-900/40 to-violet-950/40 border border-white/5 rounded-[2.5rem] p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl backdrop-blur-md overflow-hidden group mb-8"
+          className="relative bg-slate-900/95 border border-slate-800 rounded-[2.5rem] p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl overflow-hidden group mb-8"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-2xl -mr-10 -mt-10 animate-pulse" />
           <div className="flex items-center gap-5">
-            <div className="w-14 h-14 bg-indigo-500/20 border border-indigo-500/30 rounded-2xl flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+            <div className="w-14 h-14 bg-indigo-500/15 border border-indigo-500/30 rounded-2xl flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
               <Brain size={24} className="animate-bounce" />
             </div>
             <div>
-              <h3 className="font-black text-slate-100 text-base tracking-tight italic uppercase">Nhắc nhở ôn tập thẻ từ</h3>
-              <p className="text-xs text-slate-350 font-semibold mt-1.5 max-w-md leading-relaxed">
-                Hôm nay bạn có <span className="text-indigo-400 font-black">{totalDue} từ vựng</span> cần ôn tập. 
+              <h3 className="font-black text-white text-base tracking-tight italic uppercase">Nhắc nhở ôn tập thẻ từ</h3>
+              <p className="text-xs text-slate-300 font-bold mt-1.5 max-w-md leading-relaxed">
+                Hôm nay bạn có <span className="text-orange-400 font-black">{totalDue} từ vựng</span> cần ôn tập. 
                 Gợi ý ôn tập: <span className="text-amber-400 font-black">"{dueDecks[0]?.name || "Từ vựng hàng ngày"}"</span> để giữ vững chuỗi học tập!
               </p>
             </div>
           </div>
           <Link to={`/student/flashcards/${dueDecks[0]?.id || ""}`} className="w-full md:w-auto">
-            <Button className="w-full md:w-auto px-8 h-12 rounded-2xl bg-indigo-650 hover:bg-indigo-700 text-white font-black text-[10px] uppercase tracking-widest transition-transform active:scale-95 shadow-lg shadow-indigo-500/10 border border-white/5">
+            <Button className="w-full md:w-auto px-8 h-12 rounded-2xl bg-indigo-650 hover:bg-indigo-700 text-white font-black text-[10px] uppercase tracking-widest transition-transform active:scale-95 shadow-lg shadow-indigo-500/20 border border-white/10">
               Ôn tập ngay <ArrowRight size={14} className="ml-2" />
             </Button>
           </Link>

@@ -186,9 +186,11 @@ export default function AppLayout() {
              <span className="text-base font-black italic tracking-tighter text-slate-100">IMMERSIO</span>
           </div>
           <div className="flex items-center gap-3">
-            <button className="w-9 h-9 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-slate-400 hover:text-indigo-500 transition-all">
-              <Bell size={18} />
-            </button>
+            <Link to="/student/notifications" className="flex">
+              <button className="w-9 h-9 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-slate-400 hover:text-indigo-500 transition-all flex items-center justify-center">
+                <Bell size={18} />
+              </button>
+            </Link>
             <Link to="/student/profile">
               <div className="w-9 h-9 rounded-xl bg-gradient-vibrant flex items-center justify-center text-white font-black text-[10px] shadow-lg shadow-indigo-200/50">
                 {user ? getInitials(user.username) : "?"}
@@ -203,6 +205,17 @@ export default function AppLayout() {
         "flex-1 overflow-y-auto relative z-10 scroll-smooth",
         !isScenarioDetail && "pt-16 pb-28 md:pt-0 md:pb-0 min-w-0"
       )}>
+        {/* Desktop Header Actions */}
+        {!isScenarioDetail && (
+          <div className="hidden md:flex items-center justify-end px-12 pt-8 pb-0 relative z-30">
+            <Link to="/student/notifications">
+              <button className="w-10 h-10 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-405 hover:text-indigo-400 transition-all flex items-center justify-center border border-white/5 shadow-sm cursor-pointer">
+                <Bell size={20} />
+              </button>
+            </Link>
+          </div>
+        )}
+
         <div className={cn(
           "max-w-5xl mx-auto min-h-full w-full",
           !isScenarioDetail ? "p-5 sm:p-6 md:p-12" : "p-0 max-w-none"

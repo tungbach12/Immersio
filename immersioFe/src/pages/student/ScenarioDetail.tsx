@@ -994,7 +994,7 @@ export default function ScenarioDetail() {
                   <div className="w-5 h-5 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-[10px] font-black">
                     ✦
                   </div>
-                  <span className="text-[9px] font-black text-white uppercase tracking-widest">IMMERSIO Speech Lab</span>
+                  <span className="text-[9px] font-black text-slate-100 dark:text-white uppercase tracking-widest">IMMERSIO Speech Lab</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -1016,7 +1016,7 @@ export default function ScenarioDetail() {
                       "p-3.5 rounded-2xl border text-xs md:text-sm font-semibold leading-relaxed shadow-sm relative group",
                       msg.role === "user"
                         ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-500/20 rounded-tr-none"
-                        : "bg-white/5 border-white/5 text-slate-200 rounded-tl-none pr-12"
+                        : "bg-slate-900/40 border-slate-700/30 text-slate-100 dark:bg-white/5 dark:border-white/5 dark:text-slate-200 rounded-tl-none pr-12"
                     )}>
                       {msg.role !== "user" && (
                         <p className="text-[9px] font-black text-indigo-400 mb-1 uppercase tracking-wide leading-none">

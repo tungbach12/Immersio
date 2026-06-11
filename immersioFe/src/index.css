@@ -516,104 +516,104 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* In light mode, override text-white on plain text elements to keep them readable against bright backgrounds */
-:root:not(.dark) h1.text-white,
-:root:not(.dark) h2.text-white,
-:root:not(.dark) h3.text-white,
-:root:not(.dark) h4.text-white,
-:root:not(.dark) h5.text-white,
-:root:not(.dark) h6.text-white,
-:root:not(.dark) p.text-white,
-:root:not(.dark) input.text-white,
-:root:not(.dark) textarea.text-white,
-:root:not(.dark) select.text-white,
-:root:not(.dark) span.text-white:not(.bg-indigo-600):not(.bg-blue-600):not(.bg-gradient-to-r):not(.bg-gradient-vibrant):not(.bg-indigo-500):not(.bg-purple-600):not(.bg-emerald-500):not(.bg-amber-500):not(.bg-white\/20):not(.bg-white\/10),
-:root:not(.dark) div.text-white:not(.bg-indigo-600):not(.bg-blue-600):not(.bg-gradient-to-r):not(.bg-gradient-vibrant):not(.bg-indigo-500):not(.bg-purple-600):not(.bg-emerald-500):not(.bg-amber-500):not(.bg-white\/20):not(.bg-white\/10),
-:root:not(.dark) span.font-black.italic.tracking-tighter.text-white {
+:root:not(.dark) h1.text-white:not(.dark, .dark *),
+:root:not(.dark) h2.text-white:not(.dark, .dark *),
+:root:not(.dark) h3.text-white:not(.dark, .dark *),
+:root:not(.dark) h4.text-white:not(.dark, .dark *),
+:root:not(.dark) h5.text-white:not(.dark, .dark *),
+:root:not(.dark) h6.text-white:not(.dark, .dark *),
+:root:not(.dark) p.text-white:not(.dark, .dark *),
+:root:not(.dark) input.text-white:not(.dark, .dark *),
+:root:not(.dark) textarea.text-white:not(.dark, .dark *),
+:root:not(.dark) select.text-white:not(.dark, .dark *),
+:root:not(.dark) span.text-white:not(.bg-indigo-600):not(.bg-blue-600):not(.bg-gradient-to-r):not(.bg-gradient-vibrant):not(.bg-indigo-500):not(.bg-purple-600):not(.bg-emerald-500):not(.bg-amber-500):not(.bg-white\/20):not(.bg-white\/10):not(.dark, .dark *),
+:root:not(.dark) div.text-white:not(.bg-indigo-600):not(.bg-blue-600):not(.bg-gradient-to-r):not(.bg-gradient-vibrant):not(.bg-indigo-500):not(.bg-purple-600):not(.bg-emerald-500):not(.bg-amber-500):not(.bg-white\/20):not(.bg-white\/10):not(.dark, .dark *),
+:root:not(.dark) span.font-black.italic.tracking-tighter.text-white:not(.dark, .dark *) {
   color: var(--slate-100) !important;
 }
 
 /* Ensure inputs and other fields have high contrast and matching backgrounds in light mode */
-:root:not(.dark) input,
-:root:not(.dark) textarea,
-:root:not(.dark) select {
+:root:not(.dark) input:not(.dark, .dark *),
+:root:not(.dark) textarea:not(.dark, .dark *),
+:root:not(.dark) select:not(.dark, .dark *) {
   background-color: var(--surface) !important;
   color: var(--slate-100) !important;
   border-color: var(--slate-700) !important;
 }
 
 /* Translucent color adjustments to avoid washed-out elements on light background */
-:root:not(.dark) .bg-white\/5 {
+:root:not(.dark) .bg-white\/5:not(.dark, .dark *) {
   background-color: var(--slate-800) !important;
 }
-:root:not(.dark) .bg-white\/10 {
+:root:not(.dark) .bg-white\/10:not(.dark, .dark *) {
   background-color: var(--slate-700) !important;
 }
-:root:not(.dark) .bg-white\/20 {
+:root:not(.dark) .bg-white\/20:not(.dark, .dark *) {
   background-color: var(--slate-600) !important;
 }
-:root:not(.dark) .bg-black\/40 {
+:root:not(.dark) .bg-black\/40:not(.dark, .dark *) {
   background-color: var(--slate-850) !important;
 }
 
 /* Translucent border overrides to use logo theme-compatible warm gray-brown border */
-:root:not(.dark) .border-white\/5,
-:root:not(.dark) .border-white\/10,
-:root:not(.dark) .border-white\/20 {
+:root:not(.dark) .border-white\/5:not(.dark, .dark *),
+:root:not(.dark) .border-white\/10:not(.dark, .dark *),
+:root:not(.dark) .border-white\/20:not(.dark, .dark *) {
   border-color: var(--slate-700) !important;
 }
 
 /* Flashcards Light Mode Overrides for clean physical card feel */
-:root:not(.dark) .preserve-3d > div {
+:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) {
   background-color: #ffffff !important;
   background-image: none !important;
   border: 1px solid var(--slate-700) !important;
   box-shadow: 0 15px 35px rgba(67, 44, 37, 0.08) !important;
 }
-:root:not(.dark) .preserve-3d > div * {
+:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) * {
   color: var(--slate-100) !important;
 }
 /* Ensure highlights/badges inside the card still have correct color tags */
-:root:not(.dark) .preserve-3d > div .text-emerald-400,
-:root:not(.dark) .preserve-3d > div .bg-emerald-500\/10 *,
-:root:not(.dark) .preserve-3d > div .bg-emerald-500\/10 {
+:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .text-emerald-400,
+:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .bg-emerald-500\/10 *,
+:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .bg-emerald-500\/10 {
   color: #15803d !important;
   background-color: rgba(21, 128, 61, 0.1) !important;
 }
-:root:not(.dark) .preserve-3d > div .text-indigo-300,
-:root:not(.dark) .preserve-3d > div .bg-indigo-500\/10 *,
-:root:not(.dark) .preserve-3d > div .bg-indigo-500\/10 {
+:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .text-indigo-300,
+:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .bg-indigo-500\/10 *,
+:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .bg-indigo-500\/10 {
   color: #f25b29 !important;
   background-color: rgba(242, 91, 41, 0.1) !important;
 }
-:root:not(.dark) .preserve-3d > div .text-amber-300,
-:root:not(.dark) .preserve-3d > div .bg-amber-500\/10 *,
-:root:not(.dark) .preserve-3d > div .bg-amber-500\/10 {
+:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .text-amber-300,
+:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .bg-amber-500\/10 *,
+:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .bg-amber-500\/10 {
   color: #b45309 !important;
   background-color: rgba(180, 83, 9, 0.1) !important;
 }
 
 /* Light mode brand gradient overrides */
-:root:not(.dark) .bg-gradient-vibrant {
+:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) {
   background: linear-gradient(135deg, #f25b29 0%, #ff843d 50%, #fbbf24 100%) !important;
 }
 
 /* Prevent light mode text-white overrides inside vibrant gradients */
-:root:not(.dark) .bg-gradient-vibrant h1.text-white,
-:root:not(.dark) .bg-gradient-vibrant h2.text-white,
-:root:not(.dark) .bg-gradient-vibrant h3.text-white,
-:root:not(.dark) .bg-gradient-vibrant h4.text-white,
-:root:not(.dark) .bg-gradient-vibrant h5.text-white,
-:root:not(.dark) .bg-gradient-vibrant h6.text-white,
-:root:not(.dark) .bg-gradient-vibrant p.text-white,
-:root:not(.dark) .bg-gradient-vibrant p.text-white\/70,
-:root:not(.dark) .bg-gradient-vibrant span.text-white,
-:root:not(.dark) .bg-gradient-vibrant div.text-white,
-:root:not(.dark) .bg-gradient-vibrant .text-white,
-:root:not(.dark) .bg-gradient-vibrant span.relative.z-10.italic.tracking-tighter {
+:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) h1.text-white,
+:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) h2.text-white,
+:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) h3.text-white,
+:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) h4.text-white,
+:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) h5.text-white,
+:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) h6.text-white,
+:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) p.text-white,
+:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) p.text-white\/70,
+:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) span.text-white,
+:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) div.text-white,
+:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) .text-white,
+:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) span.relative.z-10.italic.tracking-tighter {
   color: #ffffff !important;
 }
 
-:root:not(.dark) .bg-gradient-vibrant .text-white\/70 {
+:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) .text-white\/70 {
   color: rgba(255, 255, 255, 0.7) !important;
 }
 

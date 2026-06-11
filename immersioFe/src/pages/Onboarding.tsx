@@ -210,8 +210,8 @@ export default function Onboarding() {
         
         {/* Progress Dots */}
         <div className="flex justify-center gap-2 mt-8">
-          <div className={cn("w-2 h-2 rounded-full transition-all", step === 1 ? "w-8 bg-primary" : "bg-slate-350")} />
-          <div className={cn("w-2 h-2 rounded-full transition-all", step === 2 ? "w-8 bg-primary" : "bg-slate-350")} />
+          <div className={cn("w-2 h-2 rounded-full transition-all", step === 1 ? "w-8 bg-primary" : "bg-slate-700")} />
+          <div className={cn("w-2 h-2 rounded-full transition-all", step === 2 ? "w-8 bg-primary" : "bg-slate-700")} />
         </div>
       </div>
     </div>

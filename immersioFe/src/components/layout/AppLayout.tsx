@@ -243,7 +243,7 @@ export default function AppLayout() {
                     )}
                     <div className={cn(
                       "transition-all duration-300 flex items-center justify-center",
-                      isActive ? "text-indigo-500 -translate-y-1 scale-110" : "text-slate-500 group-hover:text-slate-350"
+                      isActive ? "text-indigo-500 -translate-y-1 scale-110" : "text-slate-500 group-hover:text-slate-200"
                     )}>
                       <link.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                     </div>

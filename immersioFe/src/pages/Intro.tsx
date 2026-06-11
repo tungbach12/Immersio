@@ -26,7 +26,8 @@ import {
   Activity,
   Sliders,
   Repeat,
-  Check
+  Check,
+  Crown
 } from 'lucide-react';
 
 const Intro = () => {
@@ -575,130 +576,156 @@ const Intro = () => {
             {/* Tier 1: Basic */}
             <div className="bg-slate-900/40 border border-white/5 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-white/10 transition-all duration-300 relative overflow-hidden group">
               <div>
-                <h4 className="text-xl font-black text-white italic uppercase">Basic tier</h4>
-                <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Luyện tập nền tảng</p>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xl font-black text-white italic uppercase">Basic</h4>
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                    <Star size={18} strokeWidth={2.5} />
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Get started with IMMERSIO</p>
 
                 <div className="my-8 flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-white">0đ</span>
-                  <span className="text-xs text-slate-500 font-bold uppercase">/ Free</span>
+                  <span className="text-4xl font-black text-white">Free</span>
                 </div>
 
                 <ul className="space-y-4 pt-6 border-t border-white/5 text-xs text-slate-300 font-semibold">
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Hạn mức: 3 Kịch bản AI / ngày</span>
+                    <Check size={14} className="text-emerald-400 shrink-0" />
+                    <span className="uppercase tracking-tight">STANDARD AI MODEL (HIGH SPEED)</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Lõi hội thoại phản xạ 2D cơ bản</span>
+                    <Check size={14} className="text-emerald-400 shrink-0" />
+                    <span className="uppercase tracking-tight">5 SCENARIOS PER DAY</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Giọng nói mẫu chuẩn tiêu chuẩn</span>
+                    <Check size={14} className="text-emerald-400 shrink-0" />
+                    <span className="uppercase tracking-tight">GRAMMAR & VOCABULARY CORRECTION</span>
                   </li>
-                  <li className="flex items-center gap-3 text-slate-600">
-                    <X size={14} className="shrink-0" />
-                    <span className="line-through">Phân tích chẩn đoán chi tiết âm vị</span>
+                  <li className="flex items-center gap-3">
+                    <Check size={14} className="text-emerald-400 shrink-0" />
+                    <span className="uppercase tracking-tight">10 FLASHCARDS/DAY (VOCAB ONLY)</span>
                   </li>
-                  <li className="flex items-center gap-3 text-slate-600">
-                    <X size={14} className="shrink-0" />
-                    <span className="line-through">Chẩn đoán thăng hạng CEFR</span>
+                  <li className="flex items-center gap-3">
+                    <Check size={14} className="text-emerald-400 shrink-0" />
+                    <span className="uppercase tracking-tight">BASIC STORYLINE ACCESS</span>
                   </li>
                 </ul>
               </div>
 
               <Link to="/register" className="mt-10">
                 <button className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs uppercase tracking-widest transition-all">
-                  Get Started
+                  ACTIVE PLAN
                 </button>
               </Link>
             </div>
 
-            {/* Tier 2: Premium (Recommended) */}
+            {/* Tier 2: Plus */}
             <div className="bg-gradient-to-b from-slate-900 to-indigo-950 border border-indigo-500/30 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-indigo-500/50 transition-all duration-300 relative overflow-hidden group scale-100 md:scale-105 shadow-indigo-950/20">
               <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-xl group-hover:scale-110 transition duration-500" />
               <div className="absolute top-4 right-4 bg-indigo-600 text-white text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-md">
-                ⭐ Recommended
+                POPULAR
               </div>
 
               <div>
-                <h4 className="text-xl font-black text-white italic uppercase">Premium tier</h4>
-                <p className="text-[9px] text-indigo-400 font-black uppercase mt-1">Luyện tập tăng tốc</p>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xl font-black text-white italic uppercase">Plus</h4>
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                    <Zap size={18} strokeWidth={2.5} />
+                  </div>
+                </div>
+                <p className="text-[10px] text-indigo-400 font-black uppercase mt-1">Real-world communication & flexibility</p>
 
                 <div className="my-8 flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-white">199.000đ</span>
-                  <span className="text-xs text-slate-500 font-bold uppercase">/ Tháng</span>
+                  <span className="text-4xl font-black text-white">69.000đ</span>
+                  <span className="text-xs text-slate-500 font-bold uppercase">/ MO</span>
                 </div>
 
                 <ul className="space-y-4 pt-6 border-t border-white/5 text-xs text-slate-200 font-semibold">
                   <li className="flex items-center gap-3">
                     <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Hạn mức: 20 Kịch bản AI / ngày</span>
+                    <span className="uppercase tracking-tight">ADVANCED AI: NATURAL DIALOGUE & CONTEXT</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Mở khóa toàn bộ kho kịch bản VIP</span>
+                    <span className="uppercase tracking-tight">20 SCENARIOS PER DAY</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Giọng nói mẫu Neural Premium sống động</span>
+                    <span className="uppercase tracking-tight">PRONUNCIATION SCORING & ANALYSIS</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Đánh giá phát âm âm vị chuẩn xác</span>
+                    <span className="uppercase tracking-tight">UNLIMITED FLASHCARDS (VOCAB, GRAMMAR)</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Thư viện ôn tập Flashcard SRS</span>
+                    <span className="uppercase tracking-tight">INTERACTIVE 2D ROLEPLAY EXPERIENCE</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check size={14} className="text-indigo-400 shrink-0" />
+                    <span className="uppercase tracking-tight">5 STORYLINES + 7 CUSTOM OUTFITS</span>
                   </li>
                 </ul>
               </div>
 
               <Link to="/register" className="mt-10">
                 <button className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-600/25 active:scale-95 transition-all">
-                  Try Premium Now
+                  UPGRADE TO PLUS
                 </button>
               </Link>
             </div>
 
-            {/* Tier 3: Elite */}
+            {/* Tier 3: Premium */}
             <div className="bg-slate-900/40 border border-white/5 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-white/10 transition-all duration-300 relative overflow-hidden group">
               <div>
-                <h4 className="text-xl font-black text-white italic uppercase">Elite tier</h4>
-                <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Bản lĩnh thượng lưu</p>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xl font-black text-white italic uppercase">Premium</h4>
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                    <Crown size={18} strokeWidth={2.5} />
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">The ultimate mentor experience</p>
 
                 <div className="my-8 flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-white">499.000đ</span>
-                  <span className="text-xs text-slate-500 font-bold uppercase">/ Tháng</span>
+                  <span className="text-4xl font-black text-white">199.000đ</span>
+                  <span className="text-xs text-slate-500 font-bold uppercase">/ MO</span>
                 </div>
 
                 <ul className="space-y-4 pt-6 border-t border-white/5 text-xs text-slate-300 font-semibold">
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Hạn mức: Không giới hạn kịch bản</span>
+                    <Check size={14} className="text-amber-400 shrink-0" />
+                    <span className="uppercase tracking-tight">ELITE AI: DEEP REASONING & METAPHORS</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Mở khóa toàn bộ kịch bản & Premium voices</span>
+                    <Check size={14} className="text-amber-400 shrink-0" />
+                    <span className="uppercase tracking-tight">UNLIMITED SCENARIOS</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Chẩn đoán cấp độ nói chuẩn CEFR chuyên sâu</span>
+                    <Check size={14} className="text-amber-400 shrink-0" />
+                    <span className="uppercase tracking-tight">AI COACH: NATIVE-LIKE EXPRESSIONS</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Generative AI Phrase builder theo yêu cầu</span>
+                    <Check size={14} className="text-amber-400 shrink-0" />
+                    <span className="uppercase tracking-tight">AUTO-GENERATE CARDS FROM MISTAKES</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Ưu tiên truy cập sớm tính năng AR/VR mới</span>
+                    <Check size={14} className="text-amber-400 shrink-0" />
+                    <span className="uppercase tracking-tight">LONG-TERM NPC MEMORY (FULL HISTORY)</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check size={14} className="text-amber-400 shrink-0" />
+                    <span className="uppercase tracking-tight">OPTIMIZED GRAPHICS & SMOOTH TRANSITIONS</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check size={14} className="text-amber-400 shrink-0" />
+                    <span className="uppercase tracking-tight">ALL STORYLINES + LIMITED OUTFITS</span>
                   </li>
                 </ul>
               </div>
 
               <Link to="/register" className="mt-10">
-                <button className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs uppercase tracking-widest transition-all">
-                  Go Elite
+                <button className="w-full h-12 rounded-xl bg-white hover:bg-slate-100 text-slate-950 font-bold text-xs uppercase tracking-widest transition-all">
+                  GO PREMIUM
                 </button>
               </Link>
             </div>

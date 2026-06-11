@@ -1540,7 +1540,7 @@ function StatsView({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.4 }}
-            className="p-5 bg-indigo-650/20 rounded-3xl border border-indigo-500/20 shadow-xl shadow-indigo-950/20 mb-6 flex items-center gap-4 relative overflow-hidden"
+            className="p-5 bg-indigo-500/20 rounded-3xl border border-indigo-500/20 shadow-xl shadow-indigo-950/20 mb-6 flex items-center gap-4 relative overflow-hidden"
           >
             <div className="absolute -right-10 -bottom-10 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
             <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">

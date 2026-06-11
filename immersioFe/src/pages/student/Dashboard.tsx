@@ -437,7 +437,7 @@ export default function StudentDashboard() {
             </div>
           </div>
           <Link to={`/student/flashcards/${dueDecks[0]?.id || ""}`} className="w-full md:w-auto">
-            <Button className="w-full md:w-auto px-8 h-12 rounded-2xl bg-indigo-650 hover:bg-indigo-700 text-white font-black text-[10px] uppercase tracking-widest transition-transform active:scale-95 shadow-lg shadow-indigo-500/20 border border-white/10">
+            <Button className="w-full md:w-auto px-8 h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] uppercase tracking-widest transition-transform active:scale-95 shadow-lg shadow-indigo-500/20 border border-white/10">
               Ôn tập ngay <ArrowRight size={14} className="ml-2" />
             </Button>
           </Link>

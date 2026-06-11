@@ -207,17 +207,7 @@ export default function AppLayout() {
           "max-w-5xl mx-auto min-h-full w-full",
           !isScenarioDetail ? "p-5 sm:p-6 md:p-12" : "p-0 max-w-none"
         )}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-            >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
+          <Outlet />
         </div>
       </main>
 

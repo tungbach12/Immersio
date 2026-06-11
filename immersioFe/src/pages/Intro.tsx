@@ -574,11 +574,11 @@ const Intro = () => {
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
 
             {/* Tier 1: Basic */}
-            <div className="bg-slate-900/40 border border-white/5 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-white/10 transition-all duration-300 relative overflow-hidden group">
+            <div className="bg-white/80 dark:bg-slate-900/40 border border-slate-700/30 dark:border-white/5 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-indigo-500/20 dark:hover:border-indigo-500/20 transition-all duration-300 relative overflow-hidden group">
               <div>
                 <div className="flex items-center justify-between">
                   <h4 className="text-xl font-black text-white italic uppercase">Basic</h4>
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                     <Star size={18} strokeWidth={2.5} />
                   </div>
                 </div>
@@ -588,39 +588,39 @@ const Intro = () => {
                   <span className="text-4xl font-black text-white">Free</span>
                 </div>
 
-                <ul className="space-y-4 pt-6 border-t border-white/5 text-xs text-slate-300 font-semibold">
+                <ul className="space-y-4 pt-6 border-t border-slate-700/30 dark:border-white/5 text-xs text-slate-200 dark:text-slate-300 font-semibold">
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-emerald-400 shrink-0" />
+                    <Check size={14} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
                     <span className="uppercase tracking-tight">STANDARD AI MODEL (HIGH SPEED)</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-emerald-400 shrink-0" />
+                    <Check size={14} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
                     <span className="uppercase tracking-tight">5 SCENARIOS PER DAY</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-emerald-400 shrink-0" />
+                    <Check size={14} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
                     <span className="uppercase tracking-tight">GRAMMAR & VOCABULARY CORRECTION</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-emerald-400 shrink-0" />
+                    <Check size={14} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
                     <span className="uppercase tracking-tight">10 FLASHCARDS/DAY (VOCAB ONLY)</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-emerald-400 shrink-0" />
+                    <Check size={14} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
                     <span className="uppercase tracking-tight">BASIC STORYLINE ACCESS</span>
                   </li>
                 </ul>
               </div>
 
               <Link to="/register" className="mt-10">
-                <button className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs uppercase tracking-widest transition-all">
+                <button className="w-full h-12 rounded-xl bg-slate-800 hover:bg-slate-800 text-slate-100 dark:text-slate-400 border border-slate-700/50 dark:border-white/5 font-bold text-xs uppercase tracking-widest transition-all">
                   ACTIVE PLAN
                 </button>
               </Link>
             </div>
 
             {/* Tier 2: Plus */}
-            <div className="bg-gradient-to-b from-slate-900 to-indigo-950 border border-indigo-500/30 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-indigo-500/50 transition-all duration-300 relative overflow-hidden group scale-100 md:scale-105 shadow-indigo-950/20">
+            <div className="bg-gradient-to-b from-slate-900 to-slate-850 dark:to-indigo-950 border border-indigo-500/40 dark:border-indigo-500/30 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-indigo-500/60 dark:hover:border-indigo-500/50 transition-all duration-300 relative overflow-hidden group scale-100 md:scale-105 shadow-indigo-950/20">
               <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-xl group-hover:scale-110 transition duration-500" />
               <div className="absolute top-4 right-4 bg-indigo-600 text-white text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-md">
                 POPULAR
@@ -633,36 +633,36 @@ const Intro = () => {
                     <Zap size={18} strokeWidth={2.5} />
                   </div>
                 </div>
-                <p className="text-[10px] text-indigo-400 font-black uppercase mt-1">Real-world communication & flexibility</p>
+                <p className="text-[10px] text-indigo-500 dark:text-indigo-400 font-black uppercase mt-1">Real-world communication & flexibility</p>
 
                 <div className="my-8 flex items-baseline gap-1">
                   <span className="text-4xl font-black text-white">69.000đ</span>
                   <span className="text-xs text-slate-500 font-bold uppercase">/ MO</span>
                 </div>
 
-                <ul className="space-y-4 pt-6 border-t border-white/5 text-xs text-slate-200 font-semibold">
+                <ul className="space-y-4 pt-6 border-t border-slate-700/30 dark:border-white/5 text-xs text-slate-200 dark:text-slate-300 font-semibold">
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
+                    <Check size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
                     <span className="uppercase tracking-tight">ADVANCED AI: NATURAL DIALOGUE & CONTEXT</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
+                    <Check size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
                     <span className="uppercase tracking-tight">20 SCENARIOS PER DAY</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
+                    <Check size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
                     <span className="uppercase tracking-tight">PRONUNCIATION SCORING & ANALYSIS</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
+                    <Check size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
                     <span className="uppercase tracking-tight">UNLIMITED FLASHCARDS (VOCAB, GRAMMAR)</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
+                    <Check size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
                     <span className="uppercase tracking-tight">INTERACTIVE 2D ROLEPLAY EXPERIENCE</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
+                    <Check size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
                     <span className="uppercase tracking-tight">5 STORYLINES + 7 CUSTOM OUTFITS</span>
                   </li>
                 </ul>
@@ -676,11 +676,11 @@ const Intro = () => {
             </div>
 
             {/* Tier 3: Premium */}
-            <div className="bg-slate-900/40 border border-white/5 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-white/10 transition-all duration-300 relative overflow-hidden group">
+            <div className="bg-white/80 dark:bg-slate-900/40 border border-slate-700/30 dark:border-white/5 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-amber-500/20 dark:hover:border-amber-500/20 transition-all duration-300 relative overflow-hidden group">
               <div>
                 <div className="flex items-center justify-between">
                   <h4 className="text-xl font-black text-white italic uppercase">Premium</h4>
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                     <Crown size={18} strokeWidth={2.5} />
                   </div>
                 </div>
@@ -691,40 +691,40 @@ const Intro = () => {
                   <span className="text-xs text-slate-500 font-bold uppercase">/ MO</span>
                 </div>
 
-                <ul className="space-y-4 pt-6 border-t border-white/5 text-xs text-slate-300 font-semibold">
+                <ul className="space-y-4 pt-6 border-t border-slate-700/30 dark:border-white/5 text-xs text-slate-200 dark:text-slate-300 font-semibold">
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-amber-400 shrink-0" />
+                    <Check size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
                     <span className="uppercase tracking-tight">ELITE AI: DEEP REASONING & METAPHORS</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-amber-400 shrink-0" />
+                    <Check size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
                     <span className="uppercase tracking-tight">UNLIMITED SCENARIOS</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-amber-400 shrink-0" />
+                    <Check size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
                     <span className="uppercase tracking-tight">AI COACH: NATIVE-LIKE EXPRESSIONS</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-amber-400 shrink-0" />
+                    <Check size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
                     <span className="uppercase tracking-tight">AUTO-GENERATE CARDS FROM MISTAKES</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-amber-400 shrink-0" />
+                    <Check size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
                     <span className="uppercase tracking-tight">LONG-TERM NPC MEMORY (FULL HISTORY)</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-amber-400 shrink-0" />
+                    <Check size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
                     <span className="uppercase tracking-tight">OPTIMIZED GRAPHICS & SMOOTH TRANSITIONS</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-amber-400 shrink-0" />
+                    <Check size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
                     <span className="uppercase tracking-tight">ALL STORYLINES + LIMITED OUTFITS</span>
                   </li>
                 </ul>
               </div>
 
               <Link to="/register" className="mt-10">
-                <button className="w-full h-12 rounded-xl bg-white hover:bg-slate-100 text-slate-950 font-bold text-xs uppercase tracking-widest transition-all">
+                <button className="w-full h-12 rounded-xl bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-slate-100 dark:text-slate-950 border border-slate-700/50 dark:border-slate-200 font-bold text-xs uppercase tracking-widest transition-all">
                   GO PREMIUM
                 </button>
               </Link>
@@ -735,7 +735,7 @@ const Intro = () => {
       </section>
 
       {/* Dynamic Call-To-Action (CTA) section */}
-      <section className="py-28 px-6 bg-gradient-to-b from-indigo-950 to-slate-950 text-center relative overflow-hidden border-t border-white/5 z-10">
+      <section className="py-28 px-6 bg-gradient-to-b from-slate-900 to-slate-950 dark:from-indigo-950 dark:to-slate-950 text-center relative overflow-hidden border-t border-slate-700/30 dark:border-white/5 z-10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent opacity-50"></div>
 
         <div className="max-w-4xl mx-auto space-y-8 relative z-10">
@@ -752,7 +752,7 @@ const Intro = () => {
               </button>
             </Link>
             <Link to="/login">
-              <button className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-10 h-14 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all w-full sm:w-auto">
+              <button className="bg-slate-800 hover:bg-slate-700 text-slate-100 dark:text-white border border-slate-700/50 dark:border-white/10 px-10 h-14 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all w-full sm:w-auto">
                 Đăng nhập với Google
               </button>
             </Link>

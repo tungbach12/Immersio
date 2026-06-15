@@ -154,9 +154,6 @@ export default function FlashcardsPage() {
 
   return (
     <div className="w-full min-h-full bg-transparent relative overflow-hidden">
-      {/* Ambient background elements */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-500/10 via-indigo-500/5 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
 
       <AnimatePresence mode="wait">
         {view === "decks" && (
@@ -547,7 +544,7 @@ function StudyView({
             {content.definition_en && (
               <div className="space-y-1">
                 <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Định nghĩa tiếng Anh</span>
-                <p className="text-xs text-slate-350 leading-relaxed max-w-xs mx-auto font-medium">
+                <p className="text-xs text-slate-300 dark:text-slate-400 leading-relaxed max-w-xs mx-auto font-medium">
                   {content.definition_en}
                 </p>
               </div>
@@ -768,7 +765,7 @@ function StudyView({
                   {target}
                 </p>
                 {content.phrase_meaning && (
-                  <p className="text-xs text-slate-350 leading-relaxed mt-1 font-semibold">
+                  <p className="text-xs text-slate-300 dark:text-slate-400 leading-relaxed mt-1 font-semibold">
                     👉 {content.phrase_meaning}
                   </p>
                 )}
@@ -906,7 +903,7 @@ function StudyView({
       <div className="flex items-center justify-between px-6 md:px-8 pt-6 pb-4">
         <button
           onClick={onBack}
-          className="w-11 h-11 rounded-2xl bg-white/5 border border-white/5 shadow-sm flex items-center justify-center text-slate-350 hover:bg-white/10 hover:border-indigo-500/30 hover:text-white transition-all"
+          className="w-11 h-11 rounded-2xl bg-white/5 border border-white/5 shadow-sm flex items-center justify-center text-slate-200 dark:text-slate-300 hover:bg-white/10 hover:border-indigo-500/30 hover:text-white transition-all"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -1061,7 +1058,7 @@ function StudyView({
                       </span>
 
                       <div className="flex flex-col items-center gap-2.5 mb-4">
-                        <h3 className="text-base font-black text-slate-350 italic whitespace-pre-wrap text-center font-display leading-tight">
+                        <h3 className="text-base font-black text-slate-200 dark:text-slate-300 italic whitespace-pre-wrap text-center font-display leading-tight">
                           {displayFront}
                         </h3>
                         <button
@@ -1241,7 +1238,7 @@ function CompleteView({
       <div className="flex items-center px-6 md:px-8 pt-6 pb-2">
         <button
           onClick={onBack}
-          className="w-11 h-11 rounded-2xl bg-white/5 border border-white/5 shadow-sm flex items-center justify-center text-slate-350 hover:bg-white/10 hover:border-indigo-500/30 hover:text-white transition-all"
+          className="w-11 h-11 rounded-2xl bg-white/5 border border-white/5 shadow-sm flex items-center justify-center text-slate-200 dark:text-slate-300 hover:bg-white/10 hover:border-indigo-500/30 hover:text-white transition-all"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -1317,7 +1314,7 @@ function CompleteView({
                       key={idx}
                       className="flex flex-col items-center flex-1 gap-2 h-full"
                     >
-                      <span className="text-xs font-semibold text-slate-350">
+                      <span className="text-xs font-semibold text-slate-200 dark:text-slate-300">
                         {count}
                       </span>
                       <div className="w-full bg-white/5 rounded-full relative flex-1 overflow-hidden">
@@ -1490,7 +1487,7 @@ function StatsView({
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={onBack}
-            className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 shadow-lg flex items-center justify-center text-slate-350 hover:bg-white/10 hover:border-indigo-500/30 hover:text-white transition-all active:scale-95 duration-300"
+            className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 shadow-lg flex items-center justify-center text-slate-200 dark:text-slate-300 hover:bg-white/10 hover:border-indigo-500/30 hover:text-white transition-all active:scale-95 duration-300"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -1543,7 +1540,7 @@ function StatsView({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.4 }}
-            className="p-5 bg-indigo-650/20 rounded-3xl border border-indigo-500/20 shadow-xl shadow-indigo-950/20 mb-6 flex items-center gap-4 relative overflow-hidden"
+            className="p-5 bg-indigo-500/20 rounded-3xl border border-indigo-500/20 shadow-xl shadow-indigo-950/20 mb-6 flex items-center gap-4 relative overflow-hidden"
           >
             <div className="absolute -right-10 -bottom-10 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
             <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
@@ -1653,7 +1650,7 @@ function StatsView({
                         key={idx}
                         className="flex flex-col items-center flex-1 gap-2 h-full"
                       >
-                        <span className="text-[10px] font-black text-slate-350">
+                        <span className="text-[10px] font-black text-slate-200 dark:text-slate-300">
                           {count}
                         </span>
                         <div className="w-full bg-white/5 rounded-full relative flex-1 overflow-hidden">

@@ -102,8 +102,13 @@ namespace Immersio.Infrastructure.Services
             string contextPrompt, 
             IEnumerable<SessionMessageDto> history, 
             string userMessage, 
+            IEnumerable<string>? allowedEmotions,
             CancellationToken cancellationToken)
         {
+            var emotionsListStr = allowedEmotions != null && allowedEmotions.Any()
+                ? string.Join(", ", allowedEmotions.Select(e => $"'{e}'"))
+                : null;
+
             var systemInstructions = $"You are a roleplay character in a language learning app called IMMERSIO.\n\n" +
                                      $"SCENARIO CONTEXT:\n{contextPrompt}\n\n" +
                                      $"INSTRUCTIONS:\n" +
@@ -111,6 +116,11 @@ namespace Immersio.Infrastructure.Services
                                      $"2. Keep responses concise (1-3 sentences).\n" +
                                      $"3. Prioritize natural conversation flow.\n" +
                                      $"4. Do not break character.";
+
+            if (emotionsListStr != null && allowedEmotions != null)
+            {
+                systemInstructions += $"\n5. You must choose one of the following emotions that fits your reply best: {emotionsListStr}. You MUST start your response with `[EMOTION: <emotion_name>]`. For example: `[EMOTION: {allowedEmotions.FirstOrDefault() ?? "happy"}] Hi! How can I help you today?` or similar.";
+            }
 
             var messagesPayload = new List<object>
             {

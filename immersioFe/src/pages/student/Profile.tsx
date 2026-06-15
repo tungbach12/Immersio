@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/Card";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/Button";
 import { 
   Settings, 
@@ -15,7 +15,9 @@ import {
   Zap,
   Camera,
   Crown,
-  ArrowRight
+  ArrowRight,
+  ChevronDown,
+  X
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -24,12 +26,6 @@ import { authService, UserDto } from "@/services/auth";
 export default function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserDto | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
-
-  const showComingSoon = (label: string) => {
-    setToast(label);
-    setTimeout(() => setToast((current) => (current === label ? null : current)), 2500);
-  };
 
   useEffect(() => {
     // Attempt to read the user from stored session
@@ -65,11 +61,14 @@ export default function Profile() {
   };
 
   const menuItems = [
-    { icon: Bell, label: "Notifications", color: "text-blue-400", bg: "bg-blue-500/10 border border-blue-500/20" },
-    { icon: Shield, label: "Privacy & Security", color: "text-emerald-400", bg: "bg-emerald-500/10 border border-emerald-500/20" },
-    { icon: CreditCard, label: "Subscription", color: "text-purple-400", bg: "bg-purple-500/10 border border-purple-500/20", path: "/student/subscription" },
-    { icon: HelpCircle, label: "Help Center", color: "text-amber-400", bg: "bg-amber-500/10 border border-amber-500/20" },
+    { id: "notifications", icon: Bell, label: "Notifications", color: "text-orange-500", bg: "bg-orange-500/10 border border-orange-500/20", path: "/student/notifications" },
+    { id: "subscription", icon: CreditCard, label: "Subscription", color: "text-purple-400", bg: "bg-purple-500/10 border border-purple-500/20", path: "/student/subscription" },
+    { id: "help", icon: HelpCircle, label: "Help Center", color: "text-amber-500", bg: "bg-amber-500/10 border border-amber-500/20", path: "/student/help" },
   ];
+
+  const handleItemClick = (item: typeof menuItems[number]) => {
+    navigate(item.path);
+  };
 
   return (
     <div className="space-y-10 pb-24 px-4 overflow-x-hidden">
@@ -89,11 +88,7 @@ export default function Profile() {
                 {user ? getInitials(user.username) : "—"}
               </span>
           </div>
-          <button
-            type="button"
-            onClick={() => showComingSoon("Đổi ảnh đại diện")}
-            className="absolute bottom-1 right-1 w-12 h-12 bg-slate-900/80 rounded-2xl shadow-2xl flex items-center justify-center text-white border border-white/10 hover:bg-indigo-650 hover:text-indigo-200 transition-all active:scale-90 z-20 backdrop-blur-md"
-          >
+          <button className="absolute bottom-1 right-1 w-12 h-12 bg-slate-900/80 rounded-2xl shadow-2xl flex items-center justify-center text-white border border-white/10 hover:bg-indigo-600 hover:text-indigo-200 transition-all active:scale-95 z-20 backdrop-blur-md">
             <Camera size={22} strokeWidth={2.5} />
           </button>
         </div>
@@ -195,7 +190,7 @@ export default function Profile() {
                 : `Enjoy your premium ${user?.subscriptionTier} access with increased scenario sessions and flashcard generation.`}
             </p>
             <Link to="/student/subscription">
-              <Button className="w-full rounded-[1.25rem] bg-white hover:bg-slate-50 text-slate-950 font-black uppercase tracking-widest text-[10px] h-16 shadow-2xl transition-transform active:scale-95 group/btn">
+              <Button className="w-full rounded-[1.25rem] bg-white hover:bg-orange-50 dark:hover:bg-slate-100 text-slate-100 dark:text-slate-950 hover:text-primary font-black uppercase tracking-widest text-[10px] h-16 shadow-2xl transition-transform active:scale-95 group/btn transition-colors border border-slate-700/50">
                 {(user?.subscriptionTier || "Basic").toLowerCase() === "basic" ? "Manage Membership" : "Manage Subscription"} <ArrowRight size={14} className="ml-2 group-hover/btn:translate-x-1 transition-transform" />
               </Button>
             </Link>
@@ -210,38 +205,26 @@ export default function Profile() {
            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Account Ecosystem</h2>
         </div>
         <div className="glass-card rounded-[2.5rem] overflow-hidden relative z-10">
-          {menuItems.map((item, i) => {
-            const rowClass = cn(
-              "flex items-center justify-between w-full text-left px-8 py-7 hover:bg-white/5 transition-all group",
-              i !== menuItems.length - 1 && "border-b border-white/5"
-            );
-            const inner = (
-              <>
-                <div className="flex items-center gap-5">
-                  <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110", item.bg, item.color)}>
-                    <item.icon size={20} strokeWidth={2.5} />
-                  </div>
-                  <span className="font-black text-white text-base tracking-tight">{item.label}</span>
+          {menuItems.map((item, i) => (
+            <div 
+              key={i} 
+              onClick={() => handleItemClick(item)}
+              className={cn(
+                "flex items-center justify-between px-8 py-7 hover:bg-white/5 transition-all group cursor-pointer",
+                i !== menuItems.length - 1 && "border-b border-white/5"
+              )}
+            >
+              <div className="flex items-center gap-5">
+                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110", item.bg, item.color)}>
+                  <item.icon size={20} strokeWidth={2.5} />
                 </div>
-                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:translate-x-1 transition-transform group-hover:bg-indigo-500/20">
-                  <ChevronRight size={18} className="text-slate-300 group-hover:text-indigo-400 transition-colors" />
-                </div>
-              </>
-            );
-
-            return item.path ? (
-              <Link to={item.path} key={i} className={rowClass}>{inner}</Link>
-            ) : (
-              <button
-                type="button"
-                key={i}
-                onClick={() => showComingSoon(item.label)}
-                className={rowClass}
-              >
-                {inner}
-              </button>
-            );
-          })}
+                <span className="font-black text-white text-base tracking-tight">{item.label}</span>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:translate-x-1 transition-transform group-hover:bg-indigo-500/20">
+                <ChevronRight size={18} className="text-slate-300 group-hover:text-indigo-400 transition-colors" />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -257,18 +240,6 @@ export default function Profile() {
         </Button>
         <p className="text-center text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-6">Version 2.0.4 Premium</p>
       </div>
-
-      {toast && (
-        <motion.div
-          key={toast}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-slate-900/90 backdrop-blur-md border border-white/10 rounded-2xl text-white text-xs font-bold shadow-2xl whitespace-nowrap"
-        >
-          {toast} — tính năng sắp ra mắt 🚧
-        </motion.div>
-      )}
     </div>
   );
 }

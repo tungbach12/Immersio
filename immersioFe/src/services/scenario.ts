@@ -27,6 +27,7 @@ export interface Scenario {
   isNavigation?: boolean;
   voiceId?: string;
   items?: ScenarioItem[];
+  emotions?: Record<string, string>;
 }
 
 export interface CorrectionResult {
@@ -37,6 +38,7 @@ export interface CorrectionResult {
 export interface ChatOutputResponse {
   reply: string;
   correction?: CorrectionResult;
+  emotion?: string;
 }
 
 export interface FinishSessionResponse {
@@ -159,6 +161,7 @@ export const scenarioService = {
         image: item.imageUrl,
         icon: item.icon,
       })),
+      emotions: dto.emotionsJson ? JSON.parse(dto.emotionsJson) : undefined
     };
   },
 };

@@ -20,7 +20,8 @@ namespace Immersio.Application.DTOs.Scenario
         string AvatarUrl,
         bool IsNavigation,
         string? VoiceId,
-        IEnumerable<ScenarioItemDto> Items
+        IEnumerable<ScenarioItemDto> Items,
+        string? EmotionsJson = null
     );
 
     public sealed record StartSessionRequest(Guid ScenarioId, string? TargetLanguage = null);
@@ -33,7 +34,7 @@ namespace Immersio.Application.DTOs.Scenario
 
     public sealed record CorrectionResultDto(string Corrected, string Explanation);
 
-    public sealed record ChatOutputResponse(string Reply, CorrectionResultDto? Correction);
+    public sealed record ChatOutputResponse(string Reply, CorrectionResultDto? Correction, string? Emotion = "idle");
 
     public sealed record FinishSessionResponse(string Feedback, List<AddCardDto> SuggestedFlashcards);
 
@@ -52,7 +53,8 @@ namespace Immersio.Application.DTOs.Scenario
         string InitialMessage,
         string AvatarUrl,
         bool IsNavigation,
-        string? VoiceId
+        string? VoiceId,
+        string? EmotionsJson = null
     );
 
     public sealed record CreateScenarioItemDto(string Name, decimal Price, string ImageUrl, string? Icon);

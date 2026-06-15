@@ -56,6 +56,26 @@ namespace Immersio.Infrastructure.Persistence.Configurations
                 .HasMaxLength(100)
                 .HasDefaultValue("Unassigned");
 
+            builder.Property(u => u.NotifEmail)
+                .IsRequired()
+                .HasDefaultValue(true);
+
+            builder.Property(u => u.NotifPush)
+                .IsRequired()
+                .HasDefaultValue(true);
+
+            builder.Property(u => u.NotifStreak)
+                .IsRequired()
+                .HasDefaultValue(true);
+
+            builder.Property(u => u.NotifTips)
+                .IsRequired()
+                .HasDefaultValue(true);
+
+            builder.Property(u => u.IsPublic)
+                .IsRequired()
+                .HasDefaultValue(true);
+
             builder.HasQueryFilter(u => !u.IsDeleted);
 
             builder.HasMany(u => u.RefreshTokens)

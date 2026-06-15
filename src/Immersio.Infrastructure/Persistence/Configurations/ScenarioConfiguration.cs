@@ -56,6 +56,10 @@ namespace Immersio.Infrastructure.Persistence.Configurations
                 .HasMaxLength(100)
                 .IsRequired(false);
 
+            builder.Property(s => s.EmotionsJson)
+                .HasMaxLength(2000)
+                .IsRequired(false);
+
             // Soft delete query filter
             builder.HasQueryFilter(s => !s.IsDeleted);
 

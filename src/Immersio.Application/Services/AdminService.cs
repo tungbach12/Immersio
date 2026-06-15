@@ -93,7 +93,12 @@ namespace Immersio.Application.Services
                 u.ExperiencePoints,
                 u.LearningHours,
                 u.CurrentLanguageLevel,
-                u.Role
+                u.Role,
+                u.NotifEmail,
+                u.NotifPush,
+                u.NotifStreak,
+                u.NotifTips,
+                u.IsPublic
             ));
         }
 
@@ -119,7 +124,12 @@ namespace Immersio.Application.Services
                 user.ExperiencePoints,
                 user.LearningHours,
                 user.CurrentLanguageLevel,
-                user.Role
+                user.Role,
+                user.NotifEmail,
+                user.NotifPush,
+                user.NotifStreak,
+                user.NotifTips,
+                user.IsPublic
             );
         }
 

@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { authService, UserDto } from "@/services/auth";
 import { practiceService, CefrAnalysisDto } from "@/services/practice";
 import { scenarioService, Scenario } from "@/services/scenario";
+import { getDecks } from "@/services/decks";
 import { cn } from "@/lib/utils";
 
 const CEFR_CONFIG: Record<
@@ -29,11 +30,11 @@ const CEFR_CONFIG: Record<
   { gradient: string; glow: string; ring: string; label: string; emoji: string }
 > = {
   "Unassigned": {
-    gradient: "from-slate-400 via-slate-500 to-slate-600",
-    glow: "shadow-slate-400/40",
-    ring: "ring-slate-400/60",
-    label: "Not yet assessed",
-    emoji: "❓",
+    gradient: "from-[#432c25] via-[#5b3e34] to-[#f25b29]",
+    glow: "shadow-orange-500/20",
+    ring: "ring-orange-400/50 bg-white/10",
+    label: "Not yet assessed · Practice in Vocal Lab to begin",
+    emoji: "✨",
   },
   A1: {
     gradient: "from-slate-700 via-slate-600 to-slate-800",
@@ -94,6 +95,9 @@ export default function StudentDashboard() {
     return localStorage.getItem("practice_language") || "English";
   });
 
+  const [totalDue, setTotalDue] = useState<number>(0);
+  const [dueDecks, setDueDecks] = useState<{ id: string; name: string; dueCount: number }[]>([]);
+
   useEffect(() => {
     // Sync latest user from server
     authService
@@ -108,6 +112,30 @@ export default function StudentDashboard() {
     scenarioService.getScenarios()
       .then((list) => setDbScenarios(list))
       .catch((err) => console.error("Failed to load scenarios for dashboard:", err));
+
+    // Load due cards count for reminders
+    getDecks()
+      .then((data) => {
+        const dueList = data
+          .filter(d => (d.dueCardsCount || 0) > 0)
+          .map(d => ({ id: d.id, name: d.name, dueCount: d.dueCardsCount || 0 }));
+        setDueDecks(dueList);
+        const total = dueList.reduce((sum, d) => sum + d.dueCount, 0);
+        setTotalDue(total);
+
+        // Notify client-side if permissions granted and has due cards
+        if (total > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+          const alreadyNotified = sessionStorage.getItem("notified_flashcards_today");
+          if (!alreadyNotified) {
+            new Notification("IMMERSIO", {
+              body: `Hôm nay bạn có ${total} thẻ từ vựng cần ôn tập. Click để bắt đầu ôn ngay! 🔥`,
+              icon: "/logo.png"
+            });
+            sessionStorage.setItem("notified_flashcards_today", "true");
+          }
+        }
+      })
+      .catch((err) => console.error("Failed to load decks for dashboard stats:", err));
   }, []);
 
   // Determine active scenarios (use real database ones if loaded, otherwise fallback to local mocks)
@@ -149,7 +177,7 @@ export default function StudentDashboard() {
             <h1 className="text-2xl md:text-3xl font-display font-black text-slate-100 italic tracking-tight leading-tight">
               Hello,{" "}
               <span className="text-indigo-400">
-                {user?.username ?? "Learner"}!
+                {user?.username?.trim() || "Learner"}!
               </span>{" "}
               👋
             </h1>
@@ -218,7 +246,7 @@ export default function StudentDashboard() {
                 )}
               >
                 <span className="text-2xl font-black text-white tracking-tighter">
-                  {level}
+                  {level === "Unassigned" ? "?" : level}
                 </span>
               </div>
             </div>
@@ -388,7 +416,33 @@ export default function StudentDashboard() {
         )}
       </AnimatePresence>
 
-
+      {/* Flashcard Review Reminder Banner */}
+      {totalDue > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative bg-slate-900/95 border border-slate-800 rounded-[2.5rem] p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl overflow-hidden group mb-8"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-2xl -mr-10 -mt-10 animate-pulse" />
+          <div className="flex items-center gap-5">
+            <div className="w-14 h-14 bg-indigo-500/15 border border-indigo-500/30 rounded-2xl flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+              <Brain size={24} className="animate-bounce" />
+            </div>
+            <div>
+              <h3 className="font-black text-white text-base tracking-tight italic uppercase">Nhắc nhở ôn tập thẻ từ</h3>
+              <p className="text-xs text-slate-300 font-bold mt-1.5 max-w-md leading-relaxed">
+                Hôm nay bạn có <span className="text-orange-400 font-black">{totalDue} từ vựng</span> cần ôn tập. 
+                Gợi ý ôn tập: <span className="text-amber-400 font-black">"{dueDecks[0]?.name || "Từ vựng hàng ngày"}"</span> để giữ vững chuỗi học tập!
+              </p>
+            </div>
+          </div>
+          <Link to={`/student/flashcards/${dueDecks[0]?.id || ""}`} className="w-full md:w-auto">
+            <Button className="w-full md:w-auto px-8 h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] uppercase tracking-widest transition-transform active:scale-95 shadow-lg shadow-indigo-500/20 border border-white/10">
+              Ôn tập ngay <ArrowRight size={14} className="ml-2" />
+            </Button>
+          </Link>
+        </motion.div>
+      )}
 
       {/* Recommendations */}
       <section>

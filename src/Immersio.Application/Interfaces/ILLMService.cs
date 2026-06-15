@@ -13,6 +13,7 @@ namespace Immersio.Application.Interfaces
             string contextPrompt, 
             IEnumerable<SessionMessageDto> history, 
             string userMessage, 
+            IEnumerable<string>? allowedEmotions,
             CancellationToken cancellationToken);
 
         Task<CorrectionResultDto> AnalyzeGrammarAsync(

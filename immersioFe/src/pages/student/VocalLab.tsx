@@ -195,14 +195,14 @@ export default function VocalLab() {
       <div className="absolute bottom-[20%] right-[10%] w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="h-20 max-w-xl mx-auto w-full flex items-center px-6 shrink-0 justify-between relative z-10">
-        <button onClick={handleBack} className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-350 hover:bg-white/10 hover:text-white transition-all duration-300 border border-white/5 shadow-lg active:scale-95">
+        <button onClick={handleBack} className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-200 dark:text-slate-300 hover:bg-white/10 hover:text-white transition-all duration-300 border border-white/5 shadow-lg active:scale-95">
           <ChevronLeft className="w-6 h-6" />
         </button>
         <div className="text-center">
           <h2 className="font-display font-black text-white text-2xl tracking-tight italic uppercase">
             Vocal <span className="text-emerald-450">Lab</span>
           </h2>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] leading-none mt-1.5 flex items-center justify-center gap-1.5">
+          <p className="text-[10px] font-black text-slate-300 dark:text-slate-400 uppercase tracking-[0.3em] leading-none mt-1.5 flex items-center justify-center gap-1.5">
             <Sparkles className="w-3 h-3 text-emerald-400" /> Accent Training
           </p>
         </div>
@@ -280,14 +280,14 @@ export default function VocalLab() {
                   </h3>
                   
                   {translation && (
-                    <p className="text-xs font-black text-slate-450 italic mt-2 select-text flex items-center gap-1.5">
-                      <span className="text-indigo-400 font-black not-italic text-[8px] uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded border border-white/5 shrink-0">Mean</span>
+                    <p className="text-xs font-black text-slate-200 dark:text-slate-300 italic mt-2 select-text flex items-center gap-1.5">
+                      <span className="text-indigo-600 bg-indigo-50/80 border border-indigo-200/60 dark:text-indigo-300 dark:bg-indigo-950/40 dark:border-indigo-900/30 font-black not-italic text-[8px] uppercase tracking-widest px-2 py-0.5 rounded shrink-0">Mean</span>
                       <span className="truncate">"{translation}"</span>
                     </p>
                   )}
 
                   {explanation && (
-                    <div className="text-[10px] text-indigo-200 bg-indigo-950/20 px-3.5 py-2.5 rounded-xl border border-indigo-500/10 leading-normal mt-3 shadow-inner max-h-[60px] overflow-y-auto custom-scrollbar scrollbar-hide">
+                    <div className="text-[10px] text-indigo-900 bg-indigo-50/80 border border-indigo-200/60 dark:text-indigo-200 dark:bg-indigo-950/25 dark:border-indigo-500/15 px-3.5 py-2.5 rounded-xl border leading-normal mt-3 shadow-inner max-h-[60px] overflow-y-auto custom-scrollbar scrollbar-hide">
                       💡 {explanation}
                     </div>
                   )}
@@ -455,14 +455,15 @@ export default function VocalLab() {
 
       {/* Recording action bar */}
       <div className="p-4 bg-slate-950/60 backdrop-blur-xl border-t border-white/10 shrink-0 flex items-center justify-between max-w-xl mx-auto w-full rounded-b-[2rem] shadow-2xl relative z-10">
-        <Button
-          variant="outline"
-          className="w-12 h-12 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300 border border-white/5 active:scale-90"
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-12 h-12 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-200 dark:text-slate-300 hover:text-white transition-all duration-300 border border-white/5 active:scale-90 disabled:opacity-40 disabled:pointer-events-none"
           onClick={handleAiGenerate}
           disabled={isRecording || isGenerating}
         >
           <SkipBack className="w-6 h-6" />
-        </Button>
+        </motion.button>
 
         <div className="relative group">
           <div className={cn(
@@ -483,14 +484,15 @@ export default function VocalLab() {
           </button>
         </div>
 
-        <Button
-          variant="outline"
-          className="w-12 h-12 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300 border border-white/5 active:scale-90"
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-12 h-12 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-200 dark:text-slate-300 hover:text-white transition-all duration-300 border border-white/5 active:scale-90 disabled:opacity-40 disabled:pointer-events-none"
           onClick={handleAiGenerate}
           disabled={isRecording || isGenerating}
         >
           <SkipForward className="w-6 h-6" />
-        </Button>
+        </motion.button>
       </div>
     </div>
   );

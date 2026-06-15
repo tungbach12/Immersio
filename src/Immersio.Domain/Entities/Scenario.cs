@@ -20,6 +20,7 @@ namespace Immersio.Domain.Entities
         public bool IsNavigation { get; private set; }
         public bool IsDeleted { get; private set; }
         public string? VoiceId { get; private set; }
+        public string? EmotionsJson { get; private set; }
 
         // Navigation
         public ICollection<ScenarioItem> Items { get; private set; } = new List<ScenarioItem>();
@@ -39,7 +40,8 @@ namespace Immersio.Domain.Entities
             string initialMessage, 
             string avatarUrl, 
             bool isNavigation,
-            string? voiceId = null)
+            string? voiceId = null,
+            string? emotionsJson = null)
         {
             if (string.IsNullOrWhiteSpace(title))
                 throw new ArgumentException("Title cannot be empty.", nameof(title));
@@ -63,6 +65,7 @@ namespace Immersio.Domain.Entities
             IsNavigation = isNavigation;
             IsDeleted = false;
             VoiceId = voiceId;
+            EmotionsJson = emotionsJson;
         }
 
         public void AddItem(string name, decimal price, string imageUrl, string? icon = null)
@@ -83,7 +86,8 @@ namespace Immersio.Domain.Entities
             string initialMessage, 
             string avatarUrl, 
             bool isNavigation,
-            string? voiceId)
+            string? voiceId,
+            string? emotionsJson)
         {
             Title = title;
             Language = language;
@@ -98,6 +102,7 @@ namespace Immersio.Domain.Entities
             AvatarUrl = avatarUrl;
             IsNavigation = isNavigation;
             VoiceId = voiceId;
+            EmotionsJson = emotionsJson;
         }
 
         public void Delete()

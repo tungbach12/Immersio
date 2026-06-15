@@ -229,7 +229,7 @@ export default function DictionaryPage() {
                       {entry.partOfSpeech}
                     </span>
                   </div>
-                  <p className="text-slate-450 font-mono font-bold text-sm mt-3">
+                  <p className="text-slate-300 dark:text-slate-400 font-mono font-bold text-sm mt-3">
                     {entry.phonetic}
                   </p>
                 </div>
@@ -269,7 +269,7 @@ export default function DictionaryPage() {
 
                 <div>
                   <span className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.25em] mb-2 block">English Definition</span>
-                  <p className="text-sm font-bold text-slate-350 leading-relaxed bg-white/5 rounded-2xl p-5 border border-white/5 select-text">
+                  <p className="text-sm font-bold text-slate-200 dark:text-slate-300 leading-relaxed bg-white/5 rounded-2xl p-5 border border-white/5 select-text">
                     {entry.definition}
                   </p>
                 </div>

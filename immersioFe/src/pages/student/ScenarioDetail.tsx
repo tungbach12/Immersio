@@ -80,6 +80,7 @@ export default function ScenarioDetail() {
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [loadingScenario, setLoadingScenario] = useState(true);
+  const [currentEmotion, setCurrentEmotion] = useState<string>("idle");
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -133,6 +134,7 @@ export default function ScenarioDetail() {
       .then(async (data) => {
         if (!active) return;
         setScenario(data);
+        setCurrentEmotion("idle");
         setLoadingScenario(false);
         try {
           const res = await scenarioService.startSession(data.id, targetLang);
@@ -221,8 +223,12 @@ export default function ScenarioDetail() {
       currentAudioRef.current = audio;
       setCurrentAudio(audio);
       await audio.play();
-    } catch (e) {
+    } catch (e: any) {
       if (!isMountedRef.current) return;
+      if (e.name === "NotAllowedError" || (e.message && e.message.includes("user didn't interact"))) {
+        console.warn("TTS Autoplay blocked by browser. User interaction is required before audio can play.");
+        return;
+      }
       console.error("Azure TTS Playback failed, falling back to browser SpeechSynthesis:", e);
       try {
         window.speechSynthesis.cancel();
@@ -450,6 +456,10 @@ export default function ScenarioDetail() {
     try {
       const response = await scenarioService.sendMessage(sessionId, userMsg);
 
+      if (response.emotion) {
+        setCurrentEmotion(response.emotion.toLowerCase());
+      }
+
       // Update the user message item in history with its correction ONLY IF it was spoken!
       if (response.correction && isSpoken) {
         setMessages(prev => prev.map((msg, idx) =>
@@ -622,7 +632,7 @@ export default function ScenarioDetail() {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-950 z-50 flex flex-col font-body select-none">
+    <div className="dark fixed inset-0 bg-zinc-950 z-50 flex flex-col font-body select-none">
 
       {/* Background Graphic Layer */}
       <div className="absolute inset-0 z-0">
@@ -631,12 +641,12 @@ export default function ScenarioDetail() {
           alt="Scenario Background"
           className="w-full h-full object-cover opacity-35 filter brightness-75 contrast-125"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-transparent to-slate-950/95" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-transparent to-slate-950/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/90" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/70" />
       </div>
 
       {/* Modern Translucent Header */}
-      <div className="relative z-30 p-4 md:p-6 flex items-center justify-between bg-gradient-to-b from-slate-950/90 to-transparent">
+      <div className="relative z-30 p-4 md:p-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -649,11 +659,11 @@ export default function ScenarioDetail() {
 
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 shadow-2xl">
-              <span className="text-indigo-400 font-black text-xs uppercase tracking-widest">{targetLang || scenario.language}</span>
+              <span className="text-indigo-600 font-black text-xs uppercase tracking-widest">{targetLang || scenario.language}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
             </div>
-            <div className="hidden sm:flex items-center gap-2 bg-slate-900/80 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 shadow-2xl">
-              <span className="text-white/60 font-bold text-xs uppercase tracking-widest">{scenario.level}</span>
+            <div className="hidden sm:flex items-center gap-2 bg-slate-800 dark:bg-slate-900/80 backdrop-blur-xl px-4 py-2 rounded-2xl border border-slate-700/50 dark:border-white/10 shadow-premium">
+              <span className="text-slate-100 dark:text-slate-200 font-bold text-xs uppercase tracking-widest">{scenario.level}</span>
             </div>
           </div>
         </div>
@@ -955,9 +965,9 @@ export default function ScenarioDetail() {
         <div className="flex-1 relative z-20 flex flex-col justify-end pb-8 px-4 w-full h-full overflow-hidden">
 
           {/* Breathing Visual Novel Character Avatar */}
-          <div className="absolute left-0 sm:left-[2%] md:left-[5%] lg:left-[10%] xl:left-[15%] w-auto z-10 flex items-end justify-center pointer-events-none origin-bottom-left" style={{ bottom: '53vh', height: '50vh' }}>
+          <div className="absolute left-1/2 -translate-x-1/2 w-auto z-10 flex items-end justify-center pointer-events-none origin-bottom" style={{ bottom: '22vh', height: '68vh' }}>
             <motion.img
-              src={scenario.avatar}
+              src={(scenario && scenario.emotions && scenario.emotions[currentEmotion]) || scenario?.avatar || ""}
               alt="Scenario Character Avatar"
               animate={{
                 y: [0, -8, 0],
@@ -976,15 +986,15 @@ export default function ScenarioDetail() {
           <div className="relative z-20 w-full max-w-4xl mx-auto flex flex-col gap-4 pointer-events-auto">
 
             {/* Scrolling Dialogue Panel */}
-            <div className="bg-slate-950/85 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-6 md:p-8 shadow-2xl min-h-[280px] flex flex-col justify-between max-h-[45vh]">
+            <div className="bg-zinc-900/90 backdrop-blur-3xl border border-zinc-800 rounded-[2.5rem] p-6 md:p-8 shadow-2xl min-h-[280px] flex flex-col justify-between max-h-[45vh]">
 
               {/* Header card for Speech Lab */}
-              <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-3 shrink-0">
+              <div className="flex justify-between items-center border-b border-zinc-800 pb-3 mb-3 shrink-0">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-[10px] font-black">
+                  <div className="w-5 h-5 rounded-lg bg-primary flex items-center justify-center text-white text-[10px] font-black">
                     ✦
                   </div>
-                  <span className="text-[9px] font-black text-white uppercase tracking-widest">IMMERSIO Speech Lab</span>
+                  <span className="text-[9px] font-black text-zinc-100 uppercase tracking-widest">IMMERSIO Speech Lab</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -997,7 +1007,7 @@ export default function ScenarioDetail() {
                 {messages.map((msg, idx) => (
                   <div key={idx} className={cn("flex gap-3 max-w-[85%] animate-fade-in", msg.role === "user" ? "ml-auto justify-end" : "justify-start")}>
                     {msg.role !== "user" && (
-                      <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white shrink-0 border border-white/10 shadow-md">
+                      <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300 shrink-0 border border-zinc-700 shadow-md">
                         <Sparkles size={12} />
                       </div>
                     )}
@@ -1005,11 +1015,11 @@ export default function ScenarioDetail() {
                     <div className={cn(
                       "p-3.5 rounded-2xl border text-xs md:text-sm font-semibold leading-relaxed shadow-sm relative group",
                       msg.role === "user"
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-500/20 rounded-tr-none"
-                        : "bg-white/5 border-white/5 text-slate-200 rounded-tl-none pr-12"
+                        ? "bg-gradient-to-r from-primary/80 to-primary text-white border-primary/20 rounded-tr-none"
+                        : "bg-zinc-800 border-zinc-700 text-zinc-100 rounded-tl-none pr-12"
                     )}>
                       {msg.role !== "user" && (
-                        <p className="text-[9px] font-black text-indigo-400 mb-1 uppercase tracking-wide leading-none">
+                        <p className="text-[9px] font-black text-primary mb-1 uppercase tracking-wide leading-none">
                           {scenario.title.split(' ')[0]} (AI Barista)
                         </p>
                       )}
@@ -1024,7 +1034,7 @@ export default function ScenarioDetail() {
                       {/* Audio Button overlay on AI messages */}
                       {msg.role !== "user" && (
                         <button
-                          className="absolute bottom-2.5 right-2.5 w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/55 hover:text-white hover:bg-white/15 transition-all duration-200"
+                          className="absolute bottom-2.5 right-2.5 w-6 h-6 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all duration-200"
                           onClick={() => playTextToSpeech(msg.text, targetLang)}
                         >
                           <Volume2 size={12} />
@@ -1048,7 +1058,7 @@ export default function ScenarioDetail() {
                     </div>
 
                     {msg.role === "user" && (
-                      <div className="w-8 h-8 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-white shrink-0 shadow-md">
+                      <div className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300 shrink-0 shadow-md">
                         <UserCircle2 size={14} />
                       </div>
                     )}
@@ -1074,7 +1084,7 @@ export default function ScenarioDetail() {
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
                   placeholder={isListening ? "Listening closely..." : "Type your response..."}
                   className={cn(
-                    "w-full h-16 bg-slate-950/85 border border-white/10 rounded-[2.2rem] px-6 pr-16 text-white font-bold text-sm placeholder:text-white/30 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500/50 backdrop-blur-2xl shadow-2xl transition-all",
+                    "w-full h-16 bg-zinc-900/95 border border-zinc-800 rounded-[2.2rem] px-6 pr-16 text-white font-bold text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary/50 backdrop-blur-2xl shadow-2xl transition-all",
                     isListening && "ring-4 ring-red-500/20 bg-red-950/20 border-red-500/35"
                   )}
                 />
@@ -1084,8 +1094,8 @@ export default function ScenarioDetail() {
                   className={cn(
                     "absolute right-2 top-2 h-12 w-12 rounded-full transition-all active:scale-95 shadow-lg",
                     input.trim()
-                      ? "bg-indigo-600 hover:bg-indigo-700 text-white scale-100"
-                      : "bg-white/5 text-white/20 scale-90 pointer-events-none"
+                      ? "bg-primary hover:bg-primary-dark text-white scale-100"
+                      : "bg-zinc-800 text-zinc-500 scale-90 pointer-events-none"
                   )}
                   onClick={handleSend}
                   disabled={!input.trim() || isLoading}
@@ -1098,13 +1108,13 @@ export default function ScenarioDetail() {
               <Button
                 onClick={() => setAutoSend(prev => !prev)}
                 className={cn(
-                  "h-16 rounded-[1.75rem] px-5 border border-white/10 flex items-center gap-2 font-black text-[10px] uppercase tracking-wider transition-all duration-300 active:scale-95 shadow-2xl shrink-0",
+                  "h-16 rounded-[1.75rem] px-5 border flex items-center gap-2 font-black text-[10px] uppercase tracking-wider transition-all duration-300 active:scale-95 shadow-2xl shrink-0",
                   autoSend
-                    ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-600/20 border-indigo-500/30"
-                    : "bg-gradient-to-br from-slate-900 to-black hover:from-slate-800 hover:to-slate-950 text-white/50"
+                    ? "bg-primary hover:bg-primary-dark text-white border-primary/20 shadow-glow"
+                    : "bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800"
                 )}
               >
-                <span className={cn("w-2 h-2 rounded-full", autoSend ? "bg-emerald-400 animate-pulse" : "bg-slate-600")} />
+                <span className={cn("w-2 h-2 rounded-full", autoSend ? "bg-emerald-400 animate-pulse" : "bg-zinc-600")} />
                 {autoSend ? "Auto Send" : "Manual Send"}
               </Button>
 
@@ -1112,10 +1122,10 @@ export default function ScenarioDetail() {
               <Button
                 size="icon"
                 className={cn(
-                  "rounded-[1.75rem] h-16 w-16 shrink-0 shadow-2xl transition-all relative overflow-hidden border border-white/10",
+                  "rounded-[1.75rem] h-16 w-16 shrink-0 shadow-2xl transition-all relative overflow-hidden border",
                   isListening
-                    ? "bg-red-600 scale-110 ring-4 ring-red-500/30"
-                    : "bg-gradient-to-br from-slate-900 to-black hover:from-slate-800 hover:to-slate-950"
+                    ? "bg-red-500 hover:bg-red-650 text-white scale-110 ring-4 ring-red-500/20 border-red-400/30"
+                    : "bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800"
                 )}
                 onClick={(e) => {
                   e.preventDefault();
@@ -1134,7 +1144,7 @@ export default function ScenarioDetail() {
                     <div className="w-5 h-5 bg-white rounded-md" />
                   </motion.div>
                 ) : (
-                  <Mic size={24} className="text-white" />
+                  <Mic size={24} className="text-zinc-300" />
                 )}
               </Button>
             </div>

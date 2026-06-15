@@ -33,6 +33,16 @@ namespace Immersio.Domain.Entities
 
         public string CurrentLanguageLevel { get; private set; } = "Unassigned";
 
+        public bool NotifEmail { get; private set; } = true;
+
+        public bool NotifPush { get; private set; } = true;
+
+        public bool NotifStreak { get; private set; } = true;
+
+        public bool NotifTips { get; private set; } = true;
+
+        public bool IsPublic { get; private set; } = true;
+
         private readonly List<RefreshToken> _refreshTokens = new();
         public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
 
@@ -102,6 +112,21 @@ namespace Immersio.Domain.Entities
         {
             if (string.IsNullOrWhiteSpace(level)) return;
             CurrentLanguageLevel = level;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void UpdateNotificationSettings(bool email, bool push, bool streak, bool tips)
+        {
+            NotifEmail = email;
+            NotifPush = push;
+            NotifStreak = streak;
+            NotifTips = tips;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void SetProfileVisibility(bool isPublic)
+        {
+            IsPublic = isPublic;
             UpdatedAt = DateTime.UtcNow;
         }
     }

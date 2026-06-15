@@ -58,6 +58,7 @@ export default function ScenarioBuilder() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [initialMessage, setInitialMessage] = useState("");
+  const [emotions, setEmotions] = useState<{ key: string; url: string }[]>([]);
 
   const handleImageUpload = async (
     file: File | undefined,
@@ -167,6 +168,7 @@ export default function ScenarioBuilder() {
     setContextPrompt("");
     setIsNavigation(false);
     setVoiceId("en-US-JennyNeural");
+    setEmotions([]);
     setPreviewError("");
     setIsModalOpen(true);
   };
@@ -186,6 +188,11 @@ export default function ScenarioBuilder() {
     setContextPrompt(item.context || "");
     setIsNavigation(!!item.isNavigation);
     setVoiceId(item.voiceId || "en-US-JennyNeural");
+    if (item.emotions) {
+      setEmotions(Object.entries(item.emotions).map(([key, url]) => ({ key, url })));
+    } else {
+      setEmotions([]);
+    }
     setPreviewError("");
     setIsModalOpen(true);
   };
@@ -195,6 +202,17 @@ export default function ScenarioBuilder() {
     setSaving(true);
     setError("");
     setSuccess("");
+
+    const emotionsJson = emotions.length > 0
+      ? JSON.stringify(
+          emotions.reduce((acc, curr) => {
+            if (curr.key.trim()) {
+              acc[curr.key.trim().toLowerCase()] = curr.url.trim();
+            }
+            return acc;
+          }, {} as Record<string, string>)
+        )
+      : null;
 
     const payload = {
       title,
@@ -209,7 +227,8 @@ export default function ScenarioBuilder() {
       initialMessage,
       avatarUrl,
       isNavigation,
-      voiceId
+      voiceId,
+      emotionsJson
     };
 
     try {
@@ -492,6 +511,75 @@ export default function ScenarioBuilder() {
                   </div>
                   {uploadError && (
                     <span className="text-[10px] font-bold text-rose-400 ml-1">{uploadError}</span>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2 col-span-2 p-5 bg-white/5 border border-white/10 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-extrabold text-[10px] text-white uppercase tracking-widest block">Character Emotions Mapping</span>
+                      <span className="text-[8px] font-medium text-slate-500">Map custom emotions (e.g. idle, happy) to avatar images</span>
+                    </div>
+                    <Button 
+                      type="button"
+                      onClick={() => setEmotions(prev => [...prev, { key: "", url: "" }])}
+                      className="gap-1.5 h-8 px-3 rounded-lg font-bold uppercase tracking-wider text-[8px] bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-glow active:scale-95 transition-all"
+                    >
+                      <Plus size={10} />
+                      Add Emotion
+                    </Button>
+                  </div>
+
+                  {emotions.length > 0 && (
+                    <div className="space-y-3 mt-3 max-h-48 overflow-y-auto pr-1">
+                      {emotions.map((emo, index) => (
+                        <div key={index} className="flex items-center gap-2 bg-slate-950/40 p-3 rounded-xl border border-white/5 animate-fadeIn">
+                          {emo.url && (
+                            <img src={emo.url} alt="emo preview" className="h-9 w-9 rounded-lg object-cover border border-white/10" />
+                          )}
+                          <input 
+                            type="text" 
+                            placeholder="Emotion (e.g. happy)"
+                            value={emo.key}
+                            onChange={(e) => {
+                              const updated = [...emotions];
+                              updated[index].key = e.target.value;
+                              setEmotions(updated);
+                            }}
+                            className="w-1/3 h-9 px-3 rounded-lg border border-white/10 bg-slate-900 text-[10px] font-bold focus:outline-none focus:border-indigo-500 text-slate-200"
+                          />
+                          <input 
+                            type="text" 
+                            placeholder="Image URL or upload"
+                            value={emo.url}
+                            onChange={(e) => {
+                              const updated = [...emotions];
+                              updated[index].url = e.target.value;
+                              setEmotions(updated);
+                            }}
+                            className="flex-1 h-9 px-3 rounded-lg border border-white/10 bg-slate-900 text-[10px] font-mono focus:outline-none focus:border-indigo-500 text-slate-300"
+                          />
+                          <label className="h-9 px-2 flex items-center gap-1 rounded-lg border border-indigo-500/40 bg-indigo-500/10 text-indigo-300 text-[8px] font-black uppercase tracking-widest cursor-pointer hover:bg-indigo-500/20 whitespace-nowrap">
+                            <Image size={10} />
+                            <input type="file" accept="image/*" className="hidden"
+                              onChange={(e) => {
+                                handleImageUpload(e.target.files?.[0], (url) => {
+                                  const updated = [...emotions];
+                                  updated[index].url = url;
+                                  setEmotions(updated);
+                                }, () => {});
+                              }} />
+                          </label>
+                          <Button 
+                            type="button"
+                            onClick={() => setEmotions(prev => prev.filter((_, idx) => idx !== index))}
+                            className="h-9 w-9 p-0 rounded-lg bg-red-950/20 border border-red-500/10 hover:border-red-500/30 text-red-400 hover:bg-red-500/20"
+                          >
+                            <Trash2 size={12} />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
 

@@ -1,32 +1,33 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Zap, 
-  CheckCircle, 
-  Star, 
-  Layers, 
-  Gamepad2, 
-  UserCircle2, 
-  Sparkles, 
-  Mic, 
-  Volume2, 
-  Facebook, 
-  Twitter, 
-  Instagram, 
-  Youtube, 
-  Send, 
-  Mail, 
-  ArrowRight, 
-  Menu, 
-  X, 
-  Play, 
-  Globe2, 
+import {
+  Zap,
+  CheckCircle,
+  Star,
+  Layers,
+  Gamepad2,
+  UserCircle2,
+  Sparkles,
+  Mic,
+  Volume2,
+  Facebook,
+  Twitter,
+  Instagram,
+  Youtube,
+  Send,
+  Mail,
+  ArrowRight,
+  Menu,
+  X,
+  Play,
+  Globe2,
   Award,
   Brain,
   Activity,
   Sliders,
   Repeat,
-  Check
+  Check,
+  Crown
 } from 'lucide-react';
 
 const Intro = () => {
@@ -69,9 +70,9 @@ const Intro = () => {
                 Launch Online Free
               </button>
             </Link>
-            
+
             {/* Mobile Menu Toggle */}
-            <button 
+            <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition"
             >
@@ -104,29 +105,29 @@ const Intro = () => {
       {/* Hero Section */}
       <section className="relative pt-32 md:pt-44 pb-28 px-6 md:px-8 overflow-hidden z-10">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          
+
           <div className="lg:col-span-6 space-y-8 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-4 py-2 rounded-full text-xs font-bold mx-auto lg:mx-0 shadow-inner">
               <Zap size={14} className="animate-pulse" /> Voice-Interactive AI Language Learning
             </div>
-            
+
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[1.08] tracking-tight text-white italic uppercase">
               Speak to <br />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400 pr-4">
                 Conquer
               </span>
             </h1>
-            
+
             <p className="text-sm md:text-base text-slate-400 leading-relaxed max-w-lg mx-auto lg:mx-0 font-semibold">
               Học ngoại ngữ thông qua các tình huống nhập vai thực tế. Trò chuyện tự nhiên với nhân vật AI trong thế giới cốt truyện tương tác sống động, chấm điểm chuẩn xác đến từng nguyên âm, phụ âm bản xứ.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link to="/register">
                 <button className="group flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:shadow-2xl hover:shadow-indigo-600/30 transition duration-300 shadow-xl shadow-blue-500/10 w-full sm:w-auto hover:-translate-y-0.5">
-                  Bắt đầu nói ngay 
-                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition duration-300">
-                    <Mic size={14} className="text-cyan-300" />
+                  Bắt đầu nói ngay
+                  <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center group-hover:scale-110 transition duration-300 shadow-sm">
+                    <Mic size={14} className="text-blue-600" />
                   </div>
                 </button>
               </Link>
@@ -140,33 +141,33 @@ const Intro = () => {
             {/* Quick Metrics */}
             <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/5 max-w-md mx-auto lg:mx-0">
               <div>
-                <p className="text-2xl md:text-3xl font-black text-blue-400">98%</p>
+                <p className="text-2xl md:text-3xl font-black text-amber-600 dark:text-blue-400">98%</p>
                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">Chuẩn âm vị</p>
               </div>
               <div>
-                <p className="text-2xl md:text-3xl font-black text-indigo-400">100+</p>
+                <p className="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-400">100+</p>
                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">Kịch bản nhập vai</p>
               </div>
               <div>
-                <p className="text-2xl md:text-3xl font-black text-cyan-400">CEFR</p>
+                <p className="text-2xl md:text-3xl font-black text-cyan-600 dark:text-cyan-400">CEFR</p>
                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">Chẩn đoán cấp độ</p>
               </div>
             </div>
           </div>
-          
+
           {/* Right Hero Side: Premium Dashboard/AI conversation interface Mockup */}
           <div className="lg:col-span-6 relative">
             <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500 to-indigo-500 rounded-[2.5rem] blur-3xl opacity-20 transform -rotate-3 animate-pulse-slow"></div>
-            
+
             {/* Premium Futuristic AI Voice Visual Asset */}
             <div className="relative z-10 bg-slate-900/40 backdrop-blur-2xl p-2.5 rounded-[2.5rem] shadow-2xl border border-white/10 overflow-hidden transform lg:scale-105 transition-all duration-500 hover:scale-[1.07]">
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10 pointer-events-none" />
-              <img 
-                src="/hero_voice_ai.png" 
-                alt="IMMERSIO AI Voice Cognitive Core" 
+              <img
+                src="/hero_voice_ai.png?v=tech"
+                alt="IMMERSIO AI Voice Cognitive Core"
                 className="w-full h-auto object-cover rounded-[2rem] filter brightness-110 contrast-105"
               />
-              
+
               {/* Overlay Premium Label */}
               <div className="absolute bottom-6 left-6 right-6 z-20 bg-slate-950/70 backdrop-blur-md border border-white/10 p-5 rounded-2xl">
                 <div className="flex items-center gap-2.5 mb-1.5">
@@ -181,10 +182,10 @@ const Intro = () => {
         </div>
       </section>
 
-      {/* AI Cognitive Core Grid Features section */}
+      {/* AI Cognitive Core Grid Features section  */}
       <section id="features" className="py-32 px-6 bg-slate-900/30 relative overflow-hidden border-t border-b border-white/5 z-10">
         <div className="max-w-7xl mx-auto">
-          
+
           <div className="text-center mb-20 space-y-4">
             <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-inner">
               Lõi phân tích AI bậc cao
@@ -206,11 +207,10 @@ const Intro = () => {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as any)}
-                className={`flex items-center gap-2.5 h-12 px-6 rounded-2xl font-black text-[10px] uppercase tracking-wider transition-all duration-300 active:scale-95 border ${
-                  activeTab === tab.key 
-                    ? 'bg-indigo-600 border-indigo-500 text-white shadow-xl shadow-indigo-600/30' 
+                className={`flex items-center gap-2.5 h-12 px-6 rounded-2xl font-black text-[10px] uppercase tracking-wider transition-all duration-300 active:scale-95 border ${activeTab === tab.key
+                    ? 'bg-indigo-600 border-indigo-500 text-white shadow-xl shadow-indigo-600/30'
                     : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
-                }`}
+                  }`}
               >
                 {tab.icon}
                 {tab.label}
@@ -223,7 +223,7 @@ const Intro = () => {
             {activeTab === 'phoneme' && (
               <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div className="space-y-6">
-                  <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-center text-blue-400">
+                  <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-center text-blue-700 dark:text-blue-400">
                     <Mic size={24} />
                   </div>
                   <h3 className="text-2xl md:text-3xl font-black text-white uppercase italic leading-none">Chấm điểm phát âm chi tiết âm vị</h3>
@@ -365,7 +365,7 @@ const Intro = () => {
             {activeTab === 'phrase' && (
               <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div className="space-y-6">
-                  <div className="w-12 h-12 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl flex items-center justify-center text-cyan-400">
+                  <div className="w-12 h-12 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl flex items-center justify-center text-cyan-600 dark:text-cyan-400">
                     <Sliders size={24} />
                   </div>
                   <h3 className="text-2xl md:text-3xl font-black text-white uppercase italic leading-none">Bộ tổng hợp câu giao tiếp theo yêu cầu</h3>
@@ -374,15 +374,15 @@ const Intro = () => {
                   </p>
                   <ul className="space-y-3 font-semibold text-xs text-slate-300">
                     <li className="flex items-center gap-3">
-                      <CheckCircle size={16} className="text-cyan-400 shrink-0" />
+                      <CheckCircle size={16} className="text-cyan-600 dark:text-cyan-400 shrink-0" />
                       <span>Thiết lập linh hoạt ngôn ngữ và độ khó tương thích.</span>
                     </li>
                     <li className="flex items-center gap-3">
-                      <CheckCircle size={16} className="text-cyan-400 shrink-0" />
+                      <CheckCircle size={16} className="text-cyan-600 dark:text-cyan-400 shrink-0" />
                       <span>Hỗ trợ dịch nghĩa, phân tích văn phạm kèm giọng nói mẫu.</span>
                     </li>
                     <li className="flex items-center gap-3">
-                      <CheckCircle size={16} className="text-cyan-400 shrink-0" />
+                      <CheckCircle size={16} className="text-cyan-600 dark:text-cyan-400 shrink-0" />
                       <span>Phù hợp chuẩn bị cấp tốc trước các buổi phỏng vấn, sự kiện.</span>
                     </li>
                   </ul>
@@ -421,20 +421,20 @@ const Intro = () => {
       <section id="vn-mode" className="py-28 px-6 bg-slate-950 overflow-hidden relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            
+
             {/* Premium Immersive Novel Story Portal Visual Asset */}
             <div className="relative">
               <div className="absolute inset-0 bg-blue-500/10 rounded-[2.5rem] blur-3xl opacity-20 transform rotate-6"></div>
-              
+
               <div className="relative bg-slate-900/40 backdrop-blur-2xl p-2.5 rounded-[2.5rem] shadow-2xl border border-white/10 overflow-hidden">
                 <div className="aspect-[16/10] relative bg-slate-950 rounded-[1.75rem] overflow-hidden border border-white/5">
-                  <img 
-                    src="/novel_portal_ai.png" 
-                    alt="IMMERSIO Cinematic Story Portal" 
+                  <img
+                    src="/novel_portal_ai.png?v=tech"
+                    alt="IMMERSIO Cinematic Story Portal"
                     className="absolute inset-0 object-cover w-full h-full filter brightness-105 contrast-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent z-10 pointer-events-none" />
-                  
+
                   {/* Floating Overlay Badge representing the Cinematic stories */}
                   <div className="absolute bottom-4 left-4 right-4 z-20 bg-slate-950/80 backdrop-blur-md border border-white/5 p-4 rounded-xl">
                     <div className="flex items-center gap-2 mb-1">
@@ -461,10 +461,10 @@ const Intro = () => {
               <p className="text-sm md:text-base text-slate-400 leading-relaxed font-semibold">
                 Vượt xa các ứng dụng trắc nghiệm thông thường. Bạn chính là nhân vật chính của câu chuyện, quyết định các lối rẽ và hoàn thành thử thách giao tiếp bằng chính khẩu hình phát âm của bản thân.
               </p>
-              
+
               <div className="grid gap-6">
                 <div className="flex gap-4 p-5 bg-white/5 rounded-3xl border border-white/5 hover:bg-white/10 transition duration-300">
-                  <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-md text-blue-400 shrink-0">
+                  <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-md text-blue-700 dark:text-blue-400 shrink-0">
                     <Mic size={22} />
                   </div>
                   <div>
@@ -472,7 +472,7 @@ const Intro = () => {
                     <p className="text-xs text-slate-400 leading-relaxed mt-1.5 font-semibold">Nhân vật AI trả lời hoàn toàn tương thích và ngẫu biến dựa trên nội dung bạn nói.</p>
                   </div>
                 </div>
-                
+
                 <div className="flex gap-4 p-5 bg-white/5 rounded-3xl border border-white/5 hover:bg-white/10 transition duration-300">
                   <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-md text-indigo-400 shrink-0">
                     <Sparkles size={22} />
@@ -493,7 +493,7 @@ const Intro = () => {
       <section id="spaced-repetition" className="py-28 px-6 bg-slate-900/30 relative overflow-hidden border-t border-b border-white/5 z-10">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            
+
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3.5 py-1.5 rounded-full shadow-inner">
                 <Repeat size={18} />
@@ -505,7 +505,7 @@ const Intro = () => {
               <p className="text-sm md:text-base text-slate-400 leading-relaxed font-semibold">
                 Bất cứ cấu trúc sai ngữ pháp nào hay từ vựng mới nào bạn gặp phải trong kịch bản đều sẽ được phân tích, tạo thành thẻ ghi nhớ và được lên lịch ôn tập giãn cách một cách có khoa học để bám rễ sâu vào trí nhớ dài hạn.
               </p>
-              
+
               <div className="flex gap-6 mt-8">
                 <div className="flex-1 p-5 bg-white/5 rounded-2xl border border-white/5">
                   <span className="text-xl font-black text-white">4x</span>
@@ -520,10 +520,10 @@ const Intro = () => {
 
             <div className="relative flex justify-center">
               <div className="absolute inset-0 bg-purple-500/10 rounded-[2.5rem] blur-3xl opacity-30 transform -rotate-6"></div>
-              
+
               <div className="relative bg-slate-900 border border-white/10 rounded-[3rem] p-8 w-full max-w-md shadow-2xl flex flex-col gap-6">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Spaced Repetition System (SRS)</h4>
-                
+
                 <div className="space-y-4">
                   {[
                     { label: "Card #01 (Chủ đề Cafe)", interval: "Review in 1 day", progress: 95 },
@@ -560,7 +560,7 @@ const Intro = () => {
       {/* Subscription Pricing Tiers */}
       <section id="pricing" className="py-32 px-6 bg-slate-950 relative overflow-hidden z-10">
         <div className="max-w-7xl mx-auto">
-          
+
           <div className="text-center mb-24 space-y-4">
             <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-inner">
               Gói dịch vụ
@@ -572,134 +572,160 @@ const Intro = () => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            
+
             {/* Tier 1: Basic */}
-            <div className="bg-slate-900/40 border border-white/5 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-white/10 transition-all duration-300 relative overflow-hidden group">
+            <div className="bg-white/80 dark:bg-slate-900/40 border border-slate-700/30 dark:border-white/5 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-indigo-500/20 dark:hover:border-indigo-500/20 transition-all duration-300 relative overflow-hidden group">
               <div>
-                <h4 className="text-xl font-black text-white italic uppercase">Basic tier</h4>
-                <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Luyện tập nền tảng</p>
-                
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xl font-black text-white italic uppercase">Basic</h4>
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                    <Star size={18} strokeWidth={2.5} />
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Get started with IMMERSIO</p>
+
                 <div className="my-8 flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-white">0đ</span>
-                  <span className="text-xs text-slate-500 font-bold uppercase">/ Free</span>
+                  <span className="text-4xl font-black text-white">Free</span>
                 </div>
 
-                <ul className="space-y-4 pt-6 border-t border-white/5 text-xs text-slate-300 font-semibold">
+                <ul className="space-y-4 pt-6 border-t border-slate-700/30 dark:border-white/5 text-xs text-slate-200 dark:text-slate-300 font-semibold">
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Hạn mức: 3 Kịch bản AI / ngày</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Lõi hội thoại phản xạ 2D cơ bản</span>
+                    <Check size={14} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
+                    <span className="uppercase tracking-tight">STANDARD AI MODEL (HIGH SPEED)</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Giọng nói mẫu chuẩn tiêu chuẩn</span>
+                    <Check size={14} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
+                    <span className="uppercase tracking-tight">5 SCENARIOS PER DAY</span>
                   </li>
-                  <li className="flex items-center gap-3 text-slate-600">
-                    <X size={14} className="shrink-0" />
-                    <span className="line-through">Phân tích chẩn đoán chi tiết âm vị</span>
+                  <li className="flex items-center gap-3">
+                    <Check size={14} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
+                    <span className="uppercase tracking-tight">GRAMMAR & VOCABULARY CORRECTION</span>
                   </li>
-                  <li className="flex items-center gap-3 text-slate-600">
-                    <X size={14} className="shrink-0" />
-                    <span className="line-through">Chẩn đoán thăng hạng CEFR</span>
+                  <li className="flex items-center gap-3">
+                    <Check size={14} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
+                    <span className="uppercase tracking-tight">10 FLASHCARDS/DAY (VOCAB ONLY)</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check size={14} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
+                    <span className="uppercase tracking-tight">BASIC STORYLINE ACCESS</span>
                   </li>
                 </ul>
               </div>
 
               <Link to="/register" className="mt-10">
-                <button className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs uppercase tracking-widest transition-all">
-                  Get Started
+                <button className="w-full h-12 rounded-xl bg-slate-800 hover:bg-slate-800 text-slate-100 dark:text-slate-400 border border-slate-700/50 dark:border-white/5 font-bold text-xs uppercase tracking-widest transition-all">
+                  ACTIVE PLAN
                 </button>
               </Link>
             </div>
 
-            {/* Tier 2: Premium (Recommended) */}
-            <div className="bg-gradient-to-b from-slate-900 to-indigo-950 border border-indigo-500/30 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-indigo-500/50 transition-all duration-300 relative overflow-hidden group scale-100 md:scale-105 shadow-indigo-950/20">
+            {/* Tier 2: Plus */}
+            <div className="bg-gradient-to-b from-slate-900 to-slate-850 dark:to-indigo-950 border border-indigo-500/40 dark:border-indigo-500/30 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-indigo-500/60 dark:hover:border-indigo-500/50 transition-all duration-300 relative overflow-hidden group scale-100 md:scale-105 shadow-indigo-950/20">
               <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-xl group-hover:scale-110 transition duration-500" />
               <div className="absolute top-4 right-4 bg-indigo-600 text-white text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-md">
-                ⭐ Recommended
+                POPULAR
               </div>
 
               <div>
-                <h4 className="text-xl font-black text-white italic uppercase">Premium tier</h4>
-                <p className="text-[9px] text-indigo-400 font-black uppercase mt-1">Luyện tập tăng tốc</p>
-                
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xl font-black text-white italic uppercase">Plus</h4>
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                    <Zap size={18} strokeWidth={2.5} />
+                  </div>
+                </div>
+                <p className="text-[10px] text-indigo-500 dark:text-indigo-400 font-black uppercase mt-1">Real-world communication & flexibility</p>
+
                 <div className="my-8 flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-white">199.000đ</span>
-                  <span className="text-xs text-slate-500 font-bold uppercase">/ Tháng</span>
+                  <span className="text-4xl font-black text-white">69.000đ</span>
+                  <span className="text-xs text-slate-500 font-bold uppercase">/ MO</span>
                 </div>
 
-                <ul className="space-y-4 pt-6 border-t border-white/5 text-xs text-slate-200 font-semibold">
+                <ul className="space-y-4 pt-6 border-t border-slate-700/30 dark:border-white/5 text-xs text-slate-200 dark:text-slate-300 font-semibold">
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Hạn mức: 20 Kịch bản AI / ngày</span>
+                    <Check size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
+                    <span className="uppercase tracking-tight">ADVANCED AI: NATURAL DIALOGUE & CONTEXT</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Mở khóa toàn bộ kho kịch bản VIP</span>
+                    <Check size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
+                    <span className="uppercase tracking-tight">20 SCENARIOS PER DAY</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Giọng nói mẫu Neural Premium sống động</span>
+                    <Check size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
+                    <span className="uppercase tracking-tight">PRONUNCIATION SCORING & ANALYSIS</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Đánh giá phát âm âm vị chuẩn xác</span>
+                    <Check size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
+                    <span className="uppercase tracking-tight">UNLIMITED FLASHCARDS (VOCAB, GRAMMAR)</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Thư viện ôn tập Flashcard SRS</span>
+                    <Check size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
+                    <span className="uppercase tracking-tight">INTERACTIVE 2D ROLEPLAY EXPERIENCE</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
+                    <span className="uppercase tracking-tight">5 STORYLINES + 7 CUSTOM OUTFITS</span>
                   </li>
                 </ul>
               </div>
 
               <Link to="/register" className="mt-10">
                 <button className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-600/25 active:scale-95 transition-all">
-                  Try Premium Now
+                  UPGRADE TO PLUS
                 </button>
               </Link>
             </div>
 
-            {/* Tier 3: Elite */}
-            <div className="bg-slate-900/40 border border-white/5 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-white/10 transition-all duration-300 relative overflow-hidden group">
+            {/* Tier 3: Premium */}
+            <div className="bg-white/80 dark:bg-slate-900/40 border border-slate-700/30 dark:border-white/5 rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between hover:border-amber-500/20 dark:hover:border-amber-500/20 transition-all duration-300 relative overflow-hidden group">
               <div>
-                <h4 className="text-xl font-black text-white italic uppercase">Elite tier</h4>
-                <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Bản lĩnh thượng lưu</p>
-                
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xl font-black text-white italic uppercase">Premium</h4>
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                    <Crown size={18} strokeWidth={2.5} />
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">The ultimate mentor experience</p>
+
                 <div className="my-8 flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-white">499.000đ</span>
-                  <span className="text-xs text-slate-500 font-bold uppercase">/ Tháng</span>
+                  <span className="text-4xl font-black text-white">199.000đ</span>
+                  <span className="text-xs text-slate-500 font-bold uppercase">/ MO</span>
                 </div>
 
-                <ul className="space-y-4 pt-6 border-t border-white/5 text-xs text-slate-300 font-semibold">
+                <ul className="space-y-4 pt-6 border-t border-slate-700/30 dark:border-white/5 text-xs text-slate-200 dark:text-slate-300 font-semibold">
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Hạn mức: Không giới hạn kịch bản</span>
+                    <Check size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
+                    <span className="uppercase tracking-tight">ELITE AI: DEEP REASONING & METAPHORS</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Mở khóa toàn bộ kịch bản & Premium voices</span>
+                    <Check size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
+                    <span className="uppercase tracking-tight">UNLIMITED SCENARIOS</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Chẩn đoán cấp độ nói chuẩn CEFR chuyên sâu</span>
+                    <Check size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
+                    <span className="uppercase tracking-tight">AI COACH: NATIVE-LIKE EXPRESSIONS</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Generative AI Phrase builder theo yêu cầu</span>
+                    <Check size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
+                    <span className="uppercase tracking-tight">AUTO-GENERATE CARDS FROM MISTAKES</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Check size={14} className="text-indigo-400 shrink-0" />
-                    <span>Ưu tiên truy cập sớm tính năng AR/VR mới</span>
+                    <Check size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
+                    <span className="uppercase tracking-tight">LONG-TERM NPC MEMORY (FULL HISTORY)</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
+                    <span className="uppercase tracking-tight">OPTIMIZED GRAPHICS & SMOOTH TRANSITIONS</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
+                    <span className="uppercase tracking-tight">ALL STORYLINES + LIMITED OUTFITS</span>
                   </li>
                 </ul>
               </div>
 
               <Link to="/register" className="mt-10">
-                <button className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs uppercase tracking-widest transition-all">
-                  Go Elite
+                <button className="w-full h-12 rounded-xl bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-slate-100 dark:text-slate-950 border border-slate-700/50 dark:border-slate-200 font-bold text-xs uppercase tracking-widest transition-all">
+                  GO PREMIUM
                 </button>
               </Link>
             </div>
@@ -709,9 +735,9 @@ const Intro = () => {
       </section>
 
       {/* Dynamic Call-To-Action (CTA) section */}
-      <section className="py-28 px-6 bg-gradient-to-b from-indigo-950 to-slate-950 text-center relative overflow-hidden border-t border-white/5 z-10">
+      <section className="py-28 px-6 bg-gradient-to-b from-slate-900 to-slate-950 dark:from-indigo-950 dark:to-slate-950 text-center relative overflow-hidden border-t border-slate-700/30 dark:border-white/5 z-10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent opacity-50"></div>
-        
+
         <div className="max-w-4xl mx-auto space-y-8 relative z-10">
           <h2 className="text-4xl md:text-5xl font-black leading-tight tracking-tight uppercase italic text-white">
             Sẵn sàng nhập vai để chinh phục giao tiếp?
@@ -726,7 +752,7 @@ const Intro = () => {
               </button>
             </Link>
             <Link to="/login">
-              <button className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-10 h-14 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all w-full sm:w-auto">
+              <button className="bg-slate-800 hover:bg-slate-700 text-slate-100 dark:text-white border border-slate-700/50 dark:border-white/10 px-10 h-14 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all w-full sm:w-auto">
                 Đăng nhập với Google
               </button>
             </Link>
@@ -794,9 +820,9 @@ const Intro = () => {
               </h6>
               <p className="text-xs text-slate-500 font-semibold">Đăng ký để nhận các kịch bản học tập mới nhất và ưu đãi sớm.</p>
               <div className="relative">
-                <input 
-                  type="email" 
-                  placeholder="Email của bạn..." 
+                <input
+                  type="email"
+                  placeholder="Email của bạn..."
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 transition shadow-inner font-semibold"
                 />
                 <button className="absolute right-1 top-1 bottom-1 bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 rounded-lg transition-colors">

@@ -76,10 +76,12 @@ export default function AppLayout() {
     return name.slice(0, 2).toUpperCase();
   };
 
+  const logoSrc = isAdmin ? "/logo-admin.png" : "/logo.png";
+
   return (
-    <div className="h-screen bg-[#030712] flex flex-col md:flex-row overflow-hidden font-body text-slate-100 relative">
+    <div className="h-screen bg-background flex flex-col md:flex-row overflow-hidden font-body text-slate-100 relative">
       {/* Background Decorative Blobs */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-[#030712]">
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-background">
         <motion.div
           animate={{ x: [0, 60, 0], y: [0, -40, 0], rotate: [0, 45, 0] }}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -125,10 +127,10 @@ export default function AppLayout() {
       </div>
       {/* Desktop Sidebar */}
       {!isScenarioDetail && (
-        <aside className="hidden md:flex w-80 flex-col h-full bg-slate-950/80 backdrop-blur-3xl border-r border-white/5 z-20">
+        <aside className="hidden md:flex w-80 flex-col h-full bg-slate-900/80 backdrop-blur-3xl border-r border-slate-800 z-20">
           <div className="p-10 flex items-center gap-4">
-            <img src="/logo.png" alt="IMMERSIO Logo" className="h-12 w-auto object-contain" />
-            <span className="text-xl font-black italic tracking-tighter text-white">IMMERSIO</span>
+            <img src={logoSrc} alt="IMMERSIO Logo" className="h-12 w-auto object-contain" />
+            <span className="text-xl font-black italic tracking-tighter text-slate-100">IMMERSIO</span>
           </div>
 
           <nav className="flex-1 px-6 py-4 space-y-3">
@@ -140,22 +142,22 @@ export default function AppLayout() {
                     className={cn(
                       "flex items-center gap-4 px-6 py-5 rounded-[1.5rem] transition-all duration-500 group relative overflow-hidden border border-transparent",
                       isActive
-                        ? "bg-white/10 text-white shadow-lg border-white/10"
-                        : "text-slate-400 hover:bg-white/5 hover:text-white"
+                        ? "bg-slate-800 text-slate-100 shadow-lg border-slate-700/50"
+                        : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-100"
                     )}
                   >
                     <link.icon
                       size={20}
                       className={cn(
                         "transition-all duration-500",
-                        isActive ? "text-indigo-400 scale-110" : "text-slate-400 group-hover:text-white"
+                        isActive ? "text-indigo-500 scale-110" : "text-slate-400 group-hover:text-slate-100"
                       )}
                     />
                     <span className="font-bold text-sm tracking-tight">{link.label}</span>
                     {isActive && (
                       <motion.div
                         layoutId="active-glow"
-                        className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-transparent pointer-events-none"
+                        className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-transparent pointer-events-none"
                       />
                     )}
                   </div>
@@ -167,7 +169,7 @@ export default function AppLayout() {
           <div className="p-8">
 
             <Link to="/">
-              <Button variant="ghost" className="w-full justify-start text-slate-400 hover:text-red-400 hover:bg-red-950/20 rounded-2xl font-bold text-sm h-12">
+              <Button variant="ghost" className="w-full justify-start text-slate-400 hover:text-destructive hover:bg-destructive/10 rounded-2xl font-bold text-sm h-12">
                 <LogOut size={18} className="mr-3" />
                 Log Out
               </Button>
@@ -178,15 +180,17 @@ export default function AppLayout() {
 
       {/* Mobile Top Header */}
       {!isScenarioDetail && (
-        <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-3xl border-b border-white/5 z-40 flex items-center justify-between px-6 transition-all duration-300">
+        <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-3xl border-b border-slate-800 z-40 flex items-center justify-between px-6 transition-all duration-300">
           <div className="flex items-center gap-3">
-             <img src="/logo.png" alt="IMMERSIO Logo" className="h-9 w-auto object-contain" />
-             <span className="text-base font-black italic tracking-tighter text-white">IMMERSIO</span>
+             <img src={logoSrc} alt="IMMERSIO Logo" className="h-9 w-auto object-contain" />
+             <span className="text-base font-black italic tracking-tighter text-slate-100">IMMERSIO</span>
           </div>
           <div className="flex items-center gap-3">
-            <button className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:text-indigo-400 hover:bg-white/10 transition-all">
-              <Bell size={18} />
-            </button>
+            <Link to="/student/notifications" className="flex">
+              <button className="w-9 h-9 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-slate-400 hover:text-indigo-500 transition-all flex items-center justify-center">
+                <Bell size={18} />
+              </button>
+            </Link>
             <Link to="/student/profile">
               <div className="w-9 h-9 rounded-xl bg-gradient-vibrant flex items-center justify-center text-white font-black text-[10px] shadow-lg shadow-indigo-200/50">
                 {user ? getInitials(user.username) : "?"}
@@ -201,28 +205,29 @@ export default function AppLayout() {
         "flex-1 overflow-y-auto relative z-10 scroll-smooth",
         !isScenarioDetail && "pt-16 pb-28 md:pt-0 md:pb-0 min-w-0"
       )}>
+        {/* Desktop Header Actions */}
+        {!isScenarioDetail && (
+          <div className="hidden md:flex items-center justify-end px-12 pt-8 pb-0 relative z-30">
+            <Link to="/student/notifications">
+              <button className="w-10 h-10 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-405 hover:text-indigo-400 transition-all flex items-center justify-center border border-white/5 shadow-sm cursor-pointer">
+                <Bell size={20} />
+              </button>
+            </Link>
+          </div>
+        )}
+
         <div className={cn(
           "max-w-5xl mx-auto min-h-full w-full",
           !isScenarioDetail ? "p-5 sm:p-6 md:p-12" : "p-0 max-w-none"
         )}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-            >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
+          <Outlet />
         </div>
       </main>
 
       {/* Mobile Bottom Navigation - Floating style */}
       {!isScenarioDetail && (
         <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-3rem)] max-w-md z-50">
-          <nav className="h-16 bg-slate-950/90 backdrop-blur-2xl rounded-[2rem] flex items-center justify-around px-2 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 ring-1 ring-white/5">
+          <nav className="h-16 bg-slate-900/90 backdrop-blur-2xl rounded-[2rem] flex items-center justify-around px-2 shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-slate-850 ring-1 ring-slate-800/50">
             {links.map((link) => {
               const isActive = location.pathname === link.path;
               return (
@@ -238,14 +243,14 @@ export default function AppLayout() {
                     )}
                     <div className={cn(
                       "transition-all duration-300 flex items-center justify-center",
-                      isActive ? "text-indigo-400 -translate-y-1 scale-110" : "text-slate-500 group-hover:text-slate-300"
+                      isActive ? "text-indigo-500 -translate-y-1 scale-110" : "text-slate-500 group-hover:text-slate-200"
                     )}>
                       <link.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                     </div>
                     {isActive && (
                       <motion.div 
                         layoutId="nav-dot"
-                        className="w-1 h-1 bg-indigo-400 rounded-full mt-1 border-[0.5px] border-indigo-300/50 shadow-[0_0_8px_rgba(129,140,248,0.8)]"
+                        className="w-1 h-1 bg-indigo-500 rounded-full mt-1 border-[0.5px] border-indigo-400/50 shadow-[0_0_8px_rgba(129,140,248,0.8)]"
                       />
                     )}
                   </div>

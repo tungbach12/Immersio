@@ -27,6 +27,8 @@ namespace Immersio.Application.DTOs.Scenario
 
     public sealed record SessionMessageDto(string Role, string Text, string? CorrectionText, string? CorrectionExplanation, DateTime SentAt);
 
+    public sealed record ScenarioContextDto(string Title, string Level, string Category, string Description, string ContextPrompt);
+
     public sealed record ChatInputRequest(string Message);
 
     public sealed record CorrectionResultDto(string Corrected, string Explanation);

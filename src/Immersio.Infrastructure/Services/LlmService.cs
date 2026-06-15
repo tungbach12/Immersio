@@ -279,18 +279,30 @@ namespace Immersio.Infrastructure.Services
         }
 
         public async Task<List<AddCardDto>> GenerateFlashcardsAsync(
-            IEnumerable<SessionMessageDto> history, 
-            string targetLanguage, 
+            IEnumerable<SessionMessageDto> history,
+            string targetLanguage,
+            ScenarioContextDto scenario,
             CancellationToken cancellationToken)
         {
-            var systemPrompt = $"You are an expert language acquisition assistant. Analyze the conversation history between the language learner (USER) and the AI (ASSISTANT) in {targetLanguage}.\n" +
-                               $"Identify a dynamic number of cards (from 3 up to 15) covering key vocabulary terms, grammar corrections, or useful idioms/expressions that the student struggled with or could benefit from reviewing based EXCLUSIVELY on the USER's turns and the corrections provided to them.\n\n" +
+            var systemPrompt = $"You are an expert language acquisition assistant. Analyze the conversation history between the language learner (USER) and the AI character (ASSISTANT) in {targetLanguage}.\n\n" +
+                               $"LESSON CONTEXT (this MUST anchor every flashcard you generate — off-topic cards are forbidden):\n" +
+                               $"- Title: {scenario.Title}\n" +
+                               $"- Category: {scenario.Category}\n" +
+                               $"- CEFR level: {scenario.Level}\n" +
+                               $"- Objective: {scenario.Description}\n" +
+                               $"- Scene context: {scenario.ContextPrompt}\n\n" +
+                               $"Identify between 3 and 15 flashcards that DIRECTLY support this lesson's learning goals.\n\n" +
                                $"CRITICAL RULES:\n" +
-                               $"1. SOURCE RESTRICTION: Every single flashcard must be directly derived from the actual words, phrases, or errors that occurred in the USER's dialog turns. DO NOT generate random vocabulary or make up unrelated words that were never in the conversation.\n" +
-                               $"2. NO OVERLY ROBOTIC OR NITPICKY CORRECTIONS: Focus ONLY on significant grammatical errors or unnatural speaking habits/phrasings. Do NOT be overly strict or nitpicky on minor things that make the system feel too mechanical.\n" +
-                               $"3. NO TRIVIAL CARDS: Do not create flashcards for extremely basic words (e.g., 'hello', 'yes', 'no') unless they made a major error with them.\n" +
-                               $"4. DYNAMIC CARD COUNT: Generate more cards (up to 15) for longer or richer histories. Generate fewer cards (minimum 3) only if the history is extremely short.\n" +
-                               $"5. POLYMORPHIC JSON STRUCTURE: You must categorize every card into one of three exact types ('vocab', 'grammar', 'sentence') and output it adhering strictly to this schema:\n\n" +
+                               $"1. STAY ON TOPIC: Every flashcard must be relevant to \"{scenario.Title}\" ({scenario.Category}). Reject vocabulary, grammar or phrasing that — even if it appears in the dialog — is not useful for someone studying this specific scenario.\n" +
+                               $"2. SOURCE PRIORITY (in this order):\n" +
+                               $"   (a) Corrections of the USER's mistakes — highest priority.\n" +
+                               $"   (b) NEW key vocabulary, collocations, or set phrases that the ASSISTANT (NPC) introduced in this scenario context — these are exactly the items the user is meant to learn by encountering them in dialog. Include them even if the user did not say them.\n" +
+                               $"   (c) Useful idioms or collocations related to the scenario theme that the user could naturally use next time in this situation.\n" +
+                               $"   Do NOT invent words that were not in the dialog and NOT relevant to the scenario.\n" +
+                               $"3. LEVEL-APPROPRIATE: Target CEFR {scenario.Level} or one band above. Skip A1/A2 trivia (e.g., 'hello', 'yes', 'no') unless the user made a real error with them.\n" +
+                               $"4. NO NITPICKY CORRECTIONS: Focus only on significant grammatical errors or unnatural phrasings. Skip pedantic minor things that would feel mechanical.\n" +
+                               $"5. DYNAMIC CARD COUNT: More cards (up to 15) for longer/richer histories; minimum 3. Do not pad with filler — it is better to return 3 strong on-topic cards than 10 weak off-topic ones.\n" +
+                               $"6. POLYMORPHIC JSON STRUCTURE: You must categorize every card into one of three exact types ('vocab', 'grammar', 'sentence') and output it adhering strictly to this schema:\n\n" +
                                $"   - TYPE 1: 'vocab' (For vocabulary terms the user struggled with or tried to use)\n" +
                                $"     * Schema:\n" +
                                $"       {{\n" +
@@ -360,7 +372,7 @@ namespace Immersio.Infrastructure.Services
                     new { role = "system", content = systemPrompt },
                     new { role = "user", content = historyText }
                 },
-                temperature = 0.5,
+                temperature = 0.2,
                 response_format = new { type = "json_object" },
                 stream = false
             };
@@ -456,18 +468,27 @@ namespace Immersio.Infrastructure.Services
         }
 
         public async Task<List<AddCardDto>> GenerateCustomFlashcardsAsync(
-            IEnumerable<SessionMessageDto> history, 
+            IEnumerable<SessionMessageDto> history,
             string targetLanguage,
             List<string> options,
+            ScenarioContextDto scenario,
             CancellationToken cancellationToken)
         {
             var optionsCsv = string.Join(", ", options);
-            var systemPrompt = $"You are an expert language acquisition assistant. Analyze the conversation history between the language learner (USER) and the AI (ASSISTANT) in {targetLanguage}.\n" +
-                               $"You must generate custom flashcards covering these selected categories: [{optionsCsv}] based EXCLUSIVELY on the USER's turns and the corrections provided.\n\n" +
+            var systemPrompt = $"You are an expert language acquisition assistant. Analyze the conversation history between the language learner (USER) and the AI character (ASSISTANT) in {targetLanguage}.\n\n" +
+                               $"LESSON CONTEXT (must anchor every card; off-topic cards are forbidden):\n" +
+                               $"- Title: {scenario.Title}\n" +
+                               $"- Category: {scenario.Category}\n" +
+                               $"- CEFR level: {scenario.Level}\n" +
+                               $"- Objective: {scenario.Description}\n" +
+                               $"- Scene context: {scenario.ContextPrompt}\n\n" +
+                               $"Generate flashcards covering ONLY these selected categories: [{optionsCsv}], anchored to this scenario.\n\n" +
                                $"CRITICAL RULES:\n" +
-                               $"1. SOURCE RESTRICTION: Every single flashcard must be directly derived from the actual words, phrases, or errors that occurred in the USER's dialog turns in the session. Absolutely DO NOT generate cards for the AI character's messages, and do not make up arbitrary words that were never mentioned.\n" +
-                               $"2. NO OVERLY ROBOTIC OR NITPICKY CORRECTIONS: Focus ONLY on significant grammatical errors or unnatural speaking habits/phrasings. Do NOT be overly strict or nitpicky on minor things that make the system feel too mechanical.\n" +
-                               $"3. CATEGORY COMPLIANCE & POLYMORPHIC JSON STRUCTURE: You must categorize every card into one of three exact types ('vocab', 'grammar', 'sentence') and output it adhering strictly to this schema, depending on the requested categories:\n\n" +
+                               $"1. STAY ON TOPIC: Every flashcard must be relevant to \"{scenario.Title}\" ({scenario.Category}). Skip dialog material that is off-topic for this scenario.\n" +
+                               $"2. SOURCE PRIORITY (in this order): (a) corrections of USER mistakes; (b) NEW key vocabulary, collocations, or set phrases the ASSISTANT (NPC) introduced in this scenario context — include them even if the user did not say them, since they are exactly what the user is meant to learn by encountering them; (c) idioms/collocations the user could naturally use next time in this situation. Do NOT invent items that were absent from the dialog and not relevant to the scenario.\n" +
+                               $"3. LEVEL-APPROPRIATE: Target CEFR {scenario.Level} or one band above. Skip trivial A1/A2 items (e.g., 'hello', 'yes', 'no') unless the user made a real error with them.\n" +
+                               $"4. NO NITPICKY CORRECTIONS: Focus only on significant grammatical errors or unnatural phrasings. Skip pedantic minor issues that feel mechanical.\n" +
+                               $"5. CATEGORY COMPLIANCE & POLYMORPHIC JSON STRUCTURE: You must categorize every card into one of three exact types ('vocab', 'grammar', 'sentence') and output it adhering strictly to this schema, depending on the requested categories:\n\n" +
                                $"   - If 'grammar' is selected, generate 'grammar' cards (For sentences containing grammatical errors made by the user):\n" +
                                $"     * Schema:\n" +
                                $"       {{\n" +
@@ -520,8 +541,8 @@ namespace Immersio.Infrastructure.Services
                                $"           \"context_note\": \"Đồng nghĩa với 'take into consideration'.\"\n" +
                                $"         }}\n" +
                                $"       }}\n\n" +
-                               $"4. NO TRIVIAL CARDS: Do not include basic words (e.g., 'hello', 'yes', 'no', 'good') unless they were corrected.\n" +
-                               $"5. DYNAMIC CARD COUNT: Generate a dynamic number of cards (from 3 up to 15) depending on how many valid elements can be extracted from the user's turns.\n\n" +
+                               $"6. NO TRIVIAL CARDS: Do not include basic words (e.g., 'hello', 'yes', 'no', 'good') unless they were corrected.\n" +
+                               $"7. DYNAMIC CARD COUNT: Generate 3 to 15 cards. Quality over quantity — better to return 3 strong on-topic cards than 10 weak off-topic ones.\n\n" +
                                $"Return a JSON object with a \"flashcards\" key containing an array of objects. Each object must strictly match one of the three structures above.\n\n" +
                                $"The output must be strictly valid JSON.";
 
@@ -537,7 +558,7 @@ namespace Immersio.Infrastructure.Services
                     new { role = "system", content = systemPrompt },
                     new { role = "user", content = historyText }
                 },
-                temperature = 0.5,
+                temperature = 0.2,
                 response_format = new { type = "json_object" },
                 stream = false
             };
@@ -681,7 +702,7 @@ namespace Immersio.Infrastructure.Services
                     new { role = "system", content = systemPrompt },
                     new { role = "user", content = userPrompt }
                 },
-                temperature = 0.5,
+                temperature = 0.2,
                 response_format = new { type = "json_object" },
                 stream = false
             };

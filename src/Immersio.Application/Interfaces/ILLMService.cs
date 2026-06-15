@@ -27,14 +27,16 @@ namespace Immersio.Application.Interfaces
             CancellationToken cancellationToken);
 
         Task<List<AddCardDto>> GenerateFlashcardsAsync(
-            IEnumerable<SessionMessageDto> history, 
-            string targetLanguage, 
+            IEnumerable<SessionMessageDto> history,
+            string targetLanguage,
+            ScenarioContextDto scenario,
             CancellationToken cancellationToken);
 
         Task<List<AddCardDto>> GenerateCustomFlashcardsAsync(
-            IEnumerable<SessionMessageDto> history, 
+            IEnumerable<SessionMessageDto> history,
             string targetLanguage,
             List<string> options,
+            ScenarioContextDto scenario,
             CancellationToken cancellationToken);
 
         Task<AiCefrFeedbackDto> GenerateCefrFeedbackAsync(

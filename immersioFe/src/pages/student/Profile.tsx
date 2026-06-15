@@ -24,6 +24,12 @@ import { authService, UserDto } from "@/services/auth";
 export default function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserDto | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const showComingSoon = (label: string) => {
+    setToast(label);
+    setTimeout(() => setToast((current) => (current === label ? null : current)), 2500);
+  };
 
   useEffect(() => {
     // Attempt to read the user from stored session
@@ -83,7 +89,11 @@ export default function Profile() {
                 {user ? getInitials(user.username) : "—"}
               </span>
           </div>
-          <button className="absolute bottom-1 right-1 w-12 h-12 bg-slate-900/80 rounded-2xl shadow-2xl flex items-center justify-center text-white border border-white/10 hover:bg-indigo-650 hover:text-indigo-200 transition-all active:scale-90 z-20 backdrop-blur-md">
+          <button
+            type="button"
+            onClick={() => showComingSoon("Đổi ảnh đại diện")}
+            className="absolute bottom-1 right-1 w-12 h-12 bg-slate-900/80 rounded-2xl shadow-2xl flex items-center justify-center text-white border border-white/10 hover:bg-indigo-650 hover:text-indigo-200 transition-all active:scale-90 z-20 backdrop-blur-md"
+          >
             <Camera size={22} strokeWidth={2.5} />
           </button>
         </div>
@@ -200,26 +210,38 @@ export default function Profile() {
            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Account Ecosystem</h2>
         </div>
         <div className="glass-card rounded-[2.5rem] overflow-hidden relative z-10">
-          {menuItems.map((item, i) => (
-            <Link 
-              to={item.path || "#"} 
-              key={i} 
-              className={cn(
-                "flex items-center justify-between px-8 py-7 hover:bg-white/5 transition-all group",
-                i !== menuItems.length - 1 && "border-b border-white/5"
-              )}
-            >
-              <div className="flex items-center gap-5">
-                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110", item.bg, item.color)}>
-                  <item.icon size={20} strokeWidth={2.5} />
+          {menuItems.map((item, i) => {
+            const rowClass = cn(
+              "flex items-center justify-between w-full text-left px-8 py-7 hover:bg-white/5 transition-all group",
+              i !== menuItems.length - 1 && "border-b border-white/5"
+            );
+            const inner = (
+              <>
+                <div className="flex items-center gap-5">
+                  <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110", item.bg, item.color)}>
+                    <item.icon size={20} strokeWidth={2.5} />
+                  </div>
+                  <span className="font-black text-white text-base tracking-tight">{item.label}</span>
                 </div>
-                <span className="font-black text-white text-base tracking-tight">{item.label}</span>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:translate-x-1 transition-transform group-hover:bg-indigo-500/20">
-                <ChevronRight size={18} className="text-slate-300 group-hover:text-indigo-400 transition-colors" />
-              </div>
-            </Link>
-          ))}
+                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:translate-x-1 transition-transform group-hover:bg-indigo-500/20">
+                  <ChevronRight size={18} className="text-slate-300 group-hover:text-indigo-400 transition-colors" />
+                </div>
+              </>
+            );
+
+            return item.path ? (
+              <Link to={item.path} key={i} className={rowClass}>{inner}</Link>
+            ) : (
+              <button
+                type="button"
+                key={i}
+                onClick={() => showComingSoon(item.label)}
+                className={rowClass}
+              >
+                {inner}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -235,6 +257,18 @@ export default function Profile() {
         </Button>
         <p className="text-center text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-6">Version 2.0.4 Premium</p>
       </div>
+
+      {toast && (
+        <motion.div
+          key={toast}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-slate-900/90 backdrop-blur-md border border-white/10 rounded-2xl text-white text-xs font-bold shadow-2xl whitespace-nowrap"
+        >
+          {toast} — tính năng sắp ra mắt 🚧
+        </motion.div>
+      )}
     </div>
   );
 }

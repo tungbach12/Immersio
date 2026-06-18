@@ -1,0 +1,12 @@
+# Code owners for Immersio
+# All changes require review from the repo owner by default
+* @tungbach12
+
+# Frontend
+immersioFe/ @tungbach12
+
+# Backend
+src/ @tungbach12
+
+# CI/CD
+.github/ @tungbach12

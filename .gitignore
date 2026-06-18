@@ -35,5 +35,10 @@ src/Immersio.WebApi/appsettings.json
 src/Immersio.WebApi/appsettings.Development.json
 src/Immersio.WebApi/appsettings.Production.json
 
+## Local-only ECC config (contains secrets)
+.claude/settings.local.json
+.claude/.cache/
+.claude/.tmp/
+
 ## Stray IDE duplicate config files
 appsettings.* copy.json

@@ -213,7 +213,13 @@ namespace Immersio.Application.Services
             var feedback = await _llmService.GenerateSessionFeedbackAsync(session.Scenario.ContextPrompt, history, cancellationToken);
 
             // 3. Generate suggested flashcard deck candidates
-            var flashcards = await _llmService.GenerateFlashcardsAsync(history, language, cancellationToken);
+            var scenarioCtx = new ScenarioContextDto(
+                session.Scenario.Title,
+                session.Scenario.Level,
+                session.Scenario.Category,
+                session.Scenario.Description,
+                session.Scenario.ContextPrompt);
+            var flashcards = await _llmService.GenerateFlashcardsAsync(history, language, scenarioCtx, cancellationToken);
 
             // 4. Complete session
             session.Complete(feedback);
@@ -238,7 +244,13 @@ namespace Immersio.Application.Services
                 .ToList();
 
             var language = SessionLanguages.TryGetValue(sessionId, out var lang) ? lang : session.Scenario.Language;
-            return await _llmService.GenerateCustomFlashcardsAsync(history, language, options, cancellationToken);
+            var scenarioCtx = new ScenarioContextDto(
+                session.Scenario.Title,
+                session.Scenario.Level,
+                session.Scenario.Category,
+                session.Scenario.Description,
+                session.Scenario.ContextPrompt);
+            return await _llmService.GenerateCustomFlashcardsAsync(history, language, options, scenarioCtx, cancellationToken);
         }
 
         public async Task SeedScenariosAsync(CancellationToken cancellationToken)

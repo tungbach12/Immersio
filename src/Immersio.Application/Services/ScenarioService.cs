@@ -153,7 +153,7 @@ namespace Immersio.Application.Services
             }
             if (validEmotions.Count == 0)
             {
-                validEmotions.AddRange(new[] { "idle", "happy", "confused", "sad", "angry" });
+                validEmotions.AddRange(new[] { "idle", "happy", "angry" });
             }
 
             var reply = await _llmService.GenerateChatResponseAsync(prompt, history, userMessage, validEmotions, cancellationToken);
@@ -256,7 +256,17 @@ namespace Immersio.Application.Services
         public async Task SeedScenariosAsync(CancellationToken cancellationToken)
         {
             var hasScenarios = await _context.Scenarios.AnyAsync(cancellationToken);
-            if (hasScenarios) return;
+            if (hasScenarios)
+{
+    var coffee = await _context.Scenarios
+        .FirstOrDefaultAsync(s => s.Title == "Ordering Coffee (English)", cancellationToken);
+    if (coffee != null)
+    {
+        coffee.UpdateEmotions("{\"idle\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879119/immersio/scenarios/Idle.gif\",\"happy\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879123/immersio/scenarios/happy.gif\",\"angry\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879126/immersio/scenarios/angry.gif\"}");
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+    return;
+}
 
             var scenariosToSeed = new List<Scenario>
             {
@@ -302,7 +312,7 @@ namespace Immersio.Application.Services
                     avatarUrl: "/ScenariosImage/Ordering coffee character.png",
                     isNavigation: false,
                     voiceId: null,
-                    emotionsJson: "{\"idle\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781174072/immersio/scenarios/ordering_coffee_character_idle_1781174070.png\",\"happy\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781174075/immersio/scenarios/ordering_coffee_character_happy_1781174073.png\",\"confused\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781174078/immersio/scenarios/ordering_coffee_character_confused_1781174075.png\",\"sad\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781174080/immersio/scenarios/ordering_coffee_character_sad_1781174078.png\",\"angry\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781174083/immersio/scenarios/ordering_coffee_character_angry_1781174081.png\"}"
+                    emotionsJson: "{\"idle\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879119/immersio/scenarios/Idle.gif\",\"happy\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879123/immersio/scenarios/happy.gif\",\"angry\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879126/immersio/scenarios/angry.gif\"}"
                 ),
                 new Scenario(
                     title: "Ordering Dim Sum in Shanghai",

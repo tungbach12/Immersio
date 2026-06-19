@@ -105,6 +105,11 @@ namespace Immersio.Domain.Entities
             EmotionsJson = emotionsJson;
         }
 
+        public void UpdateEmotions(string? emotionsJson)
+        {
+            EmotionsJson = emotionsJson;
+        }
+
         public void Delete()
         {
             IsDeleted = true;

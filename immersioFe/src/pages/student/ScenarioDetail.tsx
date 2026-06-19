@@ -30,7 +30,8 @@ type ChatMessage = {
 };
 
 const getVoiceForLanguage = (lang?: string, defaultVoice?: string) => {
-  if (!lang) return defaultVoice || "en-US-JennyNeural";
+  if (defaultVoice) return defaultVoice;
+  if (!lang) return "en-US-JennyNeural";
   const lower = lang.toLowerCase();
   if (lower.includes("japanese") || lower === "ja") return "ja-JP-NanamiNeural";
   if (lower.includes("chinese") || lower === "zh") return "zh-CN-XiaoxiaoNeural";
@@ -142,7 +143,7 @@ export default function ScenarioDetail() {
           setSessionId(res.sessionId);
           const startMsg = res.initialMessage || data.initialMessage;
           setMessages([{ role: "model", text: startMsg }]);
-          playTextToSpeech(startMsg, targetLang);
+          playTextToSpeech(startMsg, targetLang, data.voiceId ?? undefined);
         } catch (err: any) {
           console.error("Failed to start session on backend:", err);
           if (active && err.message) alert(err.message);
@@ -176,7 +177,7 @@ export default function ScenarioDetail() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const playTextToSpeech = async (text: string, langOverride?: string) => {
+  const playTextToSpeech = async (text: string, langOverride?: string, voiceOverride?: string) => {
     if (!isMountedRef.current) return;
 
     if (currentAudioRef.current) {
@@ -189,7 +190,7 @@ export default function ScenarioDetail() {
 
     try {
       const activeLang = langOverride || targetLang || scenario?.language;
-      const selectedVoice = getVoiceForLanguage(activeLang, scenario?.voiceId);
+      const selectedVoice = voiceOverride || getVoiceForLanguage(activeLang, scenario?.voiceId);
       const token = localStorage.getItem("token") || "";
       const response = await fetch(`${API_BASE}/api/practice/tts`, {
         method: "POST",
@@ -986,7 +987,7 @@ export default function ScenarioDetail() {
           <div className="relative z-20 w-full max-w-4xl mx-auto flex flex-col gap-4 pointer-events-auto">
 
             {/* Scrolling Dialogue Panel */}
-            <div className="bg-zinc-900/90 backdrop-blur-3xl border border-zinc-800 rounded-[2.5rem] p-6 md:p-8 shadow-2xl min-h-[280px] flex flex-col justify-between max-h-[45vh]">
+            <div className="bg-zinc-900/90 backdrop-blur-3xl border border-zinc-800 rounded-[2.5rem] p-6 md:p-8 shadow-2xl min-h-[38vh] flex flex-col justify-between max-h-[45vh]">
 
               {/* Header card for Speech Lab */}
               <div className="flex justify-between items-center border-b border-zinc-800 pb-3 mb-3 shrink-0">

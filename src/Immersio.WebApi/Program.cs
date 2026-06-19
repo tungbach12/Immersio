@@ -143,6 +143,13 @@ using (var scope = app.Services.CreateScope())
         context.Users.Add(admin);
         await context.SaveChangesAsync(default);
     }
+    else if (!passwordHasher.Verify("Admin123!", existingAdmin.PasswordHash))
+    {
+        // DEV-ONLY: Reset admin password if it doesn't match the dev default.
+        // Remove this block before production deployment.
+        existingAdmin.ResetPassword(passwordHasher.Hash("Admin123!"));
+        await context.SaveChangesAsync(default);
+    }
 }
 
 // ── Middleware Pipeline ──────────────────────────────────────────────

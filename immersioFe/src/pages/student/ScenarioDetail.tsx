@@ -690,13 +690,13 @@ export default function ScenarioDetail() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowSaveDeckModal(false)}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-slate-900 border border-white/10 rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl flex flex-col max-h-[80vh] z-10"
+              className="relative bg-zinc-900 border border-white/10 rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl flex flex-col max-h-[80vh] z-10"
             >
               <div className="flex items-center justify-between mb-6 shrink-0">
                 <h2 className="text-xl font-black text-white italic tracking-tight">Save to Deck</h2>
@@ -714,7 +714,7 @@ export default function ScenarioDetail() {
                   >
                     <div>
                       <h3 className="text-white font-bold text-sm tracking-tight">{deck.name}</h3>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">{deck.cards.length} cards</p>
+                      <p className="text-[10px] text-zinc-400 font-bold uppercase mt-1">{deck.cards.length} cards</p>
                     </div>
                     <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/20 group-hover:text-indigo-400 text-white/40 transition-colors">
                       <Check size={14} />
@@ -722,12 +722,12 @@ export default function ScenarioDetail() {
                   </button>
                 ))}
                 {decks.length === 0 && (
-                  <p className="text-xs text-slate-500 font-bold text-center py-4 uppercase">No decks found. Create one below.</p>
+                  <p className="text-xs text-zinc-400 font-bold text-center py-4 uppercase">No decks found. Create one below.</p>
                 )}
               </div>
 
               <div className="shrink-0 pt-4 border-t border-white/10">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Or Create New Deck</h3>
+                <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Or Create New Deck</h3>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
@@ -754,7 +754,7 @@ export default function ScenarioDetail() {
       {mode === "feedback" ? (
         /* Lesson Feedback Summary and Dynamic Card Generator */
         <div className="flex-1 relative z-20 flex flex-col items-center justify-start pt-6 px-4 w-full h-full overflow-y-auto pb-24">
-          <div className="w-full max-w-3xl bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl relative">
+          <div className="w-full max-w-3xl bg-zinc-900/90 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl relative">
             <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gradient-vibrant px-6 py-2.5 rounded-full shadow-2xl flex items-center gap-2">
               <Trophy size={16} className="text-white animate-bounce" />
               <span className="text-white font-black text-[10px] uppercase tracking-widest">Simulation Complete</span>
@@ -772,7 +772,7 @@ export default function ScenarioDetail() {
               {isLoadingFeedback ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <Loader2 className="animate-spin text-indigo-500 mb-4" size={36} />
-                  <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Running CEFR Dialogic Analysis...</p>
+                  <p className="text-zinc-400 font-black text-[10px] uppercase tracking-widest">Running CEFR Dialogic Analysis...</p>
                 </div>
               ) : (
                 <div className="text-white/90 text-sm md:text-base leading-relaxed whitespace-pre-wrap font-medium">
@@ -785,7 +785,7 @@ export default function ScenarioDetail() {
               <div className="space-y-8">
                 <div className="text-center">
                   <h3 className="text-sm font-black text-white uppercase tracking-widest">Select Flashcard Categories</h3>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Select topics to extract card packs</p>
+                  <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-[0.2em] mt-1">Select topics to extract card packs</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -824,15 +824,15 @@ export default function ScenarioDetail() {
                 {isLoadingFlashcards && (
                   <div className="flex flex-col items-center justify-center py-12">
                     <Loader2 className="animate-spin text-indigo-500 mb-4" size={36} />
-                    <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Synthesizing personalized cards...</p>
+                    <p className="text-zinc-400 font-black text-[10px] uppercase tracking-widest">Synthesizing personalized cards...</p>
                   </div>
                 )}
 
                 {flashcards && flashcards.length > 0 && (
                   <div className="mt-10 space-y-6">
                     <div className="text-center">
-                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Synthesized Cards</h4>
-                      <p className="text-[9px] text-slate-500 font-bold uppercase mt-1 tracking-wider">
+                      <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Synthesized Cards</h4>
+                      <p className="text-[9px] text-zinc-400 font-bold uppercase mt-1 tracking-wider">
                         Click on cards to toggle selection ({selectedCardIds.length}/{flashcards.length} selected)
                       </p>
                     </div>
@@ -890,7 +890,7 @@ export default function ScenarioDetail() {
                               );
                             }}
                             className={cn(
-                              "relative bg-slate-950/40 border rounded-[1.75rem] p-6 cursor-pointer select-none transition-all duration-300 flex flex-col justify-between min-h-[160px]",
+                              "relative bg-zinc-950/60 border rounded-[1.75rem] p-6 cursor-pointer select-none transition-all duration-300 flex flex-col justify-between min-h-[160px]",
                               isSelected
                                 ? "border-indigo-500/50 bg-indigo-950/15 shadow-[0_0_20px_rgba(99,102,241,0.12)] opacity-100 scale-[1.01]"
                                 : "border-white/5 bg-white/2 opacity-50 hover:opacity-80 scale-100"
@@ -919,7 +919,7 @@ export default function ScenarioDetail() {
                             <div className="mt-4 pt-3 border-t border-white/5">
                               <p className="text-xs text-indigo-300 font-bold mb-2 whitespace-pre-wrap">{displayBack}</p>
                               {displayExplanation && (
-                                <p className="text-[10px] text-slate-400 font-medium leading-relaxed whitespace-pre-wrap">
+                                <p className="text-[10px] text-zinc-400 font-medium leading-relaxed whitespace-pre-wrap">
                                   💡 {displayExplanation}
                                 </p>
                               )}
@@ -953,7 +953,7 @@ export default function ScenarioDetail() {
                 )}
 
                 {flashcards && flashcards.length === 0 && !isLoadingFlashcards && (
-                  <div className="text-center py-8 text-slate-500 font-bold text-xs uppercase tracking-widest">
+                  <div className="text-center py-8 text-zinc-400 font-bold text-xs uppercase tracking-widest">
                     No flashcards generated. Please try toggling other options.
                   </div>
                 )}

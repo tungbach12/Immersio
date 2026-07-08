@@ -27,6 +27,10 @@ namespace Immersio.Application.DTOs.Admin
         string ModelFeedback,
         string ModelFlashcard,
         string ModelPhrase,
-        string ReasoningEffort
+        string ReasoningEffortChat,
+        string ReasoningEffortGrammar,
+        string ReasoningEffortFeedback,
+        string ReasoningEffortFlashcard,
+        string ReasoningEffortPhrase
     );
 }

@@ -67,7 +67,9 @@ export default function AITuning() {
     label: string,
     sublabel: string,
     value: string,
-    onChange: (val: string) => void
+    onChange: (val: string) => void,
+    reasoningEffort: string,
+    onReasoningChange: (val: string) => void
   ) => {
     // Check if the current value is one of the catalog models (excluding 'custom')
     const isPredefined = CATALOG_MODELS.some(m => m.value !== "custom" && m.value === value);
@@ -117,6 +119,20 @@ export default function AITuning() {
             {selectValue === "custom" && value ? `Active custom model: "${value}"` : currentModel.desc}
           </p>
         )}
+        <div className="flex items-center gap-2 pt-1 border-t border-white/5 mt-1">
+          <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider whitespace-nowrap">Reasoning</span>
+          <select
+            className="bg-slate-950 text-[9px] font-bold text-indigo-400 outline-none border border-white/10 px-2 py-1.5 rounded-lg focus:border-indigo-500 flex-1"
+            value={reasoningEffort}
+            onChange={(e) => onReasoningChange(e.target.value)}
+          >
+            <option value="none">None</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="xhigh">X-High</option>
+          </select>
+        </div>
       </div>
     );
   };
@@ -280,7 +296,8 @@ export default function AITuning() {
                       grammar: "llama-3.3-70b-versatile",
                       feedback: "llama-3.3-70b-versatile",
                       flashcard: "llama-3.3-70b-versatile",
-                      phrase: "llama-3.3-70b-versatile"
+                      phrase: "llama-3.3-70b-versatile",
+                      effortChat: "none", effortGrammar: "none", effortFeedback: "none", effortFlashcard: "none", effortPhrase: "none"
                     },
                     {
                       name: "NVIDIA NIM",
@@ -289,7 +306,8 @@ export default function AITuning() {
                       grammar: "nvidia/nemotron-mini-4b-instruct",
                       feedback: "mistralai/mistral-large-3-675b-instruct-2512",
                       flashcard: "qwen/qwen3-coder-480b-a35b-instruct",
-                      phrase: "nvidia/nemotron-mini-4b-instruct"
+                      phrase: "nvidia/nemotron-mini-4b-instruct",
+                      effortChat: "none", effortGrammar: "none", effortFeedback: "medium", effortFlashcard: "medium", effortPhrase: "none"
                     },
                     {
                       name: "StepFun MoE",
@@ -298,7 +316,8 @@ export default function AITuning() {
                       grammar: "stepfun-ai/step-3.5-flash",
                       feedback: "stepfun-ai/step-3.5-flash",
                       flashcard: "stepfun-ai/step-3.5-flash",
-                      phrase: "stepfun-ai/step-3.5-flash"
+                      phrase: "stepfun-ai/step-3.5-flash",
+                      effortChat: "none", effortGrammar: "low", effortFeedback: "medium", effortFlashcard: "medium", effortPhrase: "none"
                     },
                     {
                       name: "OpenCode Zen",
@@ -307,7 +326,8 @@ export default function AITuning() {
                       grammar: "mimo-v2.5-free",
                       feedback: "deepseek-v4-flash-free",
                       flashcard: "deepseek-v4-flash-free",
-                      phrase: "mimo-v2.5-free"
+                      phrase: "mimo-v2.5-free",
+                      effortChat: "low", effortGrammar: "medium", effortFeedback: "high", effortFlashcard: "high", effortPhrase: "low"
                     },
                     {
                       name: "Custom Setup",
@@ -316,7 +336,12 @@ export default function AITuning() {
                       grammar: settings.modelGrammar,
                       feedback: settings.modelFeedback,
                       flashcard: settings.modelFlashcard,
-                      phrase: settings.modelPhrase
+                      phrase: settings.modelPhrase,
+                      effortChat: settings.reasoningEffortChat,
+                      effortGrammar: settings.reasoningEffortGrammar,
+                      effortFeedback: settings.reasoningEffortFeedback,
+                      effortFlashcard: settings.reasoningEffortFlashcard,
+                      effortPhrase: settings.reasoningEffortPhrase
                     }
                   ].map((p, idx) => {
                     const isSelected = idx === 4
@@ -343,7 +368,12 @@ export default function AITuning() {
                               modelGrammar: p.grammar,
                               modelFeedback: p.feedback,
                               modelFlashcard: p.flashcard,
-                              modelPhrase: p.phrase
+                              modelPhrase: p.phrase,
+                              reasoningEffortChat: p.effortChat,
+                              reasoningEffortGrammar: p.effortGrammar,
+                              reasoningEffortFeedback: p.effortFeedback,
+                              reasoningEffortFlashcard: p.effortFlashcard,
+                              reasoningEffortPhrase: p.effortPhrase
                             });
                           }
                         }}
@@ -375,37 +405,17 @@ export default function AITuning() {
                 />
               </div>
 
-              {/* Reasoning Effort */}
-              <div className="pt-2">
-                <span className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest block mb-2">Reasoning Effort</span>
-                <div className="flex flex-col gap-1.5">
-                  <select
-                    className="bg-slate-950 text-xs font-bold text-indigo-400 outline-none border border-white/10 p-3 rounded-xl focus:border-indigo-500 w-full"
-                    value={settings.reasoningEffort}
-                    onChange={(e) => setSettings({ ...settings, reasoningEffort: e.target.value })}
-                  >
-                    <option value="none">None (disabled)</option>
-                    <option value="low">Low — fast, minimal reasoning</option>
-                    <option value="medium">Medium — balanced</option>
-                    <option value="high">High — thorough reasoning</option>
-                    <option value="xhigh">X-High — maximum reasoning</option>
-                  </select>
-                  <p className="text-[9px] font-semibold text-slate-500 italic">
-                    Injects <code className="text-indigo-400">reasoning_effort</code> into every API request. Only applies to models that support it (e.g. DeepSeek R1, MiMo). Has no effect on standard models.
-                  </p>
-                </div>
-              </div>
-
               {/* Granular Dropdowns with Annotations */}
               <div className="space-y-4 pt-4 border-t border-white/5">
                 <span className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest block mb-1">Fine-Tune Capability Models</span>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Chat Dialogue */}
                   {renderModelSelector(
                     "Roleplay AI Chat Response",
                     "NPC cognitive intelligence in conversations",
                     settings.modelChat,
-                    (val) => setSettings({ ...settings, modelChat: val })
+                    (val) => setSettings({ ...settings, modelChat: val }),
+                    settings.reasoningEffortChat,
+                    (val) => setSettings({ ...settings, reasoningEffortChat: val })
                   )}
 
                   {/* Grammar Corrector */}
@@ -413,7 +423,9 @@ export default function AITuning() {
                     "Grammar & Speech Correction",
                     "Analyzer scoring user sentence structure",
                     settings.modelGrammar,
-                    (val) => setSettings({ ...settings, modelGrammar: val })
+                    (val) => setSettings({ ...settings, modelGrammar: val }),
+                    settings.reasoningEffortGrammar,
+                    (val) => setSettings({ ...settings, reasoningEffortGrammar: val })
                   )}
 
                   {/* End of session CEFR Feedback */}
@@ -421,7 +433,9 @@ export default function AITuning() {
                     "Performance Feedback & CEFR Report",
                     "Comprehensive feedback evaluation engine",
                     settings.modelFeedback,
-                    (val) => setSettings({ ...settings, modelFeedback: val })
+                    (val) => setSettings({ ...settings, modelFeedback: val }),
+                    settings.reasoningEffortFeedback,
+                    (val) => setSettings({ ...settings, reasoningEffortFeedback: val })
                   )}
 
                   {/* Flashcards Extraction */}
@@ -429,7 +443,9 @@ export default function AITuning() {
                     "Flashcards Deck Generator",
                     "Vocabulary, spelling & idioms extraction",
                     settings.modelFlashcard,
-                    (val) => setSettings({ ...settings, modelFlashcard: val })
+                    (val) => setSettings({ ...settings, modelFlashcard: val }),
+                    settings.reasoningEffortFlashcard,
+                    (val) => setSettings({ ...settings, reasoningEffortFlashcard: val })
                   )}
 
                   {/* Pronunciation Phrase Generator */}
@@ -437,7 +453,9 @@ export default function AITuning() {
                     "Pronunciation Phrase Generator",
                     "Phrase composer for Vocal Lab speaking practices",
                     settings.modelPhrase,
-                    (val) => setSettings({ ...settings, modelPhrase: val })
+                    (val) => setSettings({ ...settings, modelPhrase: val }),
+                    settings.reasoningEffortPhrase,
+                    (val) => setSettings({ ...settings, reasoningEffortPhrase: val })
                   )}
                 </div>
               </div>

@@ -167,9 +167,15 @@ namespace Immersio.Application.Services
             var modelFeedback = await GetSettingValueAsync("ModelFeedback", "mistralai/mistral-large-3-675b-instruct-2512", cancellationToken);
             var modelFlashcard = await GetSettingValueAsync("ModelFlashcard", "qwen/qwen3-coder-480b-a35b-instruct", cancellationToken);
             var modelPhrase = await GetSettingValueAsync("ModelPhrase", "nvidia/nemotron-mini-4b-instruct", cancellationToken);
-            var reasoningEffort = await GetSettingValueAsync("ReasoningEffort", "none", cancellationToken);
+            // Migrate legacy single ReasoningEffort key if present
+            var legacyEffort = await GetSettingValueAsync("ReasoningEffort", "none", cancellationToken);
+            var reasoningEffortChat = await GetSettingValueAsync("ReasoningEffortChat", legacyEffort, cancellationToken);
+            var reasoningEffortGrammar = await GetSettingValueAsync("ReasoningEffortGrammar", legacyEffort, cancellationToken);
+            var reasoningEffortFeedback = await GetSettingValueAsync("ReasoningEffortFeedback", legacyEffort, cancellationToken);
+            var reasoningEffortFlashcard = await GetSettingValueAsync("ReasoningEffortFlashcard", legacyEffort, cancellationToken);
+            var reasoningEffortPhrase = await GetSettingValueAsync("ReasoningEffortPhrase", legacyEffort, cancellationToken);
 
-            return new SystemSettingsDto(prompt, grammar, vocab, slang, speed, endpoint, apiKey, modelChat, modelGrammar, modelFeedback, modelFlashcard, modelPhrase, reasoningEffort);
+            return new SystemSettingsDto(prompt, grammar, vocab, slang, speed, endpoint, apiKey, modelChat, modelGrammar, modelFeedback, modelFlashcard, modelPhrase, reasoningEffortChat, reasoningEffortGrammar, reasoningEffortFeedback, reasoningEffortFlashcard, reasoningEffortPhrase);
         }
 
         public async Task SaveAiSettingsAsync(SystemSettingsDto settings, CancellationToken cancellationToken)
@@ -186,7 +192,11 @@ namespace Immersio.Application.Services
             await SaveSettingValueAsync("ModelFeedback", settings.ModelFeedback ?? "llama-3.3-70b-versatile", cancellationToken);
             await SaveSettingValueAsync("ModelFlashcard", settings.ModelFlashcard ?? "llama-3.3-70b-versatile", cancellationToken);
             await SaveSettingValueAsync("ModelPhrase", settings.ModelPhrase ?? "llama-3.3-70b-versatile", cancellationToken);
-            await SaveSettingValueAsync("ReasoningEffort", settings.ReasoningEffort ?? "none", cancellationToken);
+            await SaveSettingValueAsync("ReasoningEffortChat", settings.ReasoningEffortChat ?? "none", cancellationToken);
+            await SaveSettingValueAsync("ReasoningEffortGrammar", settings.ReasoningEffortGrammar ?? "none", cancellationToken);
+            await SaveSettingValueAsync("ReasoningEffortFeedback", settings.ReasoningEffortFeedback ?? "none", cancellationToken);
+            await SaveSettingValueAsync("ReasoningEffortFlashcard", settings.ReasoningEffortFlashcard ?? "none", cancellationToken);
+            await SaveSettingValueAsync("ReasoningEffortPhrase", settings.ReasoningEffortPhrase ?? "none", cancellationToken);
 
             await _context.SaveChangesAsync(cancellationToken);
         }

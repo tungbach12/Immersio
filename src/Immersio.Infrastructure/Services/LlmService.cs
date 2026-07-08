@@ -40,7 +40,20 @@ namespace Immersio.Infrastructure.Services
                     .FirstOrDefaultAsync(s => s.Key == modelKey, cancellationToken);
                 var endpointSetting = await _context.SystemSettings
                     .FirstOrDefaultAsync(s => s.Key == "LlmEndpoint", cancellationToken);
+
+                // Map modelKey → per-task reasoning effort key
+                var effortKey = modelKey switch
+                {
+                    "ModelChat"      => "ReasoningEffortChat",
+                    "ModelGrammar"   => "ReasoningEffortGrammar",
+                    "ModelFeedback"  => "ReasoningEffortFeedback",
+                    "ModelFlashcard" => "ReasoningEffortFlashcard",
+                    "ModelPhrase"    => "ReasoningEffortPhrase",
+                    _                => "ReasoningEffortChat"
+                };
                 var reasoningEffortSetting = await _context.SystemSettings
+                    .FirstOrDefaultAsync(s => s.Key == effortKey, cancellationToken)
+                    ?? await _context.SystemSettings
                     .FirstOrDefaultAsync(s => s.Key == "ReasoningEffort", cancellationToken);
 
                 var modelName = !string.IsNullOrWhiteSpace(modelSetting?.Value) ? modelSetting.Value : DefaultModel;

@@ -35,8 +35,64 @@ const LANGUAGE_VOICES: Record<string, { id: string; label: string }[]> = {
   ],
 };
 
+const CHARACTER_PRESETS: Record<string, {
+  avatar: string;
+  voice: Record<string, string>;
+  emotions: { key: string; url: string }[];
+}> = {
+  Isabella: {
+    avatar: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974485/immersio/characters/isabella/isabella_dislike.gif",
+    voice: {
+      English: "en-US-JennyNeural"
+    },
+    emotions: [
+      { key: "dislike", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974485/immersio/characters/isabella/isabella_dislike.gif" },
+      { key: "greeting", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974487/immersio/characters/isabella/isabella_heyyy.gif" },
+      { key: "looking", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974489/immersio/characters/isabella/isabella_looking.gif" },
+      { key: "happy", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974491/immersio/characters/isabella/isabella_yeyyy.gif" }
+    ]
+  },
+  Jake: {
+    avatar: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974496/immersio/characters/jake/jake_idle.gif",
+    voice: {
+      English: "en-US-JennyNeural"
+    },
+    emotions: [
+      { key: "dislike", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974493/immersio/characters/jake/jake_angry.gif" },
+      { key: "idle", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974496/immersio/characters/jake/jake_idle.gif" },
+      { key: "thinking", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974498/immersio/characters/jake/jake_thinking-.-.-..gif" },
+      { key: "happy", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974500/immersio/characters/jake/jake_thumb-up.gif" }
+    ]
+  },
+  Joy: {
+    avatar: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974502/immersio/characters/joy/joy_announcement.gif",
+    voice: {
+      Chinese: "zh-CN-XiaoxiaoNeural"
+    },
+    emotions: [
+      { key: "announcement", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974502/immersio/characters/joy/joy_announcement.gif" },
+      { key: "heart", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974505/immersio/characters/joy/joy_heart.gif" },
+      { key: "happy", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974507/immersio/characters/joy/joy_hooray.gif" },
+      { key: "sing", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974509/immersio/characters/joy/joy_sing.gif" }
+    ]
+  },
+  Tommy: {
+    avatar: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974511/immersio/characters/tommy/tommy_bored.gif",
+    voice: {
+      Japanese: "ja-JP-KeitaNeural"
+    },
+    emotions: [
+      { key: "dislike", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974511/immersio/characters/tommy/tommy_bored.gif" },
+      { key: "greeting", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974513/immersio/characters/tommy/tommy_greeting.gif" },
+      { key: "pointing", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974515/immersio/characters/tommy/tommy_pointing.gif" },
+      { key: "shock", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1782974517/immersio/characters/tommy/tommy_shock.gif" }
+    ]
+  }
+};
+
 export default function ScenarioBuilder() {
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [activeTab, setActiveTab] = useState<"scenarios" | "characters">("scenarios");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -326,60 +382,132 @@ export default function ScenarioBuilder() {
         </div>
       )}
 
-      {/* Grid of Scenarios */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {scenarios.map((item) => (
-          <Card key={item.id} className="bg-slate-950/45 backdrop-blur-2xl border-white/5 shadow-2xl rounded-[2.5rem] overflow-hidden group hover:border-indigo-500/20 transition-all flex flex-col h-full">
-            <div className="h-44 w-full overflow-hidden relative">
-              <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-              <div className="absolute bottom-6 left-6 flex items-center gap-3">
-                <img src={item.avatar} alt={item.title} className="w-10 h-10 rounded-xl border border-white/10 object-cover" />
-                <div>
-                  <h3 className="text-lg font-black text-white italic tracking-tight uppercase leading-none">{item.title}</h3>
-                  <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider mt-1.5 block">{item.language} • {item.level}</span>
-                </div>
-              </div>
-            </div>
-            
-            <CardContent className="p-6 flex-1 flex flex-col justify-between">
-              <div>
-                <p className="text-xs text-slate-400 leading-relaxed font-semibold opacity-85 mb-6">{item.description}</p>
-                <div className="flex flex-wrap gap-2 mb-8">
-                  <span className="bg-white/5 border border-white/10 text-[9px] font-black uppercase px-2.5 py-1 rounded-lg text-slate-300">{item.category}</span>
-                  <span className="bg-white/5 border border-white/10 text-[9px] font-black uppercase px-2.5 py-1 rounded-lg text-slate-300">{item.duration}</span>
-                  <span className="bg-white/5 border border-white/10 text-[9px] font-black uppercase px-2.5 py-1 rounded-lg text-slate-300">{item.items?.length || 0} vocabulary items</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between border-t border-white/5 pt-5 gap-3">
-                <Button 
-                  onClick={() => setActiveScenarioForItems(item)}
-                  variant="ghost"
-                  className="h-10 px-4 rounded-xl font-bold uppercase tracking-wider text-[9px] border border-white/5 hover:border-indigo-500/20 text-slate-400 hover:text-indigo-400 bg-white/5 hover:bg-indigo-500/10"
-                >
-                  Configure Vocab ({item.items?.length || 0})
-                </Button>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    onClick={() => handleOpenEdit(item)}
-                    variant="ghost"
-                    className="h-10 w-10 p-0 rounded-xl border border-white/5 hover:border-indigo-500/20 text-slate-400 hover:text-indigo-400 bg-white/5 hover:bg-indigo-500/10"
-                  >
-                    <Edit size={14} />
-                  </Button>
-                  <Button 
-                    onClick={() => handleDelete(item.id)}
-                    className="h-10 w-10 p-0 rounded-xl bg-red-950/20 border border-red-500/10 hover:border-red-500/30 text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
-                  >
-                    <Trash2 size={14} />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Tabs */}
+      <div className="flex gap-4 border-b border-white/5 pb-2">
+        <button
+          onClick={() => setActiveTab("scenarios")}
+          className={cn(
+            "text-xs font-black uppercase tracking-wider pb-3 border-b-2 px-2 transition-all cursor-pointer",
+            activeTab === "scenarios" 
+              ? "border-indigo-500 text-indigo-400" 
+              : "border-transparent text-slate-500 hover:text-slate-300"
+          )}
+        >
+          Scenarios ({scenarios.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("characters")}
+          className={cn(
+            "text-xs font-black uppercase tracking-wider pb-3 border-b-2 px-2 transition-all cursor-pointer",
+            activeTab === "characters" 
+              ? "border-indigo-500 text-indigo-400" 
+              : "border-transparent text-slate-500 hover:text-slate-300"
+          )}
+        >
+          Characters Explorer
+        </button>
       </div>
+
+      {activeTab === "scenarios" ? (
+        /* Grid of Scenarios */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {scenarios.map((item) => (
+            <Card key={item.id} className="bg-slate-950/45 backdrop-blur-2xl border-white/5 shadow-2xl rounded-[2.5rem] overflow-hidden group hover:border-indigo-500/20 transition-all flex flex-col h-full">
+              <div className="h-44 w-full overflow-hidden relative">
+                <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+                <div className="absolute bottom-6 left-6 flex items-center gap-3">
+                  <img src={item.avatar} alt={item.title} className="w-10 h-10 rounded-xl border border-white/10 object-cover" />
+                  <div>
+                    <h3 className="text-lg font-black text-white italic tracking-tight uppercase leading-none">{item.title}</h3>
+                    <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider mt-1.5 block">{item.language} • {item.level}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <CardContent className="p-6 flex-1 flex flex-col justify-between">
+                <div>
+                  <p className="text-xs text-slate-400 leading-relaxed font-semibold opacity-85 mb-6">{item.description}</p>
+                  <div className="flex flex-wrap gap-2 mb-8">
+                    <span className="bg-white/5 border border-white/10 text-[9px] font-black uppercase px-2.5 py-1 rounded-lg text-slate-300">{item.category}</span>
+                    <span className="bg-white/5 border border-white/10 text-[9px] font-black uppercase px-2.5 py-1 rounded-lg text-slate-300">{item.duration}</span>
+                    <span className="bg-white/5 border border-white/10 text-[9px] font-black uppercase px-2.5 py-1 rounded-lg text-slate-300">{item.items?.length || 0} vocabulary items</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-white/5 pt-5 gap-3">
+                  <Button 
+                    onClick={() => setActiveScenarioForItems(item)}
+                    variant="ghost"
+                    className="h-10 px-4 rounded-xl font-bold uppercase tracking-wider text-[9px] border border-white/5 hover:border-indigo-500/20 text-slate-400 hover:text-indigo-400 bg-white/5 hover:bg-indigo-500/10"
+                  >
+                    Configure Vocab ({item.items?.length || 0})
+                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      onClick={() => handleOpenEdit(item)}
+                      variant="ghost"
+                      className="h-10 w-10 p-0 rounded-xl border border-white/5 hover:border-indigo-500/20 text-slate-400 hover:text-indigo-400 bg-white/5 hover:bg-indigo-500/10"
+                    >
+                      <Edit size={14} />
+                    </Button>
+                    <Button 
+                      onClick={() => handleDelete(item.id)}
+                      className="h-10 w-10 p-0 rounded-xl bg-red-950/20 border border-red-500/10 hover:border-red-500/30 text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        /* Characters Explorer */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {Object.entries(CHARACTER_PRESETS).map(([charName, preset]) => (
+            <Card key={charName} className="bg-slate-950/45 backdrop-blur-2xl border-white/5 shadow-2xl rounded-[2.5rem] overflow-hidden p-6 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-4 mb-6">
+                  <img 
+                    src={preset.avatar} 
+                    alt={charName} 
+                    className="w-16 h-16 rounded-2xl border border-white/10 object-cover shadow-lg" 
+                  />
+                  <div>
+                    <h3 className="text-xl font-black text-white italic tracking-tight uppercase leading-none">{charName}</h3>
+                    <span className="text-[10px] font-black uppercase text-indigo-400 tracking-wider mt-1.5 block">
+                      Default Voice: {Object.entries(preset.voice).map(([lang, v]) => `${lang} (${v})`).join(", ")}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <span className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest block">Emotions & Animations ({preset.emotions.length})</span>
+                  <div className="grid grid-cols-2 gap-4">
+                    {preset.emotions.map((emo) => (
+                      <div key={emo.key} className="bg-slate-900/60 p-3 rounded-2xl border border-white/5 flex flex-col items-center gap-2 group hover:border-indigo-500/20 transition-all">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-indigo-400">{emo.key}</span>
+                        <div className="h-28 w-full rounded-xl overflow-hidden bg-slate-950 border border-white/5 relative">
+                          <img 
+                            src={emo.url} 
+                            alt={emo.key} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                          />
+                        </div>
+                        <span className="text-[8px] font-mono text-slate-500 truncate w-full text-center hover:text-slate-300 select-all cursor-pointer">
+                          {emo.url}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Scenario Create/Edit Modal */}
       {isModalOpen && (
@@ -485,6 +613,44 @@ export default function ScenarioBuilder() {
                       <input type="file" accept="image/*" className="hidden"
                         onChange={(e) => handleImageUpload(e.target.files?.[0], setImageUrl, setUploadingBg)} />
                     </label>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 col-span-2 p-4 bg-white/5 border border-white/10 rounded-2xl">
+                  <div>
+                    <span className="font-extrabold text-[10px] text-white uppercase tracking-widest block">Character Preset Selection</span>
+                    <span className="text-[8px] font-medium text-slate-500">Quickly load a character avatar, voice, and default emotions mapping</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 mt-1">
+                    {Object.keys(CHARACTER_PRESETS).map((charName) => (
+                      <button
+                        key={charName}
+                        type="button"
+                        onClick={() => {
+                          const preset = CHARACTER_PRESETS[charName];
+                          setAvatarUrl(preset.avatar);
+                          setEmotions(preset.emotions);
+                          // Match neural voice to preset
+                          const matchedVoice = preset.voice[language];
+                          if (matchedVoice) {
+                            setVoiceId(matchedVoice);
+                          } else {
+                            const list = LANGUAGE_VOICES[language] || LANGUAGE_VOICES["English"];
+                            if (list && list.length > 0) {
+                              setVoiceId(list[0].id);
+                            }
+                          }
+                        }}
+                        className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-slate-900 border border-white/5 hover:border-indigo-500/50 hover:bg-slate-900/80 transition-all group"
+                      >
+                        <img 
+                          src={CHARACTER_PRESETS[charName].avatar} 
+                          alt={charName} 
+                          className="h-10 w-10 rounded-lg object-cover border border-white/10" 
+                        />
+                        <span className="text-[9px] font-bold text-slate-400 group-hover:text-indigo-400">{charName}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 

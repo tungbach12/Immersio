@@ -32,6 +32,7 @@ export interface AiSettings {
   modelFeedback: string;
   modelFlashcard: string;
   modelPhrase: string;
+  reasoningEffort: string;
 }
 
 const BASE_URL = `${API_BASE}/api/admin`;

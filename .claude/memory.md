@@ -66,7 +66,49 @@ src/
 - Path alias: `@` → `src/` (configured in `vite.config.ts` and `tsconfig.json`)
 - API base: `API_BASE` in `src/services/auth.ts`
 
+## Scenario Voice System
+- Admin config: `ScenarioBuilder.tsx` → `LANGUAGE_VOICES` map → saves `VoiceId` to DB
+- Student playback: `ScenarioDetail.tsx` → `getVoiceForLanguage()` → TTS API
+- Voice priority: `defaultVoice` param (from DB) > language-based fallback > default `en-US-JennyNeural`
+- **Known bug fixed**: `getVoiceForLanguage()` now checks `defaultVoice` first; previously ignored it
+- **Stale closure fix**: Pass `data.voiceId` directly from loaded scenario, not `scenario?.voiceId`
+
+## Scenario Emotion GIFs
+- Hosted on Cloudinary URLs (not local files)
+- Seed data in `ScenarioService.cs` updates emotions for existing scenarios
+- Seed does NOT overwrite `VoiceId` — only touches `EmotionsJson`
+
+## Frontend UI Notes
+- Chat panel height: `min-h-[38vh]` (was 280px, then 45vh — too tall)
+- `ThemeManager` in `App.tsx`: `/admin/*` always dark, student always light
+
+## Known Issues
+- TypeScript IDE errors in `.tsx` files — pre-existing `@types/react` issue (TS7026/TS7016)
+- `npx tsc --noEmit` passes clean — IDE-only, not caused by code changes
+
 ## ECC Harness
+
+### Current Status (2026-06-20)
+
+| Component | Status | Detail |
+|---|---|---|
+| Plugin | ✅ Active | `ecc@ecc` installed via marketplace |
+| Rules — common | ✅ 9 files | `~/.claude/rules/ecc/common/` |
+| Rules — web | ✅ 7 files | `~/.claude/rules/ecc/web/` (React, Vite, Next.js, CSS) |
+| Rules — typescript | ✅ Active | `~/.claude/rules/ecc/typescript/` |
+| Rules — react | ✅ Active | `~/.claude/rules/ecc/react/` |
+| Rules — csharp | ✅ Active | `~/.claude/rules/ecc/csharp/` |
+| Rules — java | ✅ Active | `~/.claude/rules/ecc/java/` |
+| Rules — golang | ✅ Active | `~/.claude/rules/ecc/golang/` |
+| Skills | ✅ ~118 skills | `~/.claude/skills/ecc/` (via plugin) |
+| Agents | ✅ 67 agents | Plugin-loaded |
+| Commands | ✅ 92 commands | Via `/plugin list ecc@ecc` |
+| MCP — Firecrawl | ✅ Active | `~/.claude/.mcp.json` with API key |
+| Hooks — global | ✅ 20+ scripts | Plugin hooks + DRY adapter |
+| Hooks — project | ✅ 2 guards | `.claude/settings.json` (Write + Bash) |
+| Full install guide | ✅ Created | `docs/ecc-harness-guide.md` (22 sections) |
+
+### Audits
 - Harness audit script: `scripts/harness-audit.js`
 - Run: `node scripts/harness-audit.js repo --format text`
-- Baseline score: 17/39 (2026-06-17)
+- Baseline: **17/39** (2026-06-17) → **39/39** (2026-06-20) — fully configured

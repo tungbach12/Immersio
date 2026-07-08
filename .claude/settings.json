@@ -23,7 +23,33 @@
       "Bash(git pull *)",
       "Bash(ls *)",
       "Bash(find * -name *)",
-      "Read(**)"
+      "Read(**)",
+      "Bash(wc -l *)",
+      "Bash(curl *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const d=JSON.parse(require('fs').readFileSync(0,'utf8'));const fp=d.tool_input?.file_path||'';const blocked=['appsettings.json','.env','secrets.json','credentials.json','.pem','.key'];const match=blocked.some(b=>fp.includes(b));if(match){console.error('[Hook] WARNING: Writing to sensitive file: '+fp);console.error('[Hook] Verify no secrets are being hardcoded.');process.exit(2)}process.exit(0)\""
+          }
+        ],
+        "description": "Block writes to sensitive config files (appsettings.json, .env, secrets)"
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const d=JSON.parse(require('fs').readFileSync(0,'utf8'));const cmd=d.tool_input?.command||'';const dangerous=['git push --force','git reset --hard','rm -rf /','DROP TABLE','DELETE FROM WHERE 1=1'];if(dangerous.some(x=>cmd.includes(x))){console.error('[Hook] BLOCKED: Dangerous command: '+cmd.slice(0,100));process.exit(2)}process.exit(0)\""
+          }
+        ],
+        "description": "Block dangerous git/SQL commands"
+      }
     ]
   }
 }

@@ -14,6 +14,9 @@ const CATALOG_MODELS = [
   { value: "nemotron-mini-4b-instruct", name: "NVIDIA Nemotron Mini 4B (Groq)", desc: "Groq-hosted Nemotron Mini 4B model." },
   { value: "meta/llama-4-maverick-17b-128e-instruct", name: "Meta Llama 4 Maverick 17B", desc: "Multilingual sparse MoE model. Excellent natural flow for dialog." },
   { value: "stepfun-ai/step-3.5-flash", name: "Stepfun Step 3.5 Flash", desc: "200B reasoning sparse MoE. Superb for logic and sentence analysis." },
+  { value: "opencode/zen", name: "OpenCode Zen", desc: "OpenCode Zen — powerful reasoning model optimized for code and language tasks." },
+  { value: "mimo-v2.5-free", name: "MiMo V2.5 Free (OpenCode)", desc: "Free MiMo V2.5 via OpenCode Zen — compact reasoning model." },
+  { value: "deepseek-v4-flash-free", name: "DeepSeek V4 Flash Free (OpenCode)", desc: "Free DeepSeek V4 Flash via OpenCode Zen — fast and capable." },
   { value: "google/gemma-3n-e2b-it", name: "Google Gemma 3 2B", desc: "Small model for edge, text, image, and voice tasks." },
   { value: "minimaxai/minimax-m2.7", name: "MiniMax M2.7 230B", desc: "High capacity MoE. Outstanding translation and logical structure." },
   { value: "nvidia/mistral-nemotron-12b-instruct", name: "Mistral Nemotron 12B", desc: "Designed for agentic workflows and complex instruction following." },
@@ -298,6 +301,15 @@ export default function AITuning() {
                       phrase: "stepfun-ai/step-3.5-flash"
                     },
                     {
+                      name: "OpenCode Zen",
+                      endpoint: "https://opencode.ai/zen/v1/chat/completions",
+                      chat: "mimo-v2.5-free",
+                      grammar: "mimo-v2.5-free",
+                      feedback: "deepseek-v4-flash-free",
+                      flashcard: "deepseek-v4-flash-free",
+                      phrase: "mimo-v2.5-free"
+                    },
+                    {
                       name: "Custom Setup",
                       endpoint: settings.llmEndpoint,
                       chat: settings.modelChat,
@@ -307,11 +319,12 @@ export default function AITuning() {
                       phrase: settings.modelPhrase
                     }
                   ].map((p, idx) => {
-                    const isSelected = idx === 3 
-                      ? (settings.llmEndpoint !== "https://api.groq.com/openai/v1/chat/completions" && 
+                    const isSelected = idx === 4
+                      ? (settings.llmEndpoint !== "https://api.groq.com/openai/v1/chat/completions" &&
                          settings.llmEndpoint !== "https://integrate.api.nvidia.com/v1/chat/completions" &&
-                         settings.llmEndpoint !== "https://api.stepfun.com/v1/chat/completions")
-                      : (settings.llmEndpoint === p.endpoint && 
+                         settings.llmEndpoint !== "https://api.stepfun.com/v1/chat/completions" &&
+                         settings.llmEndpoint !== "https://opencode.ai/zen/v1/chat/completions")
+                      : (settings.llmEndpoint === p.endpoint &&
                          settings.modelChat === p.chat &&
                          settings.modelGrammar === p.grammar &&
                          settings.modelFeedback === p.feedback &&
@@ -322,7 +335,7 @@ export default function AITuning() {
                         key={idx}
                         type="button"
                         onClick={() => {
-                          if (idx !== 3) {
+                          if (idx !== 4) {
                             setSettings({
                               ...settings,
                               llmEndpoint: p.endpoint,
@@ -342,7 +355,7 @@ export default function AITuning() {
                       >
                         <span className="text-[10px] uppercase tracking-wider block font-black">{p.name}</span>
                         <span className="text-[8px] text-slate-500 font-medium block mt-1 truncate">
-                          {idx === 0 ? "Llama 3.3" : idx === 1 ? "Mix NIMs" : idx === 2 ? "Mix StepFun" : "Custom Configuration"}
+                          {idx === 0 ? "Llama 3.3" : idx === 1 ? "Mix NIMs" : idx === 2 ? "Mix StepFun" : idx === 3 ? "Zen Model" : "Custom Configuration"}
                         </span>
                       </button>
                     );
@@ -360,6 +373,27 @@ export default function AITuning() {
                   value={settings.llmEndpoint}
                   onChange={(e) => setSettings({ ...settings, llmEndpoint: e.target.value })}
                 />
+              </div>
+
+              {/* Reasoning Effort */}
+              <div className="pt-2">
+                <span className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest block mb-2">Reasoning Effort</span>
+                <div className="flex flex-col gap-1.5">
+                  <select
+                    className="bg-slate-950 text-xs font-bold text-indigo-400 outline-none border border-white/10 p-3 rounded-xl focus:border-indigo-500 w-full"
+                    value={settings.reasoningEffort}
+                    onChange={(e) => setSettings({ ...settings, reasoningEffort: e.target.value })}
+                  >
+                    <option value="none">None (disabled)</option>
+                    <option value="low">Low — fast, minimal reasoning</option>
+                    <option value="medium">Medium — balanced</option>
+                    <option value="high">High — thorough reasoning</option>
+                    <option value="xhigh">X-High — maximum reasoning</option>
+                  </select>
+                  <p className="text-[9px] font-semibold text-slate-500 italic">
+                    Injects <code className="text-indigo-400">reasoning_effort</code> into every API request. Only applies to models that support it (e.g. DeepSeek R1, MiMo). Has no effect on standard models.
+                  </p>
+                </div>
               </div>
 
               {/* Granular Dropdowns with Annotations */}

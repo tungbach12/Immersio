@@ -26,6 +26,7 @@ namespace Immersio.Application.DTOs.Admin
         string ModelGrammar,
         string ModelFeedback,
         string ModelFlashcard,
-        string ModelPhrase
+        string ModelPhrase,
+        string ReasoningEffort
     );
 }

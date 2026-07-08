@@ -167,8 +167,9 @@ namespace Immersio.Application.Services
             var modelFeedback = await GetSettingValueAsync("ModelFeedback", "mistralai/mistral-large-3-675b-instruct-2512", cancellationToken);
             var modelFlashcard = await GetSettingValueAsync("ModelFlashcard", "qwen/qwen3-coder-480b-a35b-instruct", cancellationToken);
             var modelPhrase = await GetSettingValueAsync("ModelPhrase", "nvidia/nemotron-mini-4b-instruct", cancellationToken);
+            var reasoningEffort = await GetSettingValueAsync("ReasoningEffort", "none", cancellationToken);
 
-            return new SystemSettingsDto(prompt, grammar, vocab, slang, speed, endpoint, apiKey, modelChat, modelGrammar, modelFeedback, modelFlashcard, modelPhrase);
+            return new SystemSettingsDto(prompt, grammar, vocab, slang, speed, endpoint, apiKey, modelChat, modelGrammar, modelFeedback, modelFlashcard, modelPhrase, reasoningEffort);
         }
 
         public async Task SaveAiSettingsAsync(SystemSettingsDto settings, CancellationToken cancellationToken)
@@ -185,6 +186,7 @@ namespace Immersio.Application.Services
             await SaveSettingValueAsync("ModelFeedback", settings.ModelFeedback ?? "llama-3.3-70b-versatile", cancellationToken);
             await SaveSettingValueAsync("ModelFlashcard", settings.ModelFlashcard ?? "llama-3.3-70b-versatile", cancellationToken);
             await SaveSettingValueAsync("ModelPhrase", settings.ModelPhrase ?? "llama-3.3-70b-versatile", cancellationToken);
+            await SaveSettingValueAsync("ReasoningEffort", settings.ReasoningEffort ?? "none", cancellationToken);
 
             await _context.SaveChangesAsync(cancellationToken);
         }

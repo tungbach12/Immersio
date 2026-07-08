@@ -32,7 +32,7 @@ namespace Immersio.Infrastructure.Services
             _context = context;
         }
 
-        private async Task<(string ModelName, string Endpoint, string ApiKey)> GetModelConfigAsync(string modelKey, CancellationToken cancellationToken)
+        private async Task<(string ModelName, string Endpoint, string ApiKey, string ReasoningEffort)> GetModelConfigAsync(string modelKey, CancellationToken cancellationToken)
         {
             try
             {
@@ -40,10 +40,13 @@ namespace Immersio.Infrastructure.Services
                     .FirstOrDefaultAsync(s => s.Key == modelKey, cancellationToken);
                 var endpointSetting = await _context.SystemSettings
                     .FirstOrDefaultAsync(s => s.Key == "LlmEndpoint", cancellationToken);
+                var reasoningEffortSetting = await _context.SystemSettings
+                    .FirstOrDefaultAsync(s => s.Key == "ReasoningEffort", cancellationToken);
 
                 var modelName = !string.IsNullOrWhiteSpace(modelSetting?.Value) ? modelSetting.Value : DefaultModel;
                 var endpoint = !string.IsNullOrWhiteSpace(endpointSetting?.Value) ? endpointSetting.Value : NvidiaEndpoint;
-                
+                var reasoningEffort = !string.IsNullOrWhiteSpace(reasoningEffortSetting?.Value) ? reasoningEffortSetting.Value : "none";
+
                 string apiKey = "";
                 if (endpoint.Contains("groq.com", StringComparison.OrdinalIgnoreCase))
                 {
@@ -57,6 +60,10 @@ namespace Immersio.Infrastructure.Services
                 {
                     apiKey = _configuration["StepFun:ApiKey"] ?? "";
                 }
+                else if (endpoint.Contains("opencode.ai", StringComparison.OrdinalIgnoreCase))
+                {
+                    apiKey = _configuration["OpenCode:ApiKey"] ?? "";
+                }
                 else
                 {
                     apiKey = _configuration["Groq:ApiKey"] ?? "";
@@ -65,8 +72,10 @@ namespace Immersio.Infrastructure.Services
                 Console.WriteLine($"\n[AI DIAGNOSTICS] {DateTime.Now:HH:mm:ss} | Triggering AI Service: '{modelKey}'");
                 Console.WriteLine($"  -> Active Model:   {modelName}");
                 Console.WriteLine($"  -> Target Server:  {endpoint}");
+                if (reasoningEffort != "none")
+                    Console.WriteLine($"  -> Reasoning:      {reasoningEffort}");
 
-                return (modelName, endpoint, apiKey);
+                return (modelName, endpoint, apiKey, reasoningEffort);
             }
             catch (Exception ex)
             {
@@ -74,7 +83,7 @@ namespace Immersio.Infrastructure.Services
                 Console.WriteLine($"\n[AI DIAGNOSTICS] Warning: Failed to resolve database AI settings (using fallback). Error: {ex.Message}");
                 Console.WriteLine($"  -> Fallback Model: {DefaultModel}");
                 Console.WriteLine($"  -> Fallback Server:{NvidiaEndpoint}");
-                return (DefaultModel, NvidiaEndpoint, defaultKey);
+                return (DefaultModel, NvidiaEndpoint, defaultKey, "none");
             }
         }
 
@@ -84,6 +93,34 @@ namespace Immersio.Infrastructure.Services
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
             content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
             request.Content = content;
+        }
+
+        private Dictionary<string, object> BuildRequestBody(
+            string modelName,
+            IEnumerable<object> messages,
+            double temperature,
+            string reasoningEffort,
+            int maxTokens = 0,
+            bool jsonMode = false)
+        {
+            var body = new Dictionary<string, object>
+            {
+                ["model"] = modelName,
+                ["messages"] = messages,
+                ["temperature"] = temperature,
+                ["stream"] = false
+            };
+
+            if (maxTokens > 0)
+                body["max_tokens"] = maxTokens;
+
+            if (jsonMode)
+                body["response_format"] = new { type = "json_object" };
+
+            if (!string.IsNullOrWhiteSpace(reasoningEffort) && reasoningEffort != "none")
+                body["reasoning_effort"] = reasoningEffort;
+
+            return body;
         }
 
         private async Task LogErrorAsync(string operationName, string endpoint, string modelName, HttpResponseMessage response, CancellationToken cancellationToken)
@@ -142,16 +179,9 @@ namespace Immersio.Infrastructure.Services
                 messagesPayload.Add(new { role = "user", content = userMessage });
             }
 
-            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelChat", cancellationToken);
+            var (modelName, endpoint, apiKey, reasoningEffort) = await GetModelConfigAsync("ModelChat", cancellationToken);
 
-            var requestBody = new
-            {
-                model = modelName,
-                messages = messagesPayload,
-                temperature = 0.7,
-                max_tokens = 1024,
-                stream = false
-            };
+            var requestBody = BuildRequestBody(modelName, messagesPayload, 0.7, reasoningEffort, maxTokens: 1024);
 
             try
             {
@@ -191,20 +221,13 @@ namespace Immersio.Infrastructure.Services
                                $"5. Output format: You must return a valid JSON object only, with no markdown wrappers or backticks. Example:\n" +
                                $"{{\n  \"corrected\": \"(corrected sentence if errors exist, otherwise the exact original input)\",\n  \"explanation\": \"(EXACTLY 'Perfect!' if correct, otherwise a short Vietnamese explanation of the error)\"\n}}";
 
-            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelGrammar", cancellationToken);
+            var (modelName, endpoint, apiKey, reasoningEffort) = await GetModelConfigAsync("ModelGrammar", cancellationToken);
 
-            var requestBody = new
+            var requestBody = BuildRequestBody(modelName, new[]
             {
-                model = modelName,
-                messages = new[]
-                {
-                    new { role = "system", content = systemPrompt },
-                    new { role = "user", content = userMessage }
-                },
-                temperature = 0.2,
-                response_format = new { type = "json_object" },
-                stream = false
-            };
+                new { role = "system", content = systemPrompt },
+                new { role = "user", content = userMessage }
+            }, 0.2, reasoningEffort, jsonMode: true);
 
             try
             {
@@ -251,19 +274,13 @@ namespace Immersio.Infrastructure.Services
             var historyText = string.Join("\n", history.Select(m => $"{m.Role}: {m.Text}"));
             var userPrompt = $"Context: {contextPrompt}\n\nHistory:\n{historyText}";
 
-            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelFeedback", cancellationToken);
+            var (modelName, endpoint, apiKey, reasoningEffort) = await GetModelConfigAsync("ModelFeedback", cancellationToken);
 
-            var requestBody = new
+            var requestBody = BuildRequestBody(modelName, new[]
             {
-                model = modelName,
-                messages = new[]
-                {
-                    new { role = "system", content = systemPrompt },
-                    new { role = "user", content = userPrompt }
-                },
-                temperature = 0.7,
-                stream = false
-            };
+                new { role = "system", content = systemPrompt },
+                new { role = "user", content = userPrompt }
+            }, 0.7, reasoningEffort);
 
             try
             {
@@ -372,20 +389,13 @@ namespace Immersio.Infrastructure.Services
 
             var historyText = string.Join("\n", history.Select(m => $"{m.Role}: {m.Text}"));
 
-            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelFlashcard", cancellationToken);
+            var (modelName, endpoint, apiKey, reasoningEffort) = await GetModelConfigAsync("ModelFlashcard", cancellationToken);
 
-            var requestBody = new
+            var requestBody = BuildRequestBody(modelName, new[]
             {
-                model = modelName,
-                messages = new[]
-                {
-                    new { role = "system", content = systemPrompt },
-                    new { role = "user", content = historyText }
-                },
-                temperature = 0.2,
-                response_format = new { type = "json_object" },
-                stream = false
-            };
+                new { role = "system", content = systemPrompt },
+                new { role = "user", content = historyText }
+            }, 0.2, reasoningEffort, jsonMode: true);
 
             var flashcards = new List<AddCardDto>();
 
@@ -558,20 +568,13 @@ namespace Immersio.Infrastructure.Services
 
             var historyText = string.Join("\n", history.Select(m => $"{m.Role}: {m.Text}"));
 
-            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelFlashcard", cancellationToken);
+            var (modelName, endpoint, apiKey, reasoningEffort) = await GetModelConfigAsync("ModelFlashcard", cancellationToken);
 
-            var requestBody = new
+            var requestBody = BuildRequestBody(modelName, new[]
             {
-                model = modelName,
-                messages = new[]
-                {
-                    new { role = "system", content = systemPrompt },
-                    new { role = "user", content = historyText }
-                },
-                temperature = 0.2,
-                response_format = new { type = "json_object" },
-                stream = false
-            };
+                new { role = "system", content = systemPrompt },
+                new { role = "user", content = historyText }
+            }, 0.2, reasoningEffort, jsonMode: true);
 
             var flashcards = new List<AddCardDto>();
 
@@ -702,20 +705,13 @@ namespace Immersio.Infrastructure.Services
                              $"Recent Pronunciation Scores: [{speechScoresCsv}]\n" +
                              $"Active Vocabulary Count: {activeWordsCount} words\n";
 
-            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelFeedback", cancellationToken);
+            var (modelName, endpoint, apiKey, reasoningEffort) = await GetModelConfigAsync("ModelFeedback", cancellationToken);
 
-            var requestBody = new
+            var requestBody = BuildRequestBody(modelName, new[]
             {
-                model = modelName,
-                messages = new[]
-                {
-                    new { role = "system", content = systemPrompt },
-                    new { role = "user", content = userPrompt }
-                },
-                temperature = 0.2,
-                response_format = new { type = "json_object" },
-                stream = false
-            };
+                new { role = "system", content = systemPrompt },
+                new { role = "user", content = userPrompt }
+            }, 0.2, reasoningEffort, jsonMode: true);
 
             var defaultSuggestions = new List<string>
             {
@@ -795,7 +791,7 @@ namespace Immersio.Infrastructure.Services
             form.Add(new StringContent("whisper-large-v3"), "model");
             form.Add(new StringContent("en"), "language");
 
-            var (_, _, apiKey) = await GetModelConfigAsync("ModelChat", cancellationToken);
+            var (_, _, apiKey, _) = await GetModelConfigAsync("ModelChat", cancellationToken);
 
             var request = new HttpRequestMessage(HttpMethod.Post, GroqAudioEndpoint);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
@@ -837,20 +833,13 @@ namespace Immersio.Infrastructure.Services
                                $"The output must be strictly valid JSON. Example:\n" +
                                $"{{\n  \"phrase\": \"I'd like to reserve a table for two, please.\",\n  \"translation\": \"Tôi muốn đặt trước một bàn cho hai người.\",\n  \"explanation\": \"Sử dụng 'I'd like to' là cách lịch sự để đưa ra yêu cầu.\"\n}}";
 
-            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelPhrase", cancellationToken);
+            var (modelName, endpoint, apiKey, reasoningEffort) = await GetModelConfigAsync("ModelPhrase", cancellationToken);
 
-            var requestBody = new
+            var requestBody = BuildRequestBody(modelName, new[]
             {
-                model = modelName,
-                messages = new[]
-                {
-                    new { role = "system", content = systemPrompt },
-                    new { role = "user", content = $"Generate a phrase for {language} ({level}) about '{topic}'" }
-                },
-                temperature = 0.8,
-                response_format = new { type = "json_object" },
-                stream = false
-            };
+                new { role = "system", content = systemPrompt },
+                new { role = "user", content = $"Generate a phrase for {language} ({level}) about '{topic}'" }
+            }, 0.8, reasoningEffort, jsonMode: true);
 
             var defaultPhrase = language.ToLower().Contains("ja") ? "こんにちは、元気ですか？"
                              : language.ToLower().Contains("zh") ? "你好，你怎么样？"
@@ -918,20 +907,13 @@ namespace Immersio.Infrastructure.Services
                                $"The output must be strictly valid JSON. Example:\n" +
                                $"{{\n  \"word\": \"accomplish\",\n  \"translation\": \"hoàn thành, đạt được\",\n  \"phonetic\": \"/əˈkʌm.plɪʃ/\",\n  \"partOfSpeech\": \"verb\",\n  \"definition\": \"To succeed in doing something, especially after a lot of effort.\",\n  \"example\": \"We can accomplish anything if we work together.\",\n  \"exampleTranslation\": \"Chúng ta có thể đạt được bất cứ điều gì nếu làm việc cùng nhau.\"\n}}";
 
-            var (modelName, endpoint, apiKey) = await GetModelConfigAsync("ModelChat", cancellationToken);
+            var (modelName, endpoint, apiKey, reasoningEffort) = await GetModelConfigAsync("ModelChat", cancellationToken);
 
-            var requestBody = new
+            var requestBody = BuildRequestBody(modelName, new[]
             {
-                model = modelName,
-                messages = new[]
-                {
-                    new { role = "system", content = systemPrompt },
-                    new { role = "user", content = $"Lookup details for the word/phrase: {word}" }
-                },
-                temperature = 0.3,
-                response_format = new { type = "json_object" },
-                stream = false
-            };
+                new { role = "system", content = systemPrompt },
+                new { role = "user", content = $"Lookup details for the word/phrase: {word}" }
+            }, 0.3, reasoningEffort, jsonMode: true);
 
             var defaultPhonetic = "/.../";
             var defaultTranslation = "Nghĩa của từ.";

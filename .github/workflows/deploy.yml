@@ -103,7 +103,7 @@ jobs:
           target: "/home/azureuser/immersio"
 
       - name: Execute remote deployment commands via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}

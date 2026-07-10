@@ -1,38 +1,40 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, type ChangeEvent } from "react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/Button";
-import { 
-  Settings, 
-  Bell, 
-  Shield, 
-  CreditCard, 
-  HelpCircle, 
-  LogOut, 
-  ChevronRight, 
-  Award, 
-  Clock, 
+import {
+  Settings,
+  Bell,
+  Shield,
+  CreditCard,
+  HelpCircle,
+  LogOut,
+  ChevronRight,
+  Award,
+  Clock,
   Zap,
   Camera,
   Crown,
   ArrowRight,
   ChevronDown,
-  X
+  X,
+  Loader2
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { authService, UserDto } from "@/services/auth";
+import { uploadImage } from "@/services/upload";
 
 export default function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserDto | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Attempt to read the user from stored session
     const currentUser = authService.getUser();
     setUser(currentUser);
 
-    // Sync latest user details from server
     authService.getMe()
       .then((latest) => {
         authService.updateUser(latest);
@@ -40,6 +42,32 @@ export default function Profile() {
       })
       .catch((err) => console.error("Could not sync user profile:", err));
   }, []);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Ảnh không được vượt quá 5MB");
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const url = await uploadImage(file, "immersio/avatars");
+      const updated = await authService.updateAvatar(url);
+      setUser(updated);
+    } catch (err) {
+      console.error("Avatar upload failed:", err);
+    } finally {
+      setIsUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -77,19 +105,41 @@ export default function Profile() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-indigo-500/10 blur-[80px] rounded-full -z-10 animate-pulse" />
         
         <div className="relative group">
-           <motion.div 
+           <motion.div
              initial={{ scale: 0.8, opacity: 0 }}
              animate={{ scale: 1, opacity: 1 }}
-             className="absolute -inset-4 bg-gradient-vibrant opacity-30 blur-3xl rounded-full group-hover:opacity-50 transition-opacity duration-1000" 
+             className="absolute -inset-4 bg-gradient-vibrant opacity-30 blur-3xl rounded-full group-hover:opacity-50 transition-opacity duration-1000"
            />
           <div className="relative w-36 h-36 rounded-[3.5rem] bg-slate-950 flex items-center justify-center text-white text-5xl font-black shadow-3xl border-[6px] border-white/10 overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-blue-700 to-slate-900 opacity-90" />
-              <span className="relative z-10 italic tracking-tighter">
-                {user ? getInitials(user.username) : "—"}
-              </span>
+             {user?.profilePictureUrl ? (
+               <img
+                 src={user.profilePictureUrl}
+                 alt="Avatar"
+                 className="absolute inset-0 w-full h-full object-cover z-10"
+               />
+             ) : (
+               <span className="relative z-10 italic tracking-tighter">
+                 {user ? getInitials(user.username) : "—"}
+               </span>
+             )}
           </div>
-          <button className="absolute bottom-1 right-1 w-12 h-12 bg-slate-900/80 rounded-2xl shadow-2xl flex items-center justify-center text-white border border-white/10 hover:bg-indigo-600 hover:text-indigo-200 transition-all active:scale-95 z-20 backdrop-blur-md">
-            <Camera size={22} strokeWidth={2.5} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <button
+            onClick={handleAvatarClick}
+            disabled={isUploadingAvatar}
+            className="absolute bottom-1 right-1 w-12 h-12 bg-slate-900/80 rounded-2xl shadow-2xl flex items-center justify-center text-white border border-white/10 hover:bg-indigo-600 hover:text-indigo-200 transition-all active:scale-95 z-20 backdrop-blur-md disabled:opacity-60"
+          >
+            {isUploadingAvatar
+              ? <Loader2 size={20} className="animate-spin" />
+              : <Camera size={22} strokeWidth={2.5} />
+            }
           </button>
         </div>
 

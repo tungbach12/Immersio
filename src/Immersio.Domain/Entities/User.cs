@@ -43,6 +43,8 @@ namespace Immersio.Domain.Entities
 
         public bool IsPublic { get; private set; } = true;
 
+        public string? ProfilePictureUrl { get; private set; }
+
         private readonly List<RefreshToken> _refreshTokens = new();
         public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
 
@@ -127,6 +129,12 @@ namespace Immersio.Domain.Entities
         public void SetProfileVisibility(bool isPublic)
         {
             IsPublic = isPublic;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void UpdateProfilePicture(string? url)
+        {
+            ProfilePictureUrl = url;
             UpdatedAt = DateTime.UtcNow;
         }
     }

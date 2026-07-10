@@ -17,21 +17,22 @@ namespace Immersio.Application.DTOs.Auth
     public sealed record AuthResponse(string AccessToken, string RefreshToken, UserDto User);
 
     public sealed record UserDto(
-        Guid Id, 
-        string Username, 
-        string Email, 
-        string SubscriptionTier, 
-        DateTime? SubscriptionExpiresAt, 
-        int StreakCount, 
-        int ExperiencePoints, 
-        double LearningHours, 
-        string CurrentLanguageLevel, 
+        Guid Id,
+        string Username,
+        string Email,
+        string SubscriptionTier,
+        DateTime? SubscriptionExpiresAt,
+        int StreakCount,
+        int ExperiencePoints,
+        double LearningHours,
+        string CurrentLanguageLevel,
         string Role,
         bool NotifEmail,
         bool NotifPush,
         bool NotifStreak,
         bool NotifTips,
-        bool IsPublic
+        bool IsPublic,
+        string? ProfilePictureUrl
     );
 
     public sealed record UpdateSettingsRequest(
@@ -40,5 +41,7 @@ namespace Immersio.Application.DTOs.Auth
         bool NotifStreak,
         bool NotifTips
     );
+
+    public sealed record UpdateAvatarRequest(string Url);
 }
 

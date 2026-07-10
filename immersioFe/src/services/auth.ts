@@ -14,6 +14,7 @@ export interface UserDto {
   notifStreak?: boolean;
   notifTips?: boolean;
   isPublic?: boolean;
+  profilePictureUrl?: string | null;
 }
 
 export interface AuthResponse {
@@ -262,6 +263,24 @@ export const authService = {
     }
 
     const updatedUser = await response.json();
+    this.updateUser(updatedUser);
+    return updatedUser;
+  },
+
+  async updateAvatar(url: string): Promise<UserDto> {
+    const response = await this.fetchWithAuth(`${API_BASE}/api/auth/me/avatar`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Cập nhật ảnh đại diện thất bại" }));
+      throw new Error(err.detail || "Cập nhật ảnh đại diện thất bại");
+    }
+
+    const body = await response.json();
+    const updatedUser: UserDto = body.data ?? body;
     this.updateUser(updatedUser);
     return updatedUser;
   }

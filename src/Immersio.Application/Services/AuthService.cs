@@ -360,13 +360,27 @@ namespace Immersio.Application.Services
             return MapToDto(user);
         }
 
+        public async Task<UserDto> UpdateProfilePictureAsync(Guid userId, string url, CancellationToken cancellationToken = default)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
+            if (user is null)
+                throw new NotFoundException("User", userId);
+
+            user.UpdateProfilePicture(url);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return MapToDto(user);
+        }
+
         private static UserDto MapToDto(User user)
         {
             return new UserDto(
-                user.Id, 
-                user.Username, 
-                user.Email, 
-                user.ActiveSubscriptionTier, 
+                user.Id,
+                user.Username,
+                user.Email,
+                user.ActiveSubscriptionTier,
                 user.SubscriptionExpiresAt,
                 user.StreakCount,
                 user.ExperiencePoints,
@@ -377,7 +391,8 @@ namespace Immersio.Application.Services
                 user.NotifPush,
                 user.NotifStreak,
                 user.NotifTips,
-                user.IsPublic);
+                user.IsPublic,
+                user.ProfilePictureUrl);
         }
     }
 }

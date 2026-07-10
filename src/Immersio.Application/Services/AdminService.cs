@@ -98,7 +98,8 @@ namespace Immersio.Application.Services
                 u.NotifPush,
                 u.NotifStreak,
                 u.NotifTips,
-                u.IsPublic
+                u.IsPublic,
+                u.ProfilePictureUrl
             ));
         }
 
@@ -129,7 +130,8 @@ namespace Immersio.Application.Services
                 user.NotifPush,
                 user.NotifStreak,
                 user.NotifTips,
-                user.IsPublic
+                user.IsPublic,
+                user.ProfilePictureUrl
             );
         }
 

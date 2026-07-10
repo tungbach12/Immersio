@@ -134,7 +134,7 @@ export default function Profile() {
           <button
             onClick={handleAvatarClick}
             disabled={isUploadingAvatar}
-            className="absolute bottom-1 right-1 w-12 h-12 bg-slate-900/80 rounded-2xl shadow-2xl flex items-center justify-center text-white border border-white/10 hover:bg-indigo-600 hover:text-indigo-200 transition-all active:scale-95 z-20 backdrop-blur-md disabled:opacity-60"
+            className="absolute bottom-1 right-1 w-12 h-12 bg-slate-800 rounded-2xl shadow-2xl flex items-center justify-center text-white border border-slate-700 hover:bg-indigo-600 hover:border-indigo-500 transition-all active:scale-95 z-20 disabled:opacity-60"
           >
             {isUploadingAvatar
               ? <Loader2 size={20} className="animate-spin" />

@@ -838,10 +838,14 @@ const Intro = () => {
 
           {/* Bottom Bar */}
           <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider">
+            <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
               © 2026 <span className="text-white">IMMERSIO</span>. All rights reserved.
             </p>
-            <div className="flex gap-8 text-[11px] text-slate-600 font-black uppercase tracking-wider">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
+              Powered by NextGen Lab
+            </span>
+            <div className="flex gap-8 text-[11px] text-slate-400 font-black uppercase tracking-wider">
               <a href="#" className="hover:text-white transition">Chính sách bảo mật</a>
               <a href="#" className="hover:text-white transition">Điều khoản sử dụng</a>
               <a href="#" className="hover:text-white transition">Cookie Policy</a>

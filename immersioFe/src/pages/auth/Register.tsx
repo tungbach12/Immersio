@@ -275,6 +275,13 @@ export default function Register() {
               Đăng nhập ngay
             </Link>
           </p>
+
+          <div className="flex justify-center mt-6">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-widest text-slate-500">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
+              Powered by NextGen Lab
+            </span>
+          </div>
         </div>
       </motion.div>
     </div>

@@ -174,6 +174,13 @@ export default function AppLayout() {
                 Log Out
               </Button>
             </Link>
+
+            <div className="flex justify-center mt-4">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/5 bg-white/3 text-[9px] font-black uppercase tracking-widest text-slate-600">
+                <span className="w-1 h-1 rounded-full bg-indigo-500/60 shrink-0" />
+                Powered by NextGen Lab
+              </span>
+            </div>
           </div>
         </aside>
       )}

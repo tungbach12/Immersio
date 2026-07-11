@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/Switch";
 import { Save, Loader2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { adminService, AiSettings } from "@/services/admin";
+import { cn } from "@/lib/utils";
 
 const CATALOG_MODELS = [
   { value: "llama-3.3-70b-versatile", name: "Llama 3.3 70B (Groq Default)", desc: "Great all-rounder, excellent Vietnamese support & extremely fast." },
@@ -24,6 +25,78 @@ const CATALOG_MODELS = [
   { value: "mistralai/mistral-large-3-675b-instruct-2512", name: "Mistral Large 3 675B", desc: "SOTA heavy MoE, perfect for complex performance reports." },
   { value: "custom", name: "✏️ Custom Model Name...", desc: "Type any custom model identifier manually." }
 ];
+
+type ProviderPreset = {
+  name: string;
+  shortLabel: string;
+  endpoint: string;
+  chat: string;
+  grammar: string;
+  feedback: string;
+  flashcard: string;
+  phrase: string;
+  effortChat: string;
+  effortGrammar: string;
+  effortFeedback: string;
+  effortFlashcard: string;
+  effortPhrase: string;
+};
+
+const PROVIDER_PRESETS: ProviderPreset[] = [
+  {
+    name: "Groq Default",
+    shortLabel: "Llama 3.3",
+    endpoint: "https://api.groq.com/openai/v1/chat/completions",
+    chat: "llama-3.3-70b-versatile",
+    grammar: "llama-3.3-70b-versatile",
+    feedback: "llama-3.3-70b-versatile",
+    flashcard: "llama-3.3-70b-versatile",
+    phrase: "llama-3.3-70b-versatile",
+    effortChat: "none", effortGrammar: "none", effortFeedback: "none", effortFlashcard: "none", effortPhrase: "none"
+  },
+  {
+    name: "NVIDIA NIM",
+    shortLabel: "Mix NIMs",
+    endpoint: "https://integrate.api.nvidia.com/v1/chat/completions",
+    chat: "nvidia/nemotron-mini-4b-instruct",
+    grammar: "nvidia/nemotron-mini-4b-instruct",
+    feedback: "mistralai/mistral-large-3-675b-instruct-2512",
+    flashcard: "qwen/qwen3-coder-480b-a35b-instruct",
+    phrase: "nvidia/nemotron-mini-4b-instruct",
+    effortChat: "none", effortGrammar: "none", effortFeedback: "medium", effortFlashcard: "medium", effortPhrase: "none"
+  },
+  {
+    name: "StepFun MoE",
+    shortLabel: "Mix StepFun",
+    endpoint: "https://api.stepfun.com/v1/chat/completions",
+    chat: "stepfun-ai/step-3.5-flash",
+    grammar: "stepfun-ai/step-3.5-flash",
+    feedback: "stepfun-ai/step-3.5-flash",
+    flashcard: "stepfun-ai/step-3.5-flash",
+    phrase: "stepfun-ai/step-3.5-flash",
+    effortChat: "none", effortGrammar: "low", effortFeedback: "medium", effortFlashcard: "medium", effortPhrase: "none"
+  },
+  {
+    name: "OpenCode Zen",
+    shortLabel: "Zen Model",
+    endpoint: "https://opencode.ai/zen/v1/chat/completions",
+    chat: "mimo-v2.5-free",
+    grammar: "mimo-v2.5-free",
+    feedback: "deepseek-v4-flash-free",
+    flashcard: "deepseek-v4-flash-free",
+    phrase: "mimo-v2.5-free",
+    effortChat: "low", effortGrammar: "medium", effortFeedback: "high", effortFlashcard: "high", effortPhrase: "low"
+  },
+];
+
+function matchesPreset(settings: AiSettings, p: ProviderPreset): boolean {
+  return settings.llmEndpoint === p.endpoint &&
+    settings.modelChat === p.chat &&
+    settings.modelGrammar === p.grammar &&
+    settings.modelFeedback === p.feedback &&
+    settings.modelFlashcard === p.flashcard &&
+    settings.modelPhrase === p.phrase;
+}
 
 export default function AITuning() {
   const [settings, setSettings] = useState<AiSettings | null>(null);
@@ -62,6 +135,9 @@ export default function AITuning() {
       setSaving(false);
     }
   };
+
+  const matchedPreset = settings ? PROVIDER_PRESETS.find(p => matchesPreset(settings, p)) : undefined;
+  const activePresetName = matchedPreset?.name;
 
   const renderModelSelector = (
     label: string,
@@ -162,19 +238,32 @@ export default function AITuning() {
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-black text-white tracking-tighter italic">AI TUNING CENTER</h1>
-          <p className="text-slate-400 font-bold text-[10px] mt-1 uppercase tracking-[0.2em]">Configure the behavior and cognitive focus of AI NPC tutors</p>
+      <div className="sticky top-0 z-20 -mx-4 px-4 pt-4 pb-4 bg-background/85 backdrop-blur-xl border-b border-white/5">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-black text-white tracking-tighter italic">AI TUNING CENTER</h1>
+            <p className="text-slate-400 font-bold text-[10px] mt-1 uppercase tracking-[0.2em]">Configure the behavior and cognitive focus of AI NPC tutors</p>
+          </div>
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="gap-2 h-12 px-6 rounded-2xl font-black uppercase tracking-[0.15em] text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white shadow-glow shrink-0"
+          >
+            {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+            Save Changes
+          </Button>
         </div>
-        <Button 
-          onClick={handleSave}
-          disabled={saving}
-          className="gap-2 h-12 px-6 rounded-2xl font-black uppercase tracking-[0.15em] text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white shadow-glow"
-        >
-          {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-          Save Changes
-        </Button>
+        {settings && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className={cn(
+              "w-2 h-2 rounded-full",
+              activePresetName ? "bg-emerald-400" : "bg-amber-400"
+            )} />
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
+              Currently using: <span className={activePresetName ? "text-emerald-400" : "text-amber-400"}>{activePresetName || "Custom / Mixed Configuration"}</span>
+            </span>
+          </div>
+        )}
       </div>
 
       {successMsg && (
@@ -288,94 +377,27 @@ export default function AITuning() {
               <div>
                 <span className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest block mb-3">Quick Presets (Auto-configure all tasks)</span>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {[
-                    {
-                      name: "Groq Default",
-                      endpoint: "https://api.groq.com/openai/v1/chat/completions",
-                      chat: "llama-3.3-70b-versatile",
-                      grammar: "llama-3.3-70b-versatile",
-                      feedback: "llama-3.3-70b-versatile",
-                      flashcard: "llama-3.3-70b-versatile",
-                      phrase: "llama-3.3-70b-versatile",
-                      effortChat: "none", effortGrammar: "none", effortFeedback: "none", effortFlashcard: "none", effortPhrase: "none"
-                    },
-                    {
-                      name: "NVIDIA NIM",
-                      endpoint: "https://integrate.api.nvidia.com/v1/chat/completions",
-                      chat: "nvidia/nemotron-mini-4b-instruct",
-                      grammar: "nvidia/nemotron-mini-4b-instruct",
-                      feedback: "mistralai/mistral-large-3-675b-instruct-2512",
-                      flashcard: "qwen/qwen3-coder-480b-a35b-instruct",
-                      phrase: "nvidia/nemotron-mini-4b-instruct",
-                      effortChat: "none", effortGrammar: "none", effortFeedback: "medium", effortFlashcard: "medium", effortPhrase: "none"
-                    },
-                    {
-                      name: "StepFun MoE",
-                      endpoint: "https://api.stepfun.com/v1/chat/completions",
-                      chat: "stepfun-ai/step-3.5-flash",
-                      grammar: "stepfun-ai/step-3.5-flash",
-                      feedback: "stepfun-ai/step-3.5-flash",
-                      flashcard: "stepfun-ai/step-3.5-flash",
-                      phrase: "stepfun-ai/step-3.5-flash",
-                      effortChat: "none", effortGrammar: "low", effortFeedback: "medium", effortFlashcard: "medium", effortPhrase: "none"
-                    },
-                    {
-                      name: "OpenCode Zen",
-                      endpoint: "https://opencode.ai/zen/v1/chat/completions",
-                      chat: "mimo-v2.5-free",
-                      grammar: "mimo-v2.5-free",
-                      feedback: "deepseek-v4-flash-free",
-                      flashcard: "deepseek-v4-flash-free",
-                      phrase: "mimo-v2.5-free",
-                      effortChat: "low", effortGrammar: "medium", effortFeedback: "high", effortFlashcard: "high", effortPhrase: "low"
-                    },
-                    {
-                      name: "Custom Setup",
-                      endpoint: settings.llmEndpoint,
-                      chat: settings.modelChat,
-                      grammar: settings.modelGrammar,
-                      feedback: settings.modelFeedback,
-                      flashcard: settings.modelFlashcard,
-                      phrase: settings.modelPhrase,
-                      effortChat: settings.reasoningEffortChat,
-                      effortGrammar: settings.reasoningEffortGrammar,
-                      effortFeedback: settings.reasoningEffortFeedback,
-                      effortFlashcard: settings.reasoningEffortFlashcard,
-                      effortPhrase: settings.reasoningEffortPhrase
-                    }
-                  ].map((p, idx) => {
-                    const isSelected = idx === 4
-                      ? (settings.llmEndpoint !== "https://api.groq.com/openai/v1/chat/completions" &&
-                         settings.llmEndpoint !== "https://integrate.api.nvidia.com/v1/chat/completions" &&
-                         settings.llmEndpoint !== "https://api.stepfun.com/v1/chat/completions" &&
-                         settings.llmEndpoint !== "https://opencode.ai/zen/v1/chat/completions")
-                      : (settings.llmEndpoint === p.endpoint &&
-                         settings.modelChat === p.chat &&
-                         settings.modelGrammar === p.grammar &&
-                         settings.modelFeedback === p.feedback &&
-                         settings.modelFlashcard === p.flashcard &&
-                         settings.modelPhrase === p.phrase);
+                  {PROVIDER_PRESETS.map((p) => {
+                    const isSelected = matchedPreset === p;
                     return (
                       <button
-                        key={idx}
+                        key={p.name}
                         type="button"
                         onClick={() => {
-                          if (idx !== 4) {
-                            setSettings({
-                              ...settings,
-                              llmEndpoint: p.endpoint,
-                              modelChat: p.chat,
-                              modelGrammar: p.grammar,
-                              modelFeedback: p.feedback,
-                              modelFlashcard: p.flashcard,
-                              modelPhrase: p.phrase,
-                              reasoningEffortChat: p.effortChat,
-                              reasoningEffortGrammar: p.effortGrammar,
-                              reasoningEffortFeedback: p.effortFeedback,
-                              reasoningEffortFlashcard: p.effortFlashcard,
-                              reasoningEffortPhrase: p.effortPhrase
-                            });
-                          }
+                          setSettings({
+                            ...settings,
+                            llmEndpoint: p.endpoint,
+                            modelChat: p.chat,
+                            modelGrammar: p.grammar,
+                            modelFeedback: p.feedback,
+                            modelFlashcard: p.flashcard,
+                            modelPhrase: p.phrase,
+                            reasoningEffortChat: p.effortChat,
+                            reasoningEffortGrammar: p.effortGrammar,
+                            reasoningEffortFeedback: p.effortFeedback,
+                            reasoningEffortFlashcard: p.effortFlashcard,
+                            reasoningEffortPhrase: p.effortPhrase
+                          });
                         }}
                         className={`p-4 rounded-2xl border text-center transition-all ${
                           isSelected
@@ -385,11 +407,23 @@ export default function AITuning() {
                       >
                         <span className="text-[10px] uppercase tracking-wider block font-black">{p.name}</span>
                         <span className="text-[8px] text-slate-500 font-medium block mt-1 truncate">
-                          {idx === 0 ? "Llama 3.3" : idx === 1 ? "Mix NIMs" : idx === 2 ? "Mix StepFun" : idx === 3 ? "Zen Model" : "Custom Configuration"}
+                          {p.shortLabel}
                         </span>
                       </button>
                     );
                   })}
+                  <div
+                    className={`p-4 rounded-2xl border text-center transition-all ${
+                      !matchedPreset
+                        ? "bg-indigo-600/20 border-indigo-500 text-white font-extrabold shadow-glow-sm"
+                        : "bg-slate-900/40 border-white/5 text-slate-400"
+                    }`}
+                  >
+                    <span className="text-[10px] uppercase tracking-wider block font-black">Custom Setup</span>
+                    <span className="text-[8px] text-slate-500 font-medium block mt-1 truncate">
+                      {!matchedPreset ? "Active (mixed / edited manually)" : "Custom Configuration"}
+                    </span>
+                  </div>
                 </div>
               </div>
 

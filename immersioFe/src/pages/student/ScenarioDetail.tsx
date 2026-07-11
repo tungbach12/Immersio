@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { scenarioService, Scenario } from "@/services/scenario";
 import { getDecks, addCardsToDeck, addDeck, Deck, Flashcard } from "@/services/decks";
 import { API_BASE } from "@/services/auth";
+import { getVoiceIdForLanguage } from "@/data/azureVoices";
 
 type ChatMessage = {
   role: "user" | "model";
@@ -29,15 +30,7 @@ type ChatMessage = {
   pronunciationScore?: number;
 };
 
-const getVoiceForLanguage = (lang?: string, defaultVoice?: string): string => {
-  if (defaultVoice) return defaultVoice;
-  if (!lang) return "en-US-JennyNeural";
-  const lower = lang.toLowerCase();
-  if (lower.includes("japanese") || lower === "ja") return "ja-JP-NanamiNeural";
-  if (lower.includes("chinese") || lower === "zh") return "zh-CN-XiaoxiaoNeural";
-  if (lower.includes("french") || lower === "fr") return "fr-FR-DeniseNeural";
-  return "en-US-JennyNeural";
-};
+const getVoiceForLanguage = getVoiceIdForLanguage;
 
 // Desired emotion → Azure style (applied only if the voice supports it)
 const EMOTION_STYLE_MAP: Record<string, { style: string; degree: number }> = {

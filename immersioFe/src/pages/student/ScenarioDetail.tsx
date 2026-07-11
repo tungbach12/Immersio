@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 import { scenarioService, Scenario } from "@/services/scenario";
 import { getDecks, addCardsToDeck, addDeck, Deck, Flashcard } from "@/services/decks";
 import { API_BASE } from "@/services/auth";
-import { getVoiceIdForLanguage } from "@/data/azureVoices";
+import { getVoiceIdForLanguageAndGender } from "@/data/azureVoices";
 
 type ChatMessage = {
   role: "user" | "model";
@@ -29,8 +29,6 @@ type ChatMessage = {
   correction?: { corrected: string; explanation: string };
   pronunciationScore?: number;
 };
-
-const getVoiceForLanguage = getVoiceIdForLanguage;
 
 // Desired emotion → Azure style (applied only if the voice supports it)
 const EMOTION_STYLE_MAP: Record<string, { style: string; degree: number }> = {
@@ -219,7 +217,9 @@ export default function ScenarioDetail() {
       // by the backend — voice must match targetLang, not the scenario's native voiceId
       const npcLang = langOverride ?? scenario?.language;
       const isPracticingNativeLanguage = !targetLang || targetLang === scenario?.language;
-      const selectedVoice = voiceOverride || getVoiceForLanguage(npcLang, isPracticingNativeLanguage ? scenario?.voiceId : undefined);
+      const selectedVoice = voiceOverride
+        || (isPracticingNativeLanguage ? scenario?.voiceId : undefined)
+        || getVoiceIdForLanguageAndGender(npcLang, scenario?.gender);
       const token = localStorage.getItem("token") || "";
 
       const styleConfig = getStyleForVoice(selectedVoice, emotion ?? "idle");

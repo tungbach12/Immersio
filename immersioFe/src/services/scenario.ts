@@ -26,6 +26,7 @@ export interface Scenario {
   modes: ("2d" | "ar")[];
   isNavigation?: boolean;
   voiceId?: string;
+  gender?: "Male" | "Female";
   items?: ScenarioItem[];
   emotions?: Record<string, string>;
 }
@@ -154,6 +155,7 @@ export const scenarioService = {
       modes: dto.isNavigation ? ["ar"] : ["2d", "ar"],
       isNavigation: dto.isNavigation,
       voiceId: dto.voiceId,
+      gender: dto.gender,
       items: dto.items?.map((item: any) => ({
         id: item.id,
         name: item.name,

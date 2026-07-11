@@ -21,6 +21,7 @@ namespace Immersio.Domain.Entities
         public bool IsDeleted { get; private set; }
         public string? VoiceId { get; private set; }
         public string? EmotionsJson { get; private set; }
+        public string? Gender { get; private set; }
 
         // Navigation
         public ICollection<ScenarioItem> Items { get; private set; } = new List<ScenarioItem>();
@@ -41,7 +42,8 @@ namespace Immersio.Domain.Entities
             string avatarUrl, 
             bool isNavigation,
             string? voiceId = null,
-            string? emotionsJson = null)
+            string? emotionsJson = null,
+            string? gender = null)
         {
             if (string.IsNullOrWhiteSpace(title))
                 throw new ArgumentException("Title cannot be empty.", nameof(title));
@@ -66,6 +68,7 @@ namespace Immersio.Domain.Entities
             IsDeleted = false;
             VoiceId = voiceId;
             EmotionsJson = emotionsJson;
+            Gender = gender;
         }
 
         public void AddItem(string name, decimal price, string imageUrl, string? icon = null)
@@ -74,20 +77,21 @@ namespace Immersio.Domain.Entities
         }
 
         public void Update(
-            string title, 
-            string language, 
-            string level, 
-            string category, 
-            string description, 
-            double rating, 
-            string duration, 
-            string imageUrl, 
-            string contextPrompt, 
-            string initialMessage, 
-            string avatarUrl, 
+            string title,
+            string language,
+            string level,
+            string category,
+            string description,
+            double rating,
+            string duration,
+            string imageUrl,
+            string contextPrompt,
+            string initialMessage,
+            string avatarUrl,
             bool isNavigation,
             string? voiceId,
-            string? emotionsJson)
+            string? emotionsJson,
+            string? gender)
         {
             Title = title;
             Language = language;
@@ -103,6 +107,7 @@ namespace Immersio.Domain.Entities
             IsNavigation = isNavigation;
             VoiceId = voiceId;
             EmotionsJson = emotionsJson;
+            Gender = gender;
         }
 
         public void UpdateEmotions(string? emotionsJson)

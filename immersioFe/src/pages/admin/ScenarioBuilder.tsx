@@ -90,6 +90,25 @@ const CHARACTER_PRESETS: Record<string, {
   }
 };
 
+const EMOTION_PRESETS: Record<string, { key: string; url: string }[]> = {
+  "Standard (idle/happy/angry)": [
+    { key: "idle", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879119/immersio/scenarios/Idle.gif" },
+    { key: "happy", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879123/immersio/scenarios/happy.gif" },
+    { key: "angry", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879126/immersio/scenarios/angry.gif" },
+  ],
+  Isabella: CHARACTER_PRESETS.Isabella.emotions,
+  Jake: CHARACTER_PRESETS.Jake.emotions,
+  Joy: CHARACTER_PRESETS.Joy.emotions,
+  Tommy: CHARACTER_PRESETS.Tommy.emotions,
+};
+
+const CHARACTER_GENDER: Record<string, "Male" | "Female"> = {
+  Isabella: "Female",
+  Jake: "Male",
+  Joy: "Female",
+  Tommy: "Male",
+};
+
 export default function ScenarioBuilder() {
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [activeTab, setActiveTab] = useState<"scenarios" | "characters">("scenarios");
@@ -135,6 +154,7 @@ export default function ScenarioBuilder() {
   };
   const [contextPrompt, setContextPrompt] = useState("");
   const [isNavigation, setIsNavigation] = useState(false);
+  const [gender, setGender] = useState<"Male" | "Female">("Female");
   const [saving, setSaving] = useState(false);
 
   const [voiceId, setVoiceId] = useState("");
@@ -223,6 +243,7 @@ export default function ScenarioBuilder() {
     setInitialMessage("");
     setContextPrompt("");
     setIsNavigation(false);
+    setGender("Female");
     setVoiceId("en-US-JennyNeural");
     setEmotions([]);
     setPreviewError("");
@@ -243,6 +264,7 @@ export default function ScenarioBuilder() {
     // Fetch scenario prompt or provide fallback
     setContextPrompt(item.context || "");
     setIsNavigation(!!item.isNavigation);
+    setGender(item.gender === "Male" ? "Male" : "Female");
     setVoiceId(item.voiceId || "en-US-JennyNeural");
     if (item.emotions) {
       setEmotions(Object.entries(item.emotions).map(([key, url]) => ({ key, url })));
@@ -284,7 +306,8 @@ export default function ScenarioBuilder() {
       avatarUrl,
       isNavigation,
       voiceId,
-      emotionsJson
+      emotionsJson,
+      gender
     };
 
     try {
@@ -582,6 +605,27 @@ export default function ScenarioBuilder() {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Character Gender</label>
+                  <div className="flex gap-2 h-11">
+                    {(["Female", "Male"] as const).map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setGender(g)}
+                        className={cn(
+                          "flex-1 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all",
+                          gender === g
+                            ? "border-indigo-500 bg-indigo-500/20 text-indigo-300"
+                            : "border-white/10 bg-slate-900/60 text-slate-400 hover:border-indigo-500/30"
+                        )}
+                      >
+                        {g}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Estimated Duration</label>
                   <input 
                     type="text" 
@@ -630,6 +674,7 @@ export default function ScenarioBuilder() {
                           const preset = CHARACTER_PRESETS[charName];
                           setAvatarUrl(preset.avatar);
                           setEmotions(preset.emotions);
+                          setGender(CHARACTER_GENDER[charName] || "Female");
                           // Match neural voice to preset
                           const matchedVoice = preset.voice[language];
                           if (matchedVoice) {
@@ -686,7 +731,7 @@ export default function ScenarioBuilder() {
                       <span className="font-extrabold text-[10px] text-white uppercase tracking-widest block">Character Emotions Mapping</span>
                       <span className="text-[8px] font-medium text-slate-500">Map custom emotions (e.g. idle, happy) to avatar images</span>
                     </div>
-                    <Button 
+                    <Button
                       type="button"
                       onClick={() => setEmotions(prev => [...prev, { key: "", url: "" }])}
                       className="gap-1.5 h-8 px-3 rounded-lg font-bold uppercase tracking-wider text-[8px] bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-glow active:scale-95 transition-all"
@@ -694,6 +739,24 @@ export default function ScenarioBuilder() {
                       <Plus size={10} />
                       Add Emotion
                     </Button>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Load Emotion Preset</label>
+                    <select
+                      defaultValue=""
+                      onChange={(e) => {
+                        const preset = EMOTION_PRESETS[e.target.value];
+                        if (preset) setEmotions(preset.map(p => ({ ...p })));
+                        e.target.value = "";
+                      }}
+                      className="h-10 px-4 rounded-xl border border-white/10 bg-slate-900 text-xs font-bold text-indigo-400"
+                    >
+                      <option value="" disabled>Choose a default emotion set...</option>
+                      {Object.keys(EMOTION_PRESETS).map((name) => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
                   </div>
 
                   {emotions.length > 0 && (

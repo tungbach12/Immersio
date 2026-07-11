@@ -367,7 +367,8 @@ namespace Immersio.Application.Services
                 dto.AvatarUrl,
                 dto.IsNavigation,
                 dto.VoiceId,
-                string.IsNullOrWhiteSpace(dto.EmotionsJson) ? DEFAULT_EMOTIONS_JSON : dto.EmotionsJson
+                string.IsNullOrWhiteSpace(dto.EmotionsJson) ? DEFAULT_EMOTIONS_JSON : dto.EmotionsJson,
+                dto.Gender
             );
 
             _context.Scenarios.Add(scenario);
@@ -399,7 +400,8 @@ namespace Immersio.Application.Services
                 dto.AvatarUrl,
                 dto.IsNavigation,
                 dto.VoiceId,
-                dto.EmotionsJson
+                dto.EmotionsJson,
+                dto.Gender
             );
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -449,7 +451,8 @@ namespace Immersio.Application.Services
                 s.IsNavigation,
                 s.VoiceId,
                 s.Items.Select(i => new ScenarioItemDto(i.Id, i.Name, i.Price, i.ImageUrl, i.Icon)),
-                s.EmotionsJson
+                s.EmotionsJson,
+                s.Gender
             );
         }
     }

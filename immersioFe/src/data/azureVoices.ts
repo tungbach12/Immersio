@@ -318,18 +318,34 @@ export const getRecommendedVoice = (language: string): AzureVoice | undefined =>
     v.language.toLowerCase().includes(language.toLowerCase()) && v.recommended
   );
 
-/** Map scenario language string → default Azure voice ID */
-export const getVoiceIdForLanguage = (lang?: string, defaultVoiceId?: string): string => {
+/** Map scenario language + gender → default Azure voice ID */
+export const getVoiceIdForLanguageAndGender = (
+  lang?: string,
+  gender?: "Male" | "Female" | string | null,
+  defaultVoiceId?: string
+): string => {
   if (defaultVoiceId) return defaultVoiceId;
-  if (!lang) return "en-US-JennyNeural";
+  if (!lang) return gender === "Male" ? "en-US-GuyNeural" : "en-US-JennyNeural";
+
   const lower = lang.toLowerCase();
-  if (lower.includes("japanese") || lower === "ja") return "ja-JP-NanamiNeural";
-  if (lower.includes("chinese") || lower === "zh") return "zh-CN-XiaoxiaoNeural";
-  if (lower.includes("french") || lower === "fr") return "fr-FR-DeniseNeural";
-  if (lower.includes("vietnamese") || lower === "vi") return "vi-VN-HoaiMyNeural";
-  if (lower.includes("korean") || lower === "ko") return "ko-KR-SunHiNeural";
-  if (lower.includes("spanish") || lower === "es") return "es-ES-ElviraNeural";
-  if (lower.includes("german") || lower === "de") return "de-DE-KatjaNeural";
-  if (lower.includes("italian") || lower === "it") return "it-IT-ElsaNeural";
-  return "en-US-JennyNeural";
+  const wantMale = gender === "Male";
+
+  if (lower.includes("japanese") || lower === "ja")
+    return wantMale ? "ja-JP-KeitaNeural" : "ja-JP-NanamiNeural";
+  if (lower.includes("chinese") || lower === "zh")
+    return wantMale ? "zh-CN-YunxiNeural" : "zh-CN-XiaoxiaoNeural";
+  if (lower.includes("french") || lower === "fr")
+    return wantMale ? "fr-FR-HenriNeural" : "fr-FR-DeniseNeural";
+  if (lower.includes("vietnamese") || lower === "vi")
+    return wantMale ? "vi-VN-NamMinhNeural" : "vi-VN-HoaiMyNeural";
+  if (lower.includes("korean") || lower === "ko")
+    return wantMale ? "ko-KR-InJoonNeural" : "ko-KR-SunHiNeural";
+  if (lower.includes("spanish") || lower === "es")
+    return wantMale ? "es-ES-AlvaroNeural" : "es-ES-ElviraNeural";
+  if (lower.includes("german") || lower === "de")
+    return wantMale ? "de-DE-ConradNeural" : "de-DE-KatjaNeural";
+  if (lower.includes("italian") || lower === "it")
+    return wantMale ? "it-IT-DiegoNeural" : "it-IT-ElsaNeural";
+
+  return wantMale ? "en-US-GuyNeural" : "en-US-JennyNeural";
 };

@@ -6,7 +6,7 @@ import { uploadImage } from "@/services/upload";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { 
-  Layers, Plus, Trash2, Edit, Loader2, X, Check, Globe, Sliders, Image, Type, HelpCircle, DollarSign, Volume2
+  Layers, Plus, Trash2, Edit, Loader2, X, Check, Globe, Sliders, Image, Type, HelpCircle, DollarSign, Volume2, Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -90,18 +90,6 @@ const CHARACTER_PRESETS: Record<string, {
   }
 };
 
-const EMOTION_PRESETS: Record<string, { key: string; url: string }[]> = {
-  "Standard (idle/happy/angry)": [
-    { key: "idle", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879119/immersio/scenarios/Idle.gif" },
-    { key: "happy", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879123/immersio/scenarios/happy.gif" },
-    { key: "angry", url: "https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879126/immersio/scenarios/angry.gif" },
-  ],
-  Isabella: CHARACTER_PRESETS.Isabella.emotions,
-  Jake: CHARACTER_PRESETS.Jake.emotions,
-  Joy: CHARACTER_PRESETS.Joy.emotions,
-  Tommy: CHARACTER_PRESETS.Tommy.emotions,
-};
-
 const CHARACTER_GENDER: Record<string, "Male" | "Female"> = {
   Isabella: "Female",
   Jake: "Male",
@@ -134,6 +122,7 @@ export default function ScenarioBuilder() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [initialMessage, setInitialMessage] = useState("");
   const [emotions, setEmotions] = useState<{ key: string; url: string }[]>([]);
+  const [defaultEmotion, setDefaultEmotion] = useState<string>("");
 
   const handleImageUpload = async (
     file: File | undefined,
@@ -246,6 +235,7 @@ export default function ScenarioBuilder() {
     setGender("Female");
     setVoiceId("en-US-JennyNeural");
     setEmotions([]);
+    setDefaultEmotion("");
     setPreviewError("");
     setIsModalOpen(true);
   };
@@ -271,6 +261,7 @@ export default function ScenarioBuilder() {
     } else {
       setEmotions([]);
     }
+    setDefaultEmotion(item.defaultEmotion || "");
     setPreviewError("");
     setIsModalOpen(true);
   };
@@ -307,7 +298,8 @@ export default function ScenarioBuilder() {
       isNavigation,
       voiceId,
       emotionsJson,
-      gender
+      gender,
+      defaultEmotion: defaultEmotion || null
     };
 
     try {
@@ -723,13 +715,36 @@ export default function ScenarioBuilder() {
                   {uploadError && (
                     <span className="text-[10px] font-bold text-rose-400 ml-1">{uploadError}</span>
                   )}
+                  {emotions.length > 0 && (
+                    <div className="flex flex-col gap-1.5 mt-1">
+                      <span className="text-[8px] font-medium text-slate-500 ml-1">Or pick avatar from an emotion below</span>
+                      <div className="flex flex-wrap gap-2">
+                        {emotions.filter(e => e.url).map((emo, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setAvatarUrl(emo.url)}
+                            className={cn(
+                              "h-11 w-11 rounded-lg overflow-hidden border-2 transition-all",
+                              avatarUrl === emo.url
+                                ? "border-indigo-500 ring-2 ring-indigo-500/40"
+                                : "border-white/10 hover:border-indigo-500/40"
+                            )}
+                            title={emo.key || `emotion ${idx + 1}`}
+                          >
+                            <img src={emo.url} alt={emo.key || "emotion"} className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-2 col-span-2 p-5 bg-white/5 border border-white/10 rounded-2xl">
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="font-extrabold text-[10px] text-white uppercase tracking-widest block">Character Emotions Mapping</span>
-                      <span className="text-[8px] font-medium text-slate-500">Map custom emotions (e.g. idle, happy) to avatar images</span>
+                      <span className="text-[8px] font-medium text-slate-500">Map custom emotions (e.g. idle, happy) to avatar images. Pick which one plays when the scenario starts.</span>
                     </div>
                     <Button
                       type="button"
@@ -741,39 +756,33 @@ export default function ScenarioBuilder() {
                     </Button>
                   </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Load Emotion Preset</label>
-                    <select
-                      defaultValue=""
-                      onChange={(e) => {
-                        const preset = EMOTION_PRESETS[e.target.value];
-                        if (preset) setEmotions(preset.map(p => ({ ...p })));
-                        e.target.value = "";
-                      }}
-                      className="h-10 px-4 rounded-xl border border-white/10 bg-slate-900 text-xs font-bold text-indigo-400"
-                    >
-                      <option value="" disabled>Choose a default emotion set...</option>
-                      {Object.keys(EMOTION_PRESETS).map((name) => (
-                        <option key={name} value={name}>{name}</option>
-                      ))}
-                    </select>
-                  </div>
-
                   {emotions.length > 0 && (
                     <div className="space-y-3 mt-3 max-h-48 overflow-y-auto pr-1">
                       {emotions.map((emo, index) => (
-                        <div key={index} className="flex items-center gap-2 bg-slate-950/40 p-3 rounded-xl border border-white/5 animate-fadeIn">
+                        <div
+                          key={index}
+                          className={cn(
+                            "flex items-center gap-2 bg-slate-950/40 p-3 rounded-xl border animate-fadeIn",
+                            defaultEmotion && emo.key && defaultEmotion === emo.key
+                              ? "border-indigo-500/60"
+                              : "border-white/5"
+                          )}
+                        >
                           {emo.url && (
                             <img src={emo.url} alt="emo preview" className="h-9 w-9 rounded-lg object-cover border border-white/10" />
                           )}
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             placeholder="Emotion (e.g. happy)"
                             value={emo.key}
                             onChange={(e) => {
+                              const oldKey = emo.key;
                               const updated = [...emotions];
                               updated[index].key = e.target.value;
                               setEmotions(updated);
+                              if (defaultEmotion && defaultEmotion === oldKey) {
+                                setDefaultEmotion(e.target.value);
+                              }
                             }}
                             className="w-1/3 h-9 px-3 rounded-lg border border-white/10 bg-slate-900 text-[10px] font-bold focus:outline-none focus:border-indigo-500 text-slate-200"
                           />
@@ -799,9 +808,27 @@ export default function ScenarioBuilder() {
                                 }, () => {});
                               }} />
                           </label>
-                          <Button 
+                          <button
                             type="button"
-                            onClick={() => setEmotions(prev => prev.filter((_, idx) => idx !== index))}
+                            onClick={() => setDefaultEmotion(emo.key)}
+                            title="Set as default (shown when scenario starts)"
+                            className={cn(
+                              "h-9 w-9 p-0 rounded-lg border flex items-center justify-center shrink-0 transition-all",
+                              emo.key && defaultEmotion === emo.key
+                                ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-300"
+                                : "bg-white/5 border-white/10 text-slate-500 hover:text-indigo-400 hover:border-indigo-500/30"
+                            )}
+                          >
+                            <Star size={12} fill={emo.key && defaultEmotion === emo.key ? "currentColor" : "none"} />
+                          </button>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              setEmotions(prev => prev.filter((_, idx) => idx !== index));
+                              if (defaultEmotion && defaultEmotion === emo.key) {
+                                setDefaultEmotion("");
+                              }
+                            }}
                             className="h-9 w-9 p-0 rounded-lg bg-red-950/20 border border-red-500/10 hover:border-red-500/30 text-red-400 hover:bg-red-500/20"
                           >
                             <Trash2 size={12} />
@@ -866,19 +893,6 @@ export default function ScenarioBuilder() {
                     onChange={(e) => setContextPrompt(e.target.value)}
                     placeholder="You are Shinji, a barista... The user is a customer..."
                     className="h-24 p-4 rounded-xl border border-white/10 bg-slate-900/60 text-xs font-semibold focus:outline-none focus:border-indigo-500 text-slate-200 leading-relaxed"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-slate-900/40 rounded-xl border border-white/5 col-span-2">
-                  <div>
-                    <span className="font-extrabold text-[10px] text-white uppercase tracking-wider block">Enable AR/Navigation Mode</span>
-                    <span className="text-[8px] font-medium text-slate-500">Enable spatial tracking inside scenario</span>
-                  </div>
-                  <input 
-                    type="checkbox"
-                    checked={isNavigation}
-                    onChange={(e) => setIsNavigation(e.target.checked)}
-                    className="w-5 h-5 rounded border-white/10 accent-indigo-600 bg-slate-900 focus:ring-0 focus:ring-offset-0"
                   />
                 </div>
               </div>

@@ -22,6 +22,7 @@ namespace Immersio.Domain.Entities
         public string? VoiceId { get; private set; }
         public string? EmotionsJson { get; private set; }
         public string? Gender { get; private set; }
+        public string? DefaultEmotion { get; private set; }
 
         // Navigation
         public ICollection<ScenarioItem> Items { get; private set; } = new List<ScenarioItem>();
@@ -43,7 +44,8 @@ namespace Immersio.Domain.Entities
             bool isNavigation,
             string? voiceId = null,
             string? emotionsJson = null,
-            string? gender = null)
+            string? gender = null,
+            string? defaultEmotion = null)
         {
             if (string.IsNullOrWhiteSpace(title))
                 throw new ArgumentException("Title cannot be empty.", nameof(title));
@@ -69,6 +71,7 @@ namespace Immersio.Domain.Entities
             VoiceId = voiceId;
             EmotionsJson = emotionsJson;
             Gender = gender;
+            DefaultEmotion = defaultEmotion;
         }
 
         public void AddItem(string name, decimal price, string imageUrl, string? icon = null)
@@ -91,7 +94,8 @@ namespace Immersio.Domain.Entities
             bool isNavigation,
             string? voiceId,
             string? emotionsJson,
-            string? gender)
+            string? gender,
+            string? defaultEmotion)
         {
             Title = title;
             Language = language;
@@ -108,6 +112,7 @@ namespace Immersio.Domain.Entities
             VoiceId = voiceId;
             EmotionsJson = emotionsJson;
             Gender = gender;
+            DefaultEmotion = defaultEmotion;
         }
 
         public void UpdateEmotions(string? emotionsJson)

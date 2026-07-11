@@ -159,7 +159,7 @@ export default function ScenarioDetail() {
       .then(async (data) => {
         if (!active) return;
         setScenario(data);
-        setCurrentEmotion("idle");
+        setCurrentEmotion(data.defaultEmotion || "idle");
         setLoadingScenario(false);
         try {
           const res = await scenarioService.startSession(data.id, targetLang);

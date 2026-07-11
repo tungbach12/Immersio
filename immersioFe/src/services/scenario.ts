@@ -29,6 +29,7 @@ export interface Scenario {
   gender?: "Male" | "Female";
   items?: ScenarioItem[];
   emotions?: Record<string, string>;
+  defaultEmotion?: string;
 }
 
 export interface CorrectionResult {
@@ -163,7 +164,8 @@ export const scenarioService = {
         image: item.imageUrl,
         icon: item.icon,
       })),
-      emotions: dto.emotionsJson ? JSON.parse(dto.emotionsJson) : undefined
+      emotions: dto.emotionsJson ? JSON.parse(dto.emotionsJson) : undefined,
+      defaultEmotion: dto.defaultEmotion
     };
   },
 };

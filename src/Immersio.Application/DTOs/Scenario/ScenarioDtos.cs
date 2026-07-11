@@ -22,7 +22,8 @@ namespace Immersio.Application.DTOs.Scenario
         string? VoiceId,
         IEnumerable<ScenarioItemDto> Items,
         string? EmotionsJson = null,
-        string? Gender = null
+        string? Gender = null,
+        string? DefaultEmotion = null
     );
 
     public sealed record StartSessionRequest(Guid ScenarioId, string? TargetLanguage = null);
@@ -56,7 +57,8 @@ namespace Immersio.Application.DTOs.Scenario
         bool IsNavigation,
         string? VoiceId,
         string? EmotionsJson = null,
-        string? Gender = null
+        string? Gender = null,
+        string? DefaultEmotion = null
     );
 
     public sealed record CreateScenarioItemDto(string Name, decimal Price, string ImageUrl, string? Icon);

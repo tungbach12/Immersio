@@ -20,6 +20,7 @@ import {
   Mic
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { authService, UserDto } from "@/services/auth";
 
@@ -79,7 +80,7 @@ export default function AppLayout() {
   const logoSrc = isAdmin ? "/logo-admin.png" : "/logo.png";
 
   return (
-    <div className="h-screen bg-background flex flex-col md:flex-row overflow-hidden font-body text-slate-100 relative">
+    <div className="h-screen bg-background flex flex-col md:flex-row overflow-hidden font-body text-foreground relative">
       {/* Background Decorative Blobs */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-background">
         <motion.div
@@ -127,10 +128,10 @@ export default function AppLayout() {
       </div>
       {/* Desktop Sidebar */}
       {!isScenarioDetail && (
-        <aside className="hidden md:flex w-80 flex-col h-full bg-slate-900/80 backdrop-blur-3xl border-r border-slate-800 z-20">
+        <aside className="hidden md:flex w-80 flex-col h-full bg-surface/80 backdrop-blur-3xl border-r border-black/10 dark:border-slate-800 z-20">
           <div className="p-10 flex items-center gap-4">
             <img src={logoSrc} alt="IMMERSIO Logo" className="h-12 w-auto object-contain" />
-            <span className="text-xl font-black italic tracking-tighter text-slate-100">IMMERSIO</span>
+            <span className="text-xl font-black italic tracking-tighter text-slate-900 dark:text-slate-100">IMMERSIO</span>
           </div>
 
           <nav className="flex-1 px-6 py-4 space-y-3">
@@ -142,15 +143,15 @@ export default function AppLayout() {
                     className={cn(
                       "flex items-center gap-4 px-6 py-5 rounded-[1.5rem] transition-all duration-500 group relative overflow-hidden border border-transparent",
                       isActive
-                        ? "bg-slate-800 text-slate-100 shadow-lg border-slate-700/50"
-                        : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-100"
+                        ? "bg-black/5 dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-lg border-black/10 dark:border-slate-700/50"
+                        : "text-slate-500 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100"
                     )}
                   >
                     <link.icon
                       size={20}
                       className={cn(
                         "transition-all duration-500",
-                        isActive ? "text-indigo-500 scale-110" : "text-slate-400 group-hover:text-slate-100"
+                        isActive ? "text-indigo-500 scale-110" : "text-slate-400 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100"
                       )}
                     />
                     <span className="font-bold text-sm tracking-tight">{link.label}</span>
@@ -167,6 +168,11 @@ export default function AppLayout() {
           </nav>
 
           <div className="p-8">
+            {!isAdmin && (
+              <div className="mb-4">
+                <ThemeToggle />
+              </div>
+            )}
 
             <Link to="/">
               <Button variant="ghost" className="w-full justify-start text-slate-400 hover:text-destructive hover:bg-destructive/10 rounded-2xl font-bold text-sm h-12">
@@ -176,7 +182,7 @@ export default function AppLayout() {
             </Link>
 
             <div className="flex justify-center mt-4">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/5 bg-white/3 text-[9px] font-black uppercase tracking-widest text-slate-600">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-black/5 dark:border-white/5 bg-black/3 dark:bg-white/3 text-[9px] font-black uppercase tracking-widest text-slate-400">
                 <span className="w-1 h-1 rounded-full bg-indigo-500/60 shrink-0" />
                 Powered by NextGen Lab
               </span>
@@ -187,14 +193,15 @@ export default function AppLayout() {
 
       {/* Mobile Top Header */}
       {!isScenarioDetail && (
-        <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-3xl border-b border-slate-800 z-40 flex items-center justify-between px-6 transition-all duration-300">
+        <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-surface/80 backdrop-blur-3xl border-b border-black/10 dark:border-slate-800 z-40 flex items-center justify-between px-6 transition-all duration-300">
           <div className="flex items-center gap-3">
              <img src={logoSrc} alt="IMMERSIO Logo" className="h-9 w-auto object-contain" />
-             <span className="text-base font-black italic tracking-tighter text-slate-100">IMMERSIO</span>
+             <span className="text-base font-black italic tracking-tighter text-slate-900 dark:text-slate-100">IMMERSIO</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {!isAdmin && <ThemeToggle collapsed />}
             <Link to="/student/notifications" className="flex">
-              <button className="w-9 h-9 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-slate-400 hover:text-indigo-500 transition-all flex items-center justify-center">
+              <button className="w-9 h-9 rounded-xl bg-black/5 dark:bg-slate-800/40 hover:bg-black/10 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-500 transition-all flex items-center justify-center">
                 <Bell size={18} />
               </button>
             </Link>
@@ -234,7 +241,7 @@ export default function AppLayout() {
       {/* Mobile Bottom Navigation - Floating style */}
       {!isScenarioDetail && (
         <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-3rem)] max-w-md z-50">
-          <nav className="h-16 bg-slate-900/90 backdrop-blur-2xl rounded-[2rem] flex items-center justify-around px-2 shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-slate-850 ring-1 ring-slate-800/50">
+          <nav className="h-16 bg-surface/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[2rem] flex items-center justify-around px-2 shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-black/10 dark:border-slate-850 ring-1 ring-black/5 dark:ring-slate-800/50">
             {links.map((link) => {
               const isActive = location.pathname === link.path;
               return (
@@ -250,7 +257,7 @@ export default function AppLayout() {
                     )}
                     <div className={cn(
                       "transition-all duration-300 flex items-center justify-center",
-                      isActive ? "text-indigo-500 -translate-y-1 scale-110" : "text-slate-500 group-hover:text-slate-200"
+                      isActive ? "text-indigo-500 -translate-y-1 scale-110" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200"
                     )}>
                       <link.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                     </div>

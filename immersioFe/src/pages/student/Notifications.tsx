@@ -117,10 +117,10 @@ export default function Notifications() {
           <Loader2 className="animate-spin text-orange-500" size={32} />
         </div>
       ) : (
-        <Card className="bg-slate-950/45 backdrop-blur-2xl border-white/5 rounded-[2.5rem] shadow-3xl overflow-hidden relative">
+        <Card className="bg-white/70 dark:bg-slate-950/45 backdrop-blur-2xl border-black/10 dark:border-white/5 rounded-[2.5rem] shadow-3xl overflow-hidden relative">
           <CardContent className="p-8 md:p-10 space-y-8">
             <div className="space-y-6">
-              <div className="flex items-center justify-between gap-6 pb-6 border-b border-white/5">
+              <div className="flex items-center justify-between gap-6 pb-6 border-b border-black/10 dark:border-white/5">
                 <div>
                   <h4 className="font-black text-white text-xs uppercase tracking-wider">Email Notifications</h4>
                   <p className="text-[10px] text-slate-400 mt-1 font-semibold leading-relaxed">Nhận email nhắc nhở học tập hàng tuần.</p>
@@ -128,7 +128,7 @@ export default function Notifications() {
                 <ToggleSwitch checked={notifEmail} onChange={() => setNotifEmail(!notifEmail)} />
               </div>
 
-              <div className="flex items-center justify-between gap-6 pb-6 border-b border-white/5">
+              <div className="flex items-center justify-between gap-6 pb-6 border-b border-black/10 dark:border-white/5">
                 <div>
                   <h4 className="font-black text-white text-xs uppercase tracking-wider">Push Notifications</h4>
                   <p className="text-[10px] text-slate-400 mt-1 font-semibold leading-relaxed">Thông báo trực tiếp trên trình duyệt.</p>
@@ -147,7 +147,7 @@ export default function Notifications() {
                 />
               </div>
 
-              <div className="flex items-center justify-between gap-6 pb-6 border-b border-white/5">
+              <div className="flex items-center justify-between gap-6 pb-6 border-b border-black/10 dark:border-white/5">
                 <div>
                   <h4 className="font-black text-white text-xs uppercase tracking-wider">Streak Reminders</h4>
                   <p className="text-[10px] text-slate-400 mt-1 font-semibold leading-relaxed">Cảnh báo khi sắp đứt chuỗi Streak ngày.</p>

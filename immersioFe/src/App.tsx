@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
+import { useTheme } from "@/hooks/useTheme";
 import Splash from "@/pages/Splash";
 import Intro from "@/pages/Intro";
 import Onboarding from "@/pages/Onboarding";
@@ -25,14 +26,9 @@ import ScenarioBuilder from "@/pages/admin/ScenarioBuilder";
 
 function ThemeManager() {
   const location = useLocation();
-  useEffect(() => {
-    const isAdmin = location.pathname.startsWith("/admin");
-    if (isAdmin) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [location]);
+  const isAdmin = location.pathname.startsWith("/admin");
+  // Admin routes are always dark; student routes respect user preference via useTheme
+  useTheme(isAdmin);
   return null;
 }
 

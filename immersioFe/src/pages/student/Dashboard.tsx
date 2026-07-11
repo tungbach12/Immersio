@@ -139,8 +139,8 @@ export default function StudentDashboard() {
   }, []);
 
   // Determine active scenarios (use real database ones if loaded, otherwise fallback to local mocks)
-  const recommendedScenarios = dbScenarios.length > 0 
-    ? dbScenarios.slice(0, 3) 
+  const recommendedScenarios = dbScenarios.length > 0
+    ? dbScenarios.slice(0, 3)
     : (scenarios as unknown as Scenario[]).slice(0, 3);
 
   const handleToggleCefr = async () => {
@@ -174,7 +174,7 @@ export default function StudentDashboard() {
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-black text-slate-100 italic tracking-tight leading-tight">
+            <h1 className="text-2xl md:text-3xl font-display font-black text-slate-900 dark:text-slate-100 italic tracking-tight leading-tight">
               Hello,{" "}
               <span className="text-indigo-400">
                 {user?.username?.trim() || "Learner"}!
@@ -187,7 +187,7 @@ export default function StudentDashboard() {
           </div>
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="flex items-center gap-2 bg-white/5 px-4 py-2.5 rounded-2xl border border-white/5 shadow-sm"
+            className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-4 py-2.5 rounded-2xl border border-black/10 dark:border-white/5 shadow-sm"
           >
             <Flame className="text-orange-500 fill-orange-500" size={18} />
             <span className="font-black text-white text-sm">{streak}</span>
@@ -212,8 +212,8 @@ export default function StudentDashboard() {
             )}
           />
           {/* Animated glow orbs */}
-          <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24 blur-3xl animate-pulse" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16 blur-2xl" />
+          <div className="absolute top-0 right-0 w-48 h-48 bg-black/10 dark:bg-white/10 rounded-full -mr-24 -mt-24 blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/5 dark:bg-white/5 rounded-full -ml-16 -mb-16 blur-2xl" />
 
           <CardContent className="p-8 md:p-10 flex flex-col justify-between relative z-10">
             <div className="flex items-start justify-between">
@@ -282,7 +282,7 @@ export default function StudentDashboard() {
             <Target size={24} strokeWidth={2.5} />
           </div>
           <div>
-            <h3 className="text-2xl font-black text-slate-100 tracking-tighter italic">
+            <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tighter italic">
               {formatExp(exp)}
             </h3>
             <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mt-0.5">
@@ -296,7 +296,7 @@ export default function StudentDashboard() {
             <BookOpen size={24} strokeWidth={2.5} />
           </div>
           <div>
-            <h3 className="text-2xl font-black text-slate-100 tracking-tighter italic">
+            <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tighter italic">
               {Math.round(hours)}h
             </h3>
             <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mt-0.5">
@@ -316,14 +316,14 @@ export default function StudentDashboard() {
             transition={{ type: "spring", damping: 30, stiffness: 250 }}
             className="overflow-hidden"
           >
-            <div className="bg-slate-900/60 border border-white/5 rounded-[2.5rem] p-8 space-y-6 shadow-xl shadow-black/30 backdrop-blur-2xl">
+            <div className="bg-black/5 dark:bg-slate-900/60 border border-black/10 dark:border-white/5 rounded-[2.5rem] p-8 space-y-6 shadow-xl shadow-black/30 backdrop-blur-2xl">
               {/* Header */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center border border-white/5">
+                <div className="w-10 h-10 bg-black/5 dark:bg-white/5 rounded-xl flex items-center justify-center border border-black/10 dark:border-white/5">
                   <Brain size={18} className="text-indigo-400" />
                 </div>
                 <div>
-                  <h3 className="font-black text-slate-100 text-lg tracking-tight italic">
+                  <h3 className="font-black text-slate-900 dark:text-slate-100 text-lg tracking-tight italic">
                     CEFR Analysis
                   </h3>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em]">
@@ -331,7 +331,7 @@ export default function StudentDashboard() {
                   </p>
                 </div>
                 <div className="ml-auto text-right">
-                  <span className="text-3xl font-black text-slate-100 italic tracking-tighter">
+                  <span className="text-3xl font-black text-slate-900 dark:text-slate-100 italic tracking-tighter">
                     {cefrData.overallScore}
                   </span>
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
@@ -361,7 +361,7 @@ export default function StudentDashboard() {
                         {skill.score}%
                       </span>
                     </div>
-                    <div className="h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5 p-0.5">
+                    <div className="h-2.5 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden border border-black/10 dark:border-white/5 p-0.5">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${skill.score}%` }}
@@ -389,7 +389,7 @@ export default function StudentDashboard() {
 
               {/* Study Suggestions */}
               {cefrData.suggestions.length > 0 && (
-                <div className="bg-white/5 rounded-2xl p-5 space-y-2 border border-white/5">
+                <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-5 space-y-2 border border-black/10 dark:border-white/5">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3">
                     💡 Study Suggestions
                   </p>
@@ -405,7 +405,7 @@ export default function StudentDashboard() {
               )}
 
               <Link to="/student/vocal-lab">
-                <Button className="w-full h-12 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-black uppercase tracking-widest text-[10px] border border-white/10 gap-2 transition-transform active:scale-95">
+                <Button className="w-full h-12 rounded-2xl bg-black/10 dark:bg-white/10 hover:bg-white/20 text-white font-black uppercase tracking-widest text-[10px] border border-black/10 dark:border-white/10 gap-2 transition-transform active:scale-95">
                   <Zap size={14} className="text-indigo-400" />
                   Practice Now to Level Up
                   <ArrowRight size={13} />
@@ -421,7 +421,7 @@ export default function StudentDashboard() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative bg-slate-900/95 border border-slate-800 rounded-[2.5rem] p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl overflow-hidden group mb-8"
+          className="relative bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl overflow-hidden group mb-8"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-2xl -mr-10 -mt-10 animate-pulse" />
           <div className="flex items-center gap-5">
@@ -431,7 +431,7 @@ export default function StudentDashboard() {
             <div>
               <h3 className="font-black text-white text-base tracking-tight italic uppercase">Nhắc nhở ôn tập thẻ từ</h3>
               <p className="text-xs text-slate-300 font-bold mt-1.5 max-w-md leading-relaxed">
-                Hôm nay bạn có <span className="text-orange-400 font-black">{totalDue} từ vựng</span> cần ôn tập. 
+                Hôm nay bạn có <span className="text-orange-400 font-black">{totalDue} từ vựng</span> cần ôn tập.
                 Gợi ý ôn tập: <span className="text-amber-400 font-black">"{dueDecks[0]?.name || "Từ vựng hàng ngày"}"</span> để giữ vững chuỗi học tập!
               </p>
             </div>
@@ -447,7 +447,7 @@ export default function StudentDashboard() {
       {/* Recommendations */}
       <section>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-black text-slate-100 italic tracking-tight">
+          <h2 className="text-lg font-black text-slate-900 dark:text-slate-100 italic tracking-tight">
             Daily Picks
           </h2>
           <Button
@@ -464,7 +464,7 @@ export default function StudentDashboard() {
               key={scenario.id}
               className="block group"
             >
-              <div className="glass-card rounded-[2.5rem] overflow-hidden h-full flex flex-col border border-white/5 hover:border-indigo-500/20 transition-all duration-500">
+              <div className="glass-card rounded-[2.5rem] overflow-hidden h-full flex flex-col border border-black/10 dark:border-white/5 hover:border-indigo-500/20 transition-all duration-500">
                 <div className="h-48 bg-slate-800 relative overflow-hidden">
                   <img
                     src={scenario.image}
@@ -478,7 +478,7 @@ export default function StudentDashboard() {
                 </div>
                 <div className="p-7 flex-1 flex flex-col">
                   <div className="flex justify-between items-start mb-3 gap-2">
-                    <h3 className="font-black text-lg text-slate-100 tracking-tight line-clamp-1 group-hover:text-indigo-400 transition-colors uppercase leading-none">
+                    <h3 className="font-black text-lg text-slate-900 dark:text-slate-100 tracking-tight line-clamp-1 group-hover:text-indigo-400 transition-colors uppercase leading-none">
                       {scenario.title}
                     </h3>
                     <div className="flex items-center gap-1 text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-lg text-[9px] font-black border border-amber-500/20 flex-shrink-0">

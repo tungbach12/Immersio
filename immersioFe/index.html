@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/logo.png" />
     <title>IMMERSIO - Live the Language</title>
+    <script>
+      // Inline anti-flash: apply stored theme before React mounts
+      (function () {
+        var stored = localStorage.getItem("immersio.theme");
+        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var dark = stored === "dark" || (stored !== "light" && prefersDark);
+        if (dark) document.documentElement.classList.add("dark");
+      })();
+    </script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>
@@ -12,4 +21,3 @@
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

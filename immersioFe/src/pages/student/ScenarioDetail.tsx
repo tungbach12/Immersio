@@ -693,7 +693,7 @@ export default function ScenarioDetail() {
           </Button>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 shadow-2xl">
+            <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-xl px-4 py-2 rounded-2xl border border-black/10 dark:border-white/10 shadow-2xl">
               <span className="text-indigo-600 font-black text-xs uppercase tracking-widest">{targetLang || scenario.language}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
             </div>
@@ -730,7 +730,7 @@ export default function ScenarioDetail() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-zinc-900 border border-white/10 rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl flex flex-col max-h-[80vh] z-10"
+              className="relative bg-zinc-900 border border-black/10 dark:border-white/10 rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl flex flex-col max-h-[80vh] z-10"
             >
               <div className="flex items-center justify-between mb-6 shrink-0">
                 <h2 className="text-xl font-black text-white italic tracking-tight">Save to Deck</h2>
@@ -744,13 +744,13 @@ export default function ScenarioDetail() {
                   <button
                     key={deck.id}
                     onClick={() => handleSaveToDeck(deck.id)}
-                    className="w-full text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 transition-all flex items-center justify-between group"
+                    className="w-full text-left bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 rounded-2xl p-4 transition-all flex items-center justify-between group"
                   >
                     <div>
                       <h3 className="text-white font-bold text-sm tracking-tight">{deck.name}</h3>
                       <p className="text-[10px] text-zinc-400 font-bold uppercase mt-1">{deck.cards.length} cards</p>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/20 group-hover:text-indigo-400 text-white/40 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/20 group-hover:text-indigo-400 text-white/40 transition-colors">
                       <Check size={14} />
                     </div>
                   </button>
@@ -760,7 +760,7 @@ export default function ScenarioDetail() {
                 )}
               </div>
 
-              <div className="shrink-0 pt-4 border-t border-white/10">
+              <div className="shrink-0 pt-4 border-t border-black/10 dark:border-white/10">
                 <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Or Create New Deck</h3>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
@@ -768,7 +768,7 @@ export default function ScenarioDetail() {
                     value={newDeckName}
                     onChange={(e) => setNewDeckName(e.target.value)}
                     placeholder="Deck Name..."
-                    className="flex-1 h-12 bg-black/40 border border-white/10 rounded-2xl px-4 text-white text-sm focus:outline-none focus:border-indigo-500/50 font-bold"
+                    className="flex-1 h-12 bg-black/40 border border-black/10 dark:border-white/10 rounded-2xl px-4 text-white text-sm focus:outline-none focus:border-indigo-500/50 font-bold"
                   />
                   <Button
                     onClick={handleCreateAndSaveDeck}
@@ -798,7 +798,7 @@ export default function ScenarioDetail() {
               Evaluation & <span className="text-indigo-400">Insights</span>
             </h2>
 
-            <div className="bg-white/5 rounded-[2rem] p-6 md:p-8 border border-white/10 mb-10 shadow-inner">
+            <div className="bg-black/5 dark:bg-white/5 rounded-[2rem] p-6 md:p-8 border border-black/10 dark:border-white/10 mb-10 shadow-inner">
               <h3 className="text-xs font-black text-indigo-400 uppercase tracking-[0.25em] mb-4 flex items-center gap-2">
                 <Brain size={16} />
                 Performance Report
@@ -836,7 +836,7 @@ export default function ScenarioDetail() {
                         "h-14 rounded-2xl font-black text-[10px] uppercase tracking-wider transition-all border border-indigo-500/20 active:scale-95",
                         selectedFlashcardOptions.includes(opt.key)
                           ? "bg-indigo-600 text-white shadow-xl shadow-indigo-600/30"
-                          : "bg-white/5 text-white/60 hover:bg-white/10"
+                          : "bg-black/5 dark:bg-white/5 text-white/60 hover:bg-black/10 dark:hover:bg-white/10"
                       )}
                     >
                       {selectedFlashcardOptions.includes(opt.key) ? `✓ ${opt.label}` : opt.label}
@@ -971,7 +971,7 @@ export default function ScenarioDetail() {
                           "rounded-2xl px-10 h-14 font-black tracking-widest uppercase text-[10px] transition-all duration-300 active:scale-95",
                           isSaved
                             ? "bg-emerald-600 text-white shadow-xl shadow-emerald-500/20"
-                            : "bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                            : "bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-white border border-black/10 dark:border-white/10"
                         )}
                       >
                         {isSaved ? "Saved successfully!" : "Save Card Pack"}

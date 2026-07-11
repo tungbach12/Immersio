@@ -49,10 +49,10 @@ export default function HelpCenter() {
 
       <div className="space-y-4 mb-8">
         {faqs.map((faq, idx) => (
-          <div key={idx} className="bg-slate-950/45 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-2xl">
-            <button 
+          <div key={idx} className="bg-white/70 dark:bg-slate-950/45 border border-black/10 dark:border-white/5 rounded-2xl overflow-hidden backdrop-blur-2xl">
+            <button
               onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-              className="w-full flex items-center justify-between p-5 text-left font-black text-white text-xs uppercase tracking-wider hover:bg-white/5 transition-all cursor-pointer"
+              className="w-full flex items-center justify-between p-5 text-left font-black text-white text-xs uppercase tracking-wider hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer"
             >
               <span>{faq.q}</span>
               <ChevronDown size={14} className={cn("text-slate-400 transition-transform duration-300", activeFaq === idx && "transform rotate-180")} />
@@ -66,7 +66,7 @@ export default function HelpCenter() {
                   transition={{ duration: 0.2 }}
                   className="px-5 pb-5 overflow-hidden"
                 >
-                  <p className="text-[10px] text-slate-400 leading-relaxed font-bold border-t border-white/5 pt-3">
+                  <p className="text-[10px] text-slate-400 leading-relaxed font-bold border-t border-black/10 dark:border-white/5 pt-3">
                     {faq.a}
                   </p>
                 </motion.div>
@@ -76,7 +76,7 @@ export default function HelpCenter() {
         ))}
       </div>
 
-      <Card className="bg-slate-950/45 border-white/5 rounded-[2.5rem] shadow-3xl overflow-hidden relative backdrop-blur-2xl">
+      <Card className="bg-white/70 dark:bg-slate-950/45 border-black/10 dark:border-white/5 rounded-[2.5rem] shadow-3xl overflow-hidden relative backdrop-blur-2xl">
         <CardContent className="p-8 md:p-10 text-center">
           <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mx-auto mb-4">
             <Sparkles size={20} />

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { Mic, ChevronLeft, Volume2, Square, SkipBack, SkipForward, RefreshCw, Sparkles, Brain, Award, AlertCircle } from "lucide-react";
@@ -195,7 +195,7 @@ export default function VocalLab() {
       <div className="absolute bottom-[20%] right-[10%] w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="h-20 max-w-xl mx-auto w-full flex items-center px-6 shrink-0 justify-between relative z-10">
-        <button onClick={handleBack} className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-200 dark:text-slate-300 hover:bg-white/10 hover:text-white transition-all duration-300 border border-white/5 shadow-lg active:scale-95">
+        <button onClick={handleBack} className="w-12 h-12 rounded-2xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-slate-200 dark:text-slate-300 hover:bg-black/10 dark:hover:bg-white/10 hover:text-white transition-all duration-300 border border-black/10 dark:border-white/5 shadow-lg active:scale-95">
           <ChevronLeft className="w-6 h-6" />
         </button>
         <div className="text-center">
@@ -212,16 +212,16 @@ export default function VocalLab() {
       <div className="flex-1 overflow-y-auto p-4 flex flex-col max-w-xl mx-auto w-full gap-4.5 relative z-10 custom-scrollbar scrollbar-hide">
         
         {/* Merged AI Composer & Phrase Card */}
-        <div className="glass-card bg-slate-900/50 backdrop-blur-xl rounded-[2rem] p-5 border border-white/10 shadow-2xl flex flex-col gap-4 relative overflow-hidden group shrink-0">
+        <div className="glass-card bg-slate-900/50 backdrop-blur-xl rounded-[2rem] p-5 border border-black/10 dark:border-white/10 shadow-2xl flex flex-col gap-4 relative overflow-hidden group shrink-0">
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-indigo-500/10 transition-colors duration-500 pointer-events-none" />
 
           {/* Top row: selectors and compact generate button */}
-          <div className="flex items-center justify-between gap-3 border-b border-white/5 pb-3">
+          <div className="flex items-center justify-between gap-3 border-b border-black/10 dark:border-white/5 pb-3">
             <div className="flex items-center gap-2">
               <select
                 value={selectedLang}
                 onChange={(e) => setSelectedLang(e.target.value)}
-                className="bg-slate-950/80 border border-white/10 rounded-xl px-2.5 py-1.5 text-[10px] font-black text-white focus:outline-none focus:border-indigo-500 cursor-pointer shadow-inner hover:bg-slate-900"
+                className="bg-slate-950/80 border border-black/10 dark:border-white/10 rounded-xl px-2.5 py-1.5 text-[10px] font-black text-white focus:outline-none focus:border-indigo-500 cursor-pointer shadow-inner hover:bg-slate-900"
                 disabled={isGenerating || isRecording}
               >
                 <option value="English">English 🇺🇸</option>
@@ -232,7 +232,7 @@ export default function VocalLab() {
               <select
                 value={selectedLevel}
                 onChange={(e) => setSelectedLevel(e.target.value)}
-                className="bg-slate-950/80 border border-white/10 rounded-xl px-2.5 py-1.5 text-[10px] font-black text-white focus:outline-none focus:border-indigo-500 cursor-pointer shadow-inner hover:bg-slate-900"
+                className="bg-slate-950/80 border border-black/10 dark:border-white/10 rounded-xl px-2.5 py-1.5 text-[10px] font-black text-white focus:outline-none focus:border-indigo-500 cursor-pointer shadow-inner hover:bg-slate-900"
                 disabled={isGenerating || isRecording}
               >
                 <option value="Beginner">Beginner</option>
@@ -243,7 +243,7 @@ export default function VocalLab() {
               <select
                 value={selectedTopic}
                 onChange={(e) => setSelectedTopic(e.target.value)}
-                className="bg-slate-950/80 border border-white/10 rounded-xl px-2.5 py-1.5 text-[10px] font-black text-white focus:outline-none focus:border-indigo-500 cursor-pointer shadow-inner hover:bg-slate-900"
+                className="bg-slate-950/80 border border-black/10 dark:border-white/10 rounded-xl px-2.5 py-1.5 text-[10px] font-black text-white focus:outline-none focus:border-indigo-500 cursor-pointer shadow-inner hover:bg-slate-900"
                 disabled={isGenerating || isRecording}
               >
                 <option value="General">General</option>
@@ -270,8 +270,8 @@ export default function VocalLab() {
             <div className="flex-1 min-w-0">
               {isGenerating ? (
                 <div className="flex flex-col gap-2 animate-pulse py-1">
-                  <div className="h-7 w-11/12 bg-white/10 rounded-lg" />
-                  <div className="h-4 w-2/3 bg-white/10 rounded-lg" />
+                  <div className="h-7 w-11/12 bg-black/10 dark:bg-white/10 rounded-lg" />
+                  <div className="h-4 w-2/3 bg-black/10 dark:bg-white/10 rounded-lg" />
                 </div>
               ) : (
                 <>
@@ -307,7 +307,7 @@ export default function VocalLab() {
         </div>
 
         {/* Live Transcript & Feedback */}
-        <div className="flex-1 bg-slate-900/30 rounded-[2rem] p-5 relative flex flex-col border border-dashed border-white/10 shadow-inner min-h-[180px]">
+        <div className="flex-1 bg-slate-900/30 rounded-[2rem] p-5 relative flex flex-col border border-dashed border-black/10 dark:border-white/10 shadow-inner min-h-[180px]">
           <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.25em] mb-2 shrink-0">Live Transcript</span>
           
           {/* Animated recording waves */}
@@ -380,8 +380,8 @@ export default function VocalLab() {
 
                 {/* ELSA Speak Word-by-Word Highlight & Phoneme Tooltips */}
                 {feedback.words && feedback.words.length > 0 && (
-                  <div className="mt-4 bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-[1.5rem] p-5 w-full relative z-20 overflow-visible shadow-2xl">
-                    <span className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.25em] mb-3 block border-b border-white/5 pb-1.5">
+                  <div className="mt-4 bg-slate-950/80 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-[1.5rem] p-5 w-full relative z-20 overflow-visible shadow-2xl">
+                    <span className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.25em] mb-3 block border-b border-black/10 dark:border-white/5 pb-1.5">
                       Detailed Phonetic Analysis (Tap words)
                     </span>
                     
@@ -413,8 +413,8 @@ export default function VocalLab() {
 
                             {/* Phoneme IPA Dropdown Tooltip */}
                             {w.phonemes && w.phonemes.length > 0 && (
-                              <div className="absolute bottom-full mb-3 hidden group-hover:flex flex-col items-center bg-slate-900 border border-white/10 rounded-2xl p-4 shadow-3xl z-30 min-w-[130px] transition-all duration-350">
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 pb-1 border-b border-white/5">IPA Phonemes</span>
+                              <div className="absolute bottom-full mb-3 hidden group-hover:flex flex-col items-center bg-slate-900 border border-black/10 dark:border-white/10 rounded-2xl p-4 shadow-3xl z-30 min-w-[130px] transition-all duration-350">
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 pb-1 border-b border-black/10 dark:border-white/5">IPA Phonemes</span>
                                 <div className="flex gap-1.5 justify-center items-center">
                                   {w.phonemes.map((p, pIdx) => {
                                     const pGreen = p.accuracyScore >= 80 && !isOmitted;
@@ -438,7 +438,7 @@ export default function VocalLab() {
                                     );
                                   })}
                                 </div>
-                                <div className="absolute top-full w-3 h-3 bg-slate-900 border-r border-b border-white/10 rotate-45 -mt-1.5" />
+                                <div className="absolute top-full w-3 h-3 bg-slate-900 border-r border-b border-black/10 dark:border-white/10 rotate-45 -mt-1.5" />
                               </div>
                             )}
                           </div>
@@ -454,11 +454,11 @@ export default function VocalLab() {
       </div>
 
       {/* Recording action bar */}
-      <div className="p-4 bg-slate-950/60 backdrop-blur-xl border-t border-white/10 shrink-0 flex items-center justify-between max-w-xl mx-auto w-full rounded-b-[2rem] shadow-2xl relative z-10">
+      <div className="p-4 bg-slate-950/60 backdrop-blur-xl border-t border-black/10 dark:border-white/10 shrink-0 flex items-center justify-between max-w-xl mx-auto w-full rounded-b-[2rem] shadow-2xl relative z-10">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="w-12 h-12 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-200 dark:text-slate-300 hover:text-white transition-all duration-300 border border-white/5 active:scale-90 disabled:opacity-40 disabled:pointer-events-none"
+          className="w-12 h-12 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 flex items-center justify-center text-slate-200 dark:text-slate-300 hover:text-white transition-all duration-300 border border-black/10 dark:border-white/5 active:scale-90 disabled:opacity-40 disabled:pointer-events-none"
           onClick={handleAiGenerate}
           disabled={isRecording || isGenerating}
         >
@@ -472,7 +472,7 @@ export default function VocalLab() {
           )} />
           <button
             className={cn(
-              "w-20 h-20 rounded-full flex items-center justify-center shadow-3xl active:scale-95 transition-all duration-500 relative z-10 border border-white/10",
+              "w-20 h-20 rounded-full flex items-center justify-center shadow-3xl active:scale-95 transition-all duration-500 relative z-10 border border-black/10 dark:border-white/10",
               isRecording
                 ? 'bg-gradient-to-br from-rose-600 to-pink-650 text-white shadow-rose-500/30'
                 : 'bg-gradient-to-br from-indigo-600 to-violet-650 text-white hover:from-indigo-500 hover:to-violet-600 shadow-indigo-500/30'
@@ -487,7 +487,7 @@ export default function VocalLab() {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="w-12 h-12 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-200 dark:text-slate-300 hover:text-white transition-all duration-300 border border-white/5 active:scale-90 disabled:opacity-40 disabled:pointer-events-none"
+          className="w-12 h-12 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 flex items-center justify-center text-slate-200 dark:text-slate-300 hover:text-white transition-all duration-300 border border-black/10 dark:border-white/5 active:scale-90 disabled:opacity-40 disabled:pointer-events-none"
           onClick={handleAiGenerate}
           disabled={isRecording || isGenerating}
         >

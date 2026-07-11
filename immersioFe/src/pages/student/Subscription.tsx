@@ -194,7 +194,7 @@ export default function Subscription() {
       <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full -z-10" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full -z-10" />
       {syncing && (
-        <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur border border-white/10 px-3 py-1.5 rounded-full flex items-center gap-2 text-xs font-semibold text-slate-300 shadow-sm z-50">
+        <div className="absolute top-4 right-4 bg-black/10 dark:bg-slate-900/80 backdrop-blur border border-black/10 dark:border-white/10 px-3 py-1.5 rounded-full flex items-center gap-2 text-xs font-semibold text-slate-300 shadow-sm z-50">
           <Loader2 className="animate-spin text-indigo-400" size={14} /> Syncing subscription...
         </div>
       )}
@@ -256,10 +256,10 @@ export default function Subscription() {
             >
               <Card
                 className={cn(
-                  "h-full flex flex-col relative overflow-hidden border transition-all duration-700 rounded-[3rem] bg-slate-950/45 backdrop-blur-2xl group",
+                  "h-full flex flex-col relative overflow-hidden border transition-all duration-700 rounded-[3rem] bg-white/70 dark:bg-slate-950/45 backdrop-blur-2xl group",
                   plan.popular
                     ? "border-indigo-500/60 shadow-glow"
-                    : "border-white/5 hover:border-indigo-500/20 shadow-2xl shadow-black/40",
+                    : "border-black/10 dark:border-white/5 hover:border-indigo-500/20 shadow-2xl shadow-black/40",
                   isCurrent && "border-emerald-500/80 shadow-[0_0_30px_rgba(16,185,129,0.2)]"
                 )}
               >
@@ -313,7 +313,7 @@ export default function Subscription() {
                     className={cn(
                       "w-full h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-300 shadow-2xl active:scale-95 flex items-center justify-center gap-2",
                       isCurrent
-                        ? "bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed"
+                        ? "bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-slate-500 cursor-not-allowed"
                         : plan.popular
                           ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-glow"
                           : "bg-white hover:bg-orange-50 dark:hover:bg-slate-100 text-slate-100 dark:text-slate-950 hover:text-primary transition-colors border border-slate-700/50"
@@ -343,33 +343,33 @@ export default function Subscription() {
           <div className="overflow-x-auto scrollbar-hide px-4 md:px-0">
             <table className="w-full text-left border-collapse min-w-[700px] md:min-w-full">
               <thead>
-                <tr className="bg-white/5">
-                  <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-white/5">Feature</th>
-                  <th className="p-8 text-xl font-black italic text-white border-b border-white/5">Basic</th>
-                  <th className="p-8 text-xl font-black italic text-indigo-400 border-b border-white/5 relative">
+                <tr className="bg-black/5 dark:bg-white/5">
+                  <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-black/10 dark:border-white/5">Feature</th>
+                  <th className="p-8 text-xl font-black italic text-white border-b border-black/10 dark:border-white/5">Basic</th>
+                  <th className="p-8 text-xl font-black italic text-indigo-400 border-b border-black/10 dark:border-white/5 relative">
                     Plus
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-500" />
                   </th>
-                  <th className="p-8 text-xl font-black italic text-amber-400 border-b border-white/5">Premium</th>
+                  <th className="p-8 text-xl font-black italic text-amber-400 border-b border-black/10 dark:border-white/5">Premium</th>
                 </tr>
               </thead>
               <tbody>
                 {comparisonData.map((row, i) => (
-                  <tr key={i} className="group hover:bg-white/5 transition-colors">
-                    <td className="p-8 border-b border-white/5">
+                  <tr key={i} className="group hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                    <td className="p-8 border-b border-black/10 dark:border-white/5">
                       <span className="text-xs md:text-sm font-black text-white uppercase tracking-tight">{row.category}</span>
                     </td>
-                    <td className="p-8 border-b border-white/5">
+                    <td className="p-8 border-b border-black/10 dark:border-white/5">
                       <div className="text-xs md:text-sm text-slate-400 font-medium flex items-center gap-2">
                         {row.basic}
                       </div>
                     </td>
-                    <td className="p-8 border-b border-white/5 bg-indigo-500/5">
+                    <td className="p-8 border-b border-black/10 dark:border-white/5 bg-indigo-500/5">
                       <div className="text-xs md:text-sm text-indigo-200 font-bold flex items-center gap-2">
                         {row.plus}
                       </div>
                     </td>
-                    <td className="p-8 border-b border-white/5 bg-amber-500/5">
+                    <td className="p-8 border-b border-black/10 dark:border-white/5 bg-amber-500/5">
                       <div className="text-xs md:text-sm text-amber-200 font-black flex items-center gap-2">
                         <Crown size={12} className="text-amber-400 shrink-0" /> {row.premium}
                       </div>
@@ -380,7 +380,7 @@ export default function Subscription() {
             </table>
           </div>
           {/* Mobile Swipe Hint */}
-          <div className="md:hidden p-4 bg-slate-950 text-center border-t border-white/5">
+          <div className="md:hidden p-4 bg-slate-950 text-center border-t border-black/10 dark:border-white/5">
             <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center justify-center gap-3">
               <ArrowRight size={12} /> Swipe left to see full details <ArrowRight size={12} />
             </p>
@@ -389,7 +389,7 @@ export default function Subscription() {
       </div>
 
       {/* Trust Badges */}
-      <div className="mt-24 md:mt-40 grid grid-cols-2 lg:grid-cols-4 gap-12 border-t border-white/5 pt-20">
+      <div className="mt-24 md:mt-40 grid grid-cols-2 lg:grid-cols-4 gap-12 border-t border-black/10 dark:border-white/5 pt-20">
         {[
           { icon: Shield, title: "Bảo mật", desc: "PayOS · VietQR" },
           { icon: Zap, title: "Instant Access", desc: "Unlock now" },
@@ -397,7 +397,7 @@ export default function Subscription() {
           { icon: Crown, title: "No Commits", desc: "Cancel anytime" },
         ].map((badge, i) => (
           <div key={i} className="flex flex-col items-center text-center gap-5 group">
-            <div className="w-16 h-16 rounded-[2rem] bg-slate-900/60 border border-white/5 flex items-center justify-center text-indigo-400 transition-all group-hover:scale-110 group-hover:bg-indigo-500/20 shadow-sm">
+            <div className="w-16 h-16 rounded-[2rem] bg-black/5 dark:bg-slate-900/60 border border-black/10 dark:border-white/5 flex items-center justify-center text-indigo-400 transition-all group-hover:scale-110 group-hover:bg-indigo-500/20 shadow-sm">
               <badge.icon size={28} strokeWidth={2.5} />
             </div>
             <div>

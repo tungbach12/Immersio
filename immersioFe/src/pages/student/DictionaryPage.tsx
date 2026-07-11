@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Search, Volume2, Plus, Sparkles, BookOpen, Layers, Check, Loader2, Info, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -122,7 +122,7 @@ export default function DictionaryPage() {
     <div className="max-w-3xl mx-auto px-4 py-8 pb-32 flex flex-col gap-8 md:gap-10">
       {/* Premium Header */}
       <div className="flex items-center gap-5">
-        <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center shrink-0 shadow-2xl relative group border border-black/10 dark:border-white/5">
+        <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center shrink-0 shadow-2xl relative group border border-white/5">
           <div className="absolute inset-0 bg-indigo-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
           <BookOpen className="w-7 h-7 text-indigo-400 relative z-10 animate-pulse" />
         </div>
@@ -135,7 +135,7 @@ export default function DictionaryPage() {
       </div>
 
       {/* Control Panel */}
-      <div className="glass-card bg-black/5 dark:bg-slate-900/40 backdrop-blur-md rounded-[2.5rem] p-6 border border-black/10 dark:border-white/5 shadow-2xl">
+      <div className="glass-card bg-slate-900/40 backdrop-blur-md rounded-[2.5rem] p-6 border border-white/5 shadow-2xl">
         <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4 items-stretch">
           {/* Language selection dropdown */}
           <div className="flex flex-col gap-1.5 shrink-0">
@@ -143,7 +143,7 @@ export default function DictionaryPage() {
             <select
               value={selectedLang}
               onChange={(e) => setSelectedLang(e.target.value)}
-              className="bg-slate-950 border border-black/10 dark:border-white/10 rounded-2xl px-4 h-14 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer w-full sm:w-40"
+              className="bg-slate-950 border border-white/10 rounded-2xl px-4 h-14 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer w-full sm:w-40"
               disabled={isLoading}
             >
               <option value="English">English 🇺🇸</option>
@@ -162,7 +162,7 @@ export default function DictionaryPage() {
                 value={wordInput}
                 onChange={(e) => setWordInput(e.target.value)}
                 placeholder="Type word, idiom or expression..."
-                className="w-full h-14 bg-slate-950 border border-black/10 dark:border-white/10 rounded-2xl px-5 pr-14 text-white font-bold text-sm placeholder:text-white/30 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all"
+                className="w-full h-14 bg-slate-950 border border-white/10 rounded-2xl px-5 pr-14 text-white font-bold text-sm placeholder:text-white/30 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all"
                 disabled={isLoading}
               />
               <Button
@@ -172,7 +172,7 @@ export default function DictionaryPage() {
                   "absolute right-2 top-2 h-10 w-10 rounded-xl transition-all active:scale-95 shadow-md flex items-center justify-center p-0",
                   wordInput.trim() 
                     ? "bg-indigo-600 hover:bg-indigo-700 text-white" 
-                    : "bg-black/5 dark:bg-white/5 text-white/20 pointer-events-none"
+                    : "bg-white/5 text-white/20 pointer-events-none"
                 )}
               >
                 {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-4 h-4" />}
@@ -189,7 +189,7 @@ export default function DictionaryPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="glass-card bg-slate-900/20 rounded-[3rem] p-16 flex flex-col items-center justify-center border border-black/10 dark:border-white/5 border-dashed"
+            className="glass-card bg-slate-900/20 rounded-[3rem] p-16 flex flex-col items-center justify-center border border-white/5 border-dashed"
           >
             <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mb-4" />
             <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest animate-pulse">Consulting AI Brain Lexicon...</p>
@@ -216,10 +216,10 @@ export default function DictionaryPage() {
             className="flex flex-col gap-6"
           >
             {/* Primary Entry Card */}
-            <div className="glass-card bg-black/5 dark:bg-slate-900/40 backdrop-blur-md rounded-[3rem] p-8 md:p-10 shadow-2xl border border-black/10 dark:border-white/5 relative overflow-hidden">
+            <div className="glass-card bg-slate-900/40 backdrop-blur-md rounded-[3rem] p-8 md:p-10 shadow-2xl border border-white/5 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 rounded-full -mr-24 -mt-24 blur-3xl" />
               
-              <div className="flex flex-wrap justify-between items-center gap-4 mb-8 relative z-10 border-b border-black/10 dark:border-white/5 pb-6">
+              <div className="flex flex-wrap justify-between items-center gap-4 mb-8 relative z-10 border-b border-white/5 pb-6">
                 <div>
                   <div className="flex items-center gap-3">
                     <h2 className="text-4xl font-black text-white leading-none tracking-tight italic select-text">
@@ -238,7 +238,7 @@ export default function DictionaryPage() {
                   <Button
                     size="icon"
                     onClick={playTTS}
-                    className="w-12 h-12 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded-2xl flex items-center justify-center text-indigo-400 border border-black/10 dark:border-white/5 transition-transform active:scale-95"
+                    className="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-2xl flex items-center justify-center text-indigo-400 border border-white/5 transition-transform active:scale-95"
                   >
                     <Volume2 className="w-6 h-6" />
                   </Button>
@@ -269,14 +269,14 @@ export default function DictionaryPage() {
 
                 <div>
                   <span className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.25em] mb-2 block">English Definition</span>
-                  <p className="text-sm font-bold text-slate-200 dark:text-slate-300 leading-relaxed bg-black/5 dark:bg-white/5 rounded-2xl p-5 border border-black/10 dark:border-white/5 select-text">
+                  <p className="text-sm font-bold text-slate-200 dark:text-slate-300 leading-relaxed bg-white/5 rounded-2xl p-5 border border-white/5 select-text">
                     {entry.definition}
                   </p>
                 </div>
               </div>
 
               {/* Usage Example */}
-              <div className="bg-white/70 dark:bg-slate-950/45 p-6 rounded-[2.5rem] border border-black/10 dark:border-white/5 relative z-10 select-text">
+              <div className="bg-slate-950/40 p-6 rounded-[2.5rem] border border-white/5 relative z-10 select-text">
                 <span className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.25em] mb-3 block flex items-center gap-2">
                   <Sparkles className="w-3.5 h-3.5" /> Conversational Example
                 </span>
@@ -307,7 +307,7 @@ export default function DictionaryPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-slate-900 border border-black/10 dark:border-white/10 rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl flex flex-col max-h-[80vh] z-10"
+              className="relative bg-slate-900 border border-white/10 rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl flex flex-col max-h-[80vh] z-10"
             >
               <div className="flex items-center justify-between mb-6 shrink-0">
                 <h2 className="text-xl font-black text-white italic tracking-tight">Import to Deck</h2>
@@ -323,13 +323,13 @@ export default function DictionaryPage() {
                     key={deck.id}
                     onClick={() => handleImportToDeck(deck.id, deck.name)}
                     disabled={isImporting}
-                    className="w-full text-left bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 rounded-2xl p-4 transition-all flex items-center justify-between group"
+                    className="w-full text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 transition-all flex items-center justify-between group"
                   >
                     <div>
                       <h3 className="text-white font-bold text-sm tracking-tight">{deck.name}</h3>
                       <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">{(deck.cards || deck.totalCards) ? (deck.cards?.length || deck.totalCards || 0) : 0} cards</p>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/20 group-hover:text-indigo-400 text-white/40 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/20 group-hover:text-indigo-400 text-white/40 transition-colors">
                       {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Layers size={14} />}
                     </div>
                   </button>
@@ -340,7 +340,7 @@ export default function DictionaryPage() {
               </div>
 
               {/* Create New Deck */}
-              <div className="shrink-0 pt-4 border-t border-black/10 dark:border-white/10">
+              <div className="shrink-0 pt-4 border-t border-white/10">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Or Create New Deck</h3>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
@@ -348,7 +348,7 @@ export default function DictionaryPage() {
                     value={newDeckName}
                     onChange={(e) => setNewDeckName(e.target.value)}
                     placeholder="New Deck Name..."
-                    className="flex-1 h-12 bg-black/40 border border-black/10 dark:border-white/10 rounded-2xl px-4 text-white text-sm focus:outline-none focus:border-indigo-500/50 font-bold"
+                    className="flex-1 h-12 bg-black/40 border border-white/10 rounded-2xl px-4 text-white text-sm focus:outline-none focus:border-indigo-500/50 font-bold"
                     disabled={isImporting}
                   />
                   <Button

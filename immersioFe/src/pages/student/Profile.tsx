@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, type ChangeEvent } from "react";
+import { useState, useEffect, useRef, type ChangeEvent } from "react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/Button";
@@ -110,7 +110,7 @@ export default function Profile() {
              animate={{ scale: 1, opacity: 1 }}
              className="absolute -inset-4 bg-gradient-vibrant opacity-30 blur-3xl rounded-full group-hover:opacity-50 transition-opacity duration-1000"
            />
-          <div className="relative w-36 h-36 rounded-[3.5rem] bg-slate-950 flex items-center justify-center text-white text-5xl font-black shadow-3xl border-[6px] border-black/10 dark:border-white/10 overflow-hidden">
+          <div className="relative w-36 h-36 rounded-[3.5rem] bg-slate-950 flex items-center justify-center text-white text-5xl font-black shadow-3xl border-[6px] border-white/10 overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-blue-700 to-slate-900 opacity-90" />
              {user?.profilePictureUrl ? (
                <img
@@ -155,7 +155,7 @@ export default function Profile() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="flex items-center gap-2 mt-4 px-4 py-1.5 bg-black/5 dark:bg-slate-900/40 border border-black/10 dark:border-white/5 rounded-full shadow-lg mx-auto w-fit backdrop-blur-md"
+            className="flex items-center gap-2 mt-4 px-4 py-1.5 bg-slate-900/40 border border-white/5 rounded-full shadow-lg mx-auto w-fit backdrop-blur-md"
           >
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <p className="text-slate-300 font-black text-[9px] uppercase tracking-[0.2em]">
@@ -260,8 +260,8 @@ export default function Profile() {
               key={i} 
               onClick={() => handleItemClick(item)}
               className={cn(
-                "flex items-center justify-between px-8 py-7 hover:bg-black/5 dark:hover:bg-white/5 transition-all group cursor-pointer",
-                i !== menuItems.length - 1 && "border-b border-black/10 dark:border-white/5"
+                "flex items-center justify-between px-8 py-7 hover:bg-white/5 transition-all group cursor-pointer",
+                i !== menuItems.length - 1 && "border-b border-white/5"
               )}
             >
               <div className="flex items-center gap-5">
@@ -270,7 +270,7 @@ export default function Profile() {
                 </div>
                 <span className="font-black text-white text-base tracking-tight">{item.label}</span>
               </div>
-              <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center group-hover:translate-x-1 transition-transform group-hover:bg-indigo-500/20">
+              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:translate-x-1 transition-transform group-hover:bg-indigo-500/20">
                 <ChevronRight size={18} className="text-slate-300 group-hover:text-indigo-400 transition-colors" />
               </div>
             </div>

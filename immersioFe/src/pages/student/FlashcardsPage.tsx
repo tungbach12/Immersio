@@ -253,7 +253,7 @@ function DeckListView({
         >
           <button
             onClick={onBack}
-            className="w-12 h-12 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/5 shadow-lg flex items-center justify-center text-slate-300 hover:bg-white/10 hover:border-indigo-500/30 hover:text-white transition-all duration-300"
+            className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 shadow-lg flex items-center justify-center text-slate-300 hover:bg-white/10 hover:border-indigo-500/30 hover:text-white transition-all duration-300"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -310,7 +310,7 @@ function DeckListView({
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-28 rounded-3xl bg-black/5 dark:bg-slate-900/40 animate-pulse border border-black/10 dark:border-white/5"
+                  className="h-28 rounded-3xl bg-slate-900/40 animate-pulse border border-white/5"
                 />
               ))}
             </div>
@@ -343,7 +343,7 @@ function DeckListView({
                     onClick={() => onSelect(deck)}
                     className="w-full text-left group"
                   >
-                    <div className="relative glass-card bg-black/5 dark:bg-slate-900/40 rounded-3xl p-5 border border-black/10 dark:border-white/5 shadow-2xl hover:border-indigo-500/30 hover:bg-slate-900/60 transition-all duration-300 active:scale-[0.98] overflow-hidden">
+                    <div className="relative glass-card bg-slate-900/40 rounded-3xl p-5 border border-white/5 shadow-2xl hover:border-indigo-500/30 hover:bg-slate-900/60 transition-all duration-300 active:scale-[0.98] overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                       <div className="relative flex items-center gap-4">
@@ -351,7 +351,7 @@ function DeckListView({
                           <BookOpen className="w-6 h-6 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 leading-tight">
+                          <h3 className="font-bold text-lg text-slate-100 leading-tight">
                             {deck.name}
                           </h3>
                           <div className="flex items-center gap-2 mt-1">
@@ -371,7 +371,7 @@ function DeckListView({
                             )}
                           </div>
                         </div>
-                        <div className="w-10 h-10 rounded-2xl bg-black/5 dark:bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/25 group-hover:text-indigo-300 group-hover:translate-x-1 transition-all duration-300">
+                        <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/25 group-hover:text-indigo-300 group-hover:translate-x-1 transition-all duration-300">
                           <ChevronLeft className="w-4 h-4 text-slate-450 -rotate-180" />
                         </div>
                       </div>
@@ -387,12 +387,12 @@ function DeckListView({
                 onClick={onStats}
                 className="w-full mt-5 group"
               >
-                <div className="relative bg-slate-900/20 rounded-2xl p-4 flex items-center gap-4 border border-black/10 dark:border-white/5 hover:border-violet-500/30 hover:bg-slate-900/40 transition-all duration-300 active:scale-[0.98]">
+                <div className="relative bg-slate-900/20 rounded-2xl p-4 flex items-center gap-4 border border-white/5 hover:border-violet-500/30 hover:bg-slate-900/40 transition-all duration-300 active:scale-[0.98]">
                   <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500/10 to-indigo-500/10 border border-violet-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
                     <BarChart3 className="w-5 h-5 text-violet-400" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200">
+                    <h3 className="font-bold text-sm text-slate-200">
                       View Statistics
                     </h3>
                     <p className="text-xs text-slate-450">
@@ -710,7 +710,7 @@ function StudyView({
           </h3>
           {content.phrase_meaning && (
             <p className="text-xs text-slate-400 mt-6 max-w-[280px] leading-relaxed font-semibold">
-              💡 Gợi ý: <span className="text-slate-700 dark:text-slate-200 font-bold">{content.phrase_meaning}</span>
+              💡 Gợi ý: <span className="text-slate-200 font-bold">{content.phrase_meaning}</span>
             </p>
           )}
           {content.translation && (
@@ -876,7 +876,7 @@ function StudyView({
         <h2 className="text-2xl font-bold text-white mb-2">All caught up</h2>
         <p className="text-slate-400 text-center max-w-xs leading-relaxed">
           No cards due for review in{" "}
-          <span className="font-semibold text-slate-700 dark:text-slate-200">{deck?.name}</span>.
+          <span className="font-semibold text-slate-200">{deck?.name}</span>.
         </p>
         <button
           onClick={onBack}
@@ -903,7 +903,7 @@ function StudyView({
       <div className="flex items-center justify-between px-6 md:px-8 pt-6 pb-4">
         <button
           onClick={onBack}
-          className="w-11 h-11 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/5 shadow-sm flex items-center justify-center text-slate-200 dark:text-slate-300 hover:bg-white/10 hover:border-indigo-500/30 hover:text-white transition-all"
+          className="w-11 h-11 rounded-2xl bg-white/5 border border-white/5 shadow-sm flex items-center justify-center text-slate-200 dark:text-slate-300 hover:bg-white/10 hover:border-indigo-500/30 hover:text-white transition-all"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -919,7 +919,7 @@ function StudyView({
       </div>
 
       {/* Progress Bar */}
-      <div className="h-1.5 bg-black/5 dark:bg-white/5 mx-6 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-white/5 mx-6 rounded-full overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${progressPct}%` }}
@@ -1112,7 +1112,7 @@ function StudyView({
                   e.stopPropagation();
                   onReview(false);
                 }}
-                className="flex-1 h-14 rounded-2xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-slate-300 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-white/10 hover:border-slate-450 transition-all duration-200 active:scale-95"
+                className="flex-1 h-14 rounded-2xl border border-white/10 bg-white/5 text-slate-300 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-white/10 hover:border-slate-450 transition-all duration-200 active:scale-95"
               >
                 <X className="w-4 h-4" />
                 Still Learning
@@ -1238,7 +1238,7 @@ function CompleteView({
       <div className="flex items-center px-6 md:px-8 pt-6 pb-2">
         <button
           onClick={onBack}
-          className="w-11 h-11 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/5 shadow-sm flex items-center justify-center text-slate-200 dark:text-slate-300 hover:bg-white/10 hover:border-indigo-500/30 hover:text-white transition-all"
+          className="w-11 h-11 rounded-2xl bg-white/5 border border-white/5 shadow-sm flex items-center justify-center text-slate-200 dark:text-slate-300 hover:bg-white/10 hover:border-indigo-500/30 hover:text-white transition-all"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -1250,7 +1250,7 @@ function CompleteView({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-            className="glass-card bg-white/70 dark:bg-slate-950/45 backdrop-blur-md rounded-3xl border border-black/10 dark:border-white/5 shadow-2xl p-8 md:p-10 text-center"
+            className="glass-card bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/5 shadow-2xl p-8 md:p-10 text-center"
           >
             {/* Score Ring */}
             <div className="flex justify-center mb-6">
@@ -1264,7 +1264,7 @@ function CompleteView({
 
             {/* Session Stats Grid */}
             <div className="grid grid-cols-3 gap-3 mb-6">
-              <div className="bg-black/5 dark:bg-white/5 rounded-2xl py-4 px-2 border border-black/10 dark:border-white/5">
+              <div className="bg-white/5 rounded-2xl py-4 px-2 border border-white/5">
                 <p className="text-xl font-bold text-white">{totalCards}</p>
                 <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mt-1">
                   Reviewed
@@ -1276,7 +1276,7 @@ function CompleteView({
                   Known
                 </p>
               </div>
-              <div className="bg-black/5 dark:bg-white/5 rounded-2xl py-4 px-2 border border-black/10 dark:border-white/5">
+              <div className="bg-white/5 rounded-2xl py-4 px-2 border border-white/5">
                 <p className="text-xl font-bold text-white">{learningCount}</p>
                 <p className="text-[9px] font-semibold text-slate-450 uppercase tracking-wider mt-1">
                   Learning
@@ -1295,7 +1295,7 @@ function CompleteView({
             )}
 
             {/* Mastery Levels */}
-            <div className="bg-slate-900/20 rounded-2xl p-6 mb-6 border border-black/10 dark:border-white/5">
+            <div className="bg-slate-900/20 rounded-2xl p-6 mb-6 border border-white/5">
               <p className="text-[10px] font-semibold text-slate-450 uppercase tracking-widest mb-6">
                 Mastery Distribution
               </p>
@@ -1317,7 +1317,7 @@ function CompleteView({
                       <span className="text-xs font-semibold text-slate-200 dark:text-slate-300">
                         {count}
                       </span>
-                      <div className="w-full bg-black/5 dark:bg-white/5 rounded-full relative flex-1 overflow-hidden">
+                      <div className="w-full bg-white/5 rounded-full relative flex-1 overflow-hidden">
                         <motion.div
                           initial={{ height: 0 }}
                           animate={{ height: `${Math.max(pct, 8)}%` }}
@@ -1352,7 +1352,7 @@ function CompleteView({
               </button>
               <button
                 onClick={onBack}
-                className="flex-1 h-13 rounded-2xl border border-black/10 dark:border-white/10 text-slate-300 font-semibold text-sm hover:bg-white/5 transition-all active:scale-95"
+                className="flex-1 h-13 rounded-2xl border border-white/10 text-slate-300 font-semibold text-sm hover:bg-white/5 transition-all active:scale-95"
               >
                 Decks
               </button>
@@ -1487,7 +1487,7 @@ function StatsView({
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={onBack}
-            className="w-12 h-12 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/5 shadow-lg flex items-center justify-center text-slate-200 dark:text-slate-300 hover:bg-white/10 hover:border-indigo-500/30 hover:text-white transition-all active:scale-95 duration-300"
+            className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 shadow-lg flex items-center justify-center text-slate-200 dark:text-slate-300 hover:bg-white/10 hover:border-indigo-500/30 hover:text-white transition-all active:scale-95 duration-300"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -1558,7 +1558,7 @@ function StatsView({
 
       <div className="flex-1 px-6 md:px-8 pb-6 space-y-6 max-w-lg mx-auto w-full">
         {loading ? (
-          <div className="glass-card bg-white/70 dark:bg-slate-950/45 border border-black/10 dark:border-white/5 p-8 rounded-[2.5rem] flex flex-col items-center justify-center py-20 gap-4">
+          <div className="glass-card bg-slate-900/40 border border-white/5 p-8 rounded-[2.5rem] flex flex-col items-center justify-center py-20 gap-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Calculating Synapse Strengths...</p>
           </div>
@@ -1569,19 +1569,19 @@ function StatsView({
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.4 }}
-              className="glass-card bg-white/70 dark:bg-slate-950/45 border border-black/10 dark:border-white/5 shadow-2xl p-6 rounded-3xl relative overflow-hidden"
+              className="glass-card bg-slate-900/40 border border-white/5 shadow-2xl p-6 rounded-3xl relative overflow-hidden"
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                   <Activity className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="font-black text-sm text-slate-700 dark:text-slate-200 uppercase tracking-widest leading-none">Daily Consistency</h4>
+                  <h4 className="font-black text-sm text-slate-200 uppercase tracking-widest leading-none">Daily Consistency</h4>
                   <p className="text-[9px] font-bold text-slate-550 uppercase tracking-wider mt-1 leading-none">Last 14 Days Active Heatmap</p>
                 </div>
               </div>
 
-              <div className="flex justify-between items-center gap-2 py-3 px-1.5 bg-white/70 dark:bg-slate-950/40 border border-black/10 dark:border-white/5 rounded-2xl">
+              <div className="flex justify-between items-center gap-2 py-3 px-1.5 bg-slate-950/40 border border-white/5 rounded-2xl">
                 {activityData.map((day, idx) => {
                   const hasActivity = day.count > 0;
                   const intensityColor =
@@ -1591,7 +1591,7 @@ function StatsView({
                       ? "bg-emerald-500/60 border border-emerald-500/10"
                       : day.count > 0
                       ? "bg-emerald-500/25 border border-emerald-500/5"
-                      : "bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/5";
+                      : "bg-white/5 border border-white/5";
 
                   return (
                     <div key={idx} className="group relative flex flex-col items-center flex-1">
@@ -1623,14 +1623,14 @@ function StatsView({
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.4 }}
-                className="glass-card bg-white/70 dark:bg-slate-950/45 border border-black/10 dark:border-white/5 shadow-2xl p-6 rounded-3xl"
+                className="glass-card bg-slate-900/40 border border-white/5 shadow-2xl p-6 rounded-3xl"
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
                     <Brain className="w-4.5 h-4.5" />
                   </div>
                   <div>
-                    <h4 className="font-black text-sm text-slate-700 dark:text-slate-200 uppercase tracking-widest leading-none">Mastery Level Matrix</h4>
+                    <h4 className="font-black text-sm text-slate-200 uppercase tracking-widest leading-none">Mastery Level Matrix</h4>
                     <p className="text-[9px] font-bold text-slate-550 uppercase tracking-wider mt-1 leading-none">All Card Strengths</p>
                   </div>
                 </div>
@@ -1653,7 +1653,7 @@ function StatsView({
                         <span className="text-[10px] font-black text-slate-200 dark:text-slate-300">
                           {count}
                         </span>
-                        <div className="w-full bg-black/5 dark:bg-white/5 rounded-full relative flex-1 overflow-hidden">
+                        <div className="w-full bg-white/5 rounded-full relative flex-1 overflow-hidden">
                           <motion.div
                             initial={{ height: 0 }}
                             animate={{ height: `${Math.max(pct, 8)}%` }}
@@ -1684,14 +1684,14 @@ function StatsView({
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35, duration: 0.4 }}
-                className="glass-card bg-white/70 dark:bg-slate-950/45 border border-black/10 dark:border-white/5 shadow-2xl p-6 rounded-3xl"
+                className="glass-card bg-slate-900/40 border border-white/5 shadow-2xl p-6 rounded-3xl"
               >
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
                     <BarChart3 className="w-4.5 h-4.5" />
                   </div>
                   <div>
-                    <h4 className="font-black text-sm text-slate-700 dark:text-slate-200 uppercase tracking-widest leading-none">Deck Strength Index</h4>
+                    <h4 className="font-black text-sm text-slate-200 uppercase tracking-widest leading-none">Deck Strength Index</h4>
                     <p className="text-[9px] font-bold text-slate-550 uppercase tracking-wider mt-1 leading-none">Click to drill deck directly</p>
                   </div>
                 </div>
@@ -1712,10 +1712,10 @@ function StatsView({
                         onClick={() => onSelectDeck(deck)}
                         className="w-full text-left group"
                       >
-                        <div className="rounded-2xl p-4 bg-slate-950/30 hover:bg-slate-900/40 hover:border-indigo-500/30 border border-black/10 dark:border-white/5 transition-all duration-300 active:scale-[0.98]">
+                        <div className="rounded-2xl p-4 bg-slate-950/30 hover:bg-slate-900/40 hover:border-indigo-500/30 border border-white/5 transition-all duration-300 active:scale-[0.98]">
                           <div className="flex items-center justify-between mb-2">
                             <div>
-                              <h4 className="font-black text-sm text-slate-900 dark:text-slate-100 group-hover:text-indigo-400 transition-colors uppercase leading-none">
+                              <h4 className="font-black text-sm text-slate-100 group-hover:text-indigo-400 transition-colors uppercase leading-none">
                                 {deck.name}
                               </h4>
                               <div className="flex gap-3 mt-1.5 leading-none">
@@ -1747,7 +1747,7 @@ function StatsView({
 
                           {/* Deck progress bar */}
                           {deck.totalCards && deck.totalCards > 0 ? (
-                            <div className="h-1.5 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden border border-black/10 dark:border-white/5 p-0.5 mt-3">
+                            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5 p-0.5 mt-3">
                               <div 
                                 className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full" 
                                 style={{ width: `${score > 0 ? score : 5}%` }}

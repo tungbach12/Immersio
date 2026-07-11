@@ -131,7 +131,8 @@ namespace Immersio.WebApi.Controllers
             var lang = "en-US";
             if (voice.Length >= 5)
             {
-                lang = voice.Substring(0, 5);
+                var candidate = voice[..5];
+                lang = candidate.Contains('-') ? candidate : "en-US";
             }
 
             using var httpClient = new HttpClient();
@@ -141,9 +142,24 @@ namespace Immersio.WebApi.Controllers
             httpRequest.Headers.Add("User-Agent", "Immersio");
             httpRequest.Headers.Add("X-Microsoft-OutputFormat", "audio-16khz-64kbitrate-mono-mp3");
 
-            var ssml = $@"<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='{lang}'>
+            var escapedText = System.Security.SecurityElement.Escape(request.Text);
+            var styleDegree = Math.Clamp(request.StyleDegree == 0 ? 1.0 : request.StyleDegree, 0.01, 2.0);
+
+            string voiceContent;
+            if (!string.IsNullOrWhiteSpace(request.Style))
+            {
+                voiceContent = $@"<mstts:express-as style=""{request.Style}"" styledegree=""{styleDegree.ToString(System.Globalization.CultureInfo.InvariantCulture)}"">
+                        {escapedText}
+                    </mstts:express-as>";
+            }
+            else
+            {
+                voiceContent = escapedText;
+            }
+
+            var ssml = $@"<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='http://www.w3.org/2001/mstts' xml:lang='{lang}'>
                 <voice name='{voice}'>
-                    {request.Text}
+                    {voiceContent}
                 </voice>
             </speak>";
 
@@ -198,6 +214,8 @@ namespace Immersio.WebApi.Controllers
     {
         public string Text { get; set; } = null!;
         public string Voice { get; set; } = null!;
+        public string? Style { get; set; }
+        public double StyleDegree { get; set; } = 1.0;
     }
 
     /// <summary>Request DTO for multipart/form-data pronunciation assessment.</summary>

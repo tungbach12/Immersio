@@ -29,7 +29,7 @@ type ChatMessage = {
   pronunciationScore?: number;
 };
 
-const getVoiceForLanguage = (lang?: string, defaultVoice?: string) => {
+const getVoiceForLanguage = (lang?: string, defaultVoice?: string): string => {
   if (defaultVoice) return defaultVoice;
   if (!lang) return "en-US-JennyNeural";
   const lower = lang.toLowerCase();
@@ -37,6 +37,39 @@ const getVoiceForLanguage = (lang?: string, defaultVoice?: string) => {
   if (lower.includes("chinese") || lower === "zh") return "zh-CN-XiaoxiaoNeural";
   if (lower.includes("french") || lower === "fr") return "fr-FR-DeniseNeural";
   return "en-US-JennyNeural";
+};
+
+// Desired emotion → Azure style (applied only if the voice supports it)
+const EMOTION_STYLE_MAP: Record<string, { style: string; degree: number }> = {
+  happy:     { style: "cheerful",    degree: 1.2 },
+  excited:   { style: "excited",     degree: 1.3 },
+  angry:     { style: "angry",       degree: 1.2 },
+  sad:       { style: "sad",         degree: 1.0 },
+  fearful:   { style: "fearful",     degree: 1.0 },
+  surprised: { style: "excited",     degree: 1.0 },
+  disgusted: { style: "disgruntled", degree: 1.0 },
+  neutral:   { style: "chat",        degree: 1.0 },
+  idle:      { style: "chat",        degree: 1.0 },
+};
+
+// Styles supported per voice locale prefix — Azure rejects unsupported styles silently or with error
+const VOICE_STYLE_SUPPORT: Record<string, Set<string>> = {
+  "en-US": new Set(["chat","cheerful","excited","angry","sad","fearful","disgruntled","shouting","whispering","terrified","unfriendly","hopeful"]),
+  "zh-CN": new Set(["chat","cheerful","excited","angry","sad","fearful","disgruntled","serious","gentle","affectionate","embarrassed","depressed","lyrical"]),
+  "ja-JP": new Set(["chat","cheerful","customerservice"]),
+  "fr-FR": new Set(["chat"]),
+  "ko-KR": new Set(["chat","cheerful"]),
+  "de-DE": new Set(["chat","cheerful","unfriendly"]),
+  "es-ES": new Set(["chat","cheerful","angry","sad"]),
+};
+
+const getStyleForVoice = (voice: string, emotion: string): { style: string; degree: number } | null => {
+  const prefix = voice.length >= 5 ? voice.substring(0, 5) : "en-US";
+  const supported = VOICE_STYLE_SUPPORT[prefix] ?? new Set<string>();
+  const desired = EMOTION_STYLE_MAP[emotion.toLowerCase()] ?? EMOTION_STYLE_MAP["idle"];
+  if (supported.has(desired.style)) return desired;
+  if (supported.has("chat")) return { style: "chat", degree: 1.0 };
+  return null; // voice doesn't support any style — send plain text
 };
 
 const getBrowserLangCode = (lang?: string) => {
@@ -177,7 +210,7 @@ export default function ScenarioDetail() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const playTextToSpeech = async (text: string, langOverride?: string, voiceOverride?: string) => {
+  const playTextToSpeech = async (text: string, langOverride?: string, voiceOverride?: string, emotion?: string) => {
     if (!isMountedRef.current) return;
 
     if (currentAudioRef.current) {
@@ -189,9 +222,15 @@ export default function ScenarioDetail() {
     }
 
     try {
-      const activeLang = langOverride || targetLang || scenario?.language;
-      const selectedVoice = voiceOverride || getVoiceForLanguage(activeLang, scenario?.voiceId);
+      // Voice must match the language the NPC is actually speaking (scenario.language),
+      // NOT targetLang (the user's practice language). langOverride is only set when
+      // the backend has already translated the NPC reply into another language.
+      const npcLang = langOverride ?? scenario?.language;
+      const selectedVoice = voiceOverride || getVoiceForLanguage(npcLang, scenario?.voiceId);
       const token = localStorage.getItem("token") || "";
+
+      const styleConfig = getStyleForVoice(selectedVoice, emotion ?? "idle");
+
       const response = await fetch(`${API_BASE}/api/practice/tts`, {
         method: "POST",
         headers: {
@@ -199,8 +238,10 @@ export default function ScenarioDetail() {
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          text: text,
-          voice: selectedVoice
+          text,
+          voice: selectedVoice,
+          style: styleConfig?.style ?? null,
+          styleDegree: styleConfig?.degree ?? 1.0,
         })
       });
 
@@ -472,8 +513,8 @@ export default function ScenarioDetail() {
 
       setMessages(prev => [...prev, { role: "model", text: response.reply }]);
 
-      // Auto-play NPC response
-      playTextToSpeech(response.reply, targetLang);
+      // Auto-play NPC response with current emotion
+      playTextToSpeech(response.reply, targetLang, undefined, response.emotion?.toLowerCase());
 
       // Analysis for feedback (standard logic) - ONLY IF it was spoken!
       if (response.correction && isSpoken) {
@@ -1036,7 +1077,7 @@ export default function ScenarioDetail() {
                       {msg.role !== "user" && (
                         <button
                           className="absolute bottom-2.5 right-2.5 w-6 h-6 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all duration-200"
-                          onClick={() => playTextToSpeech(msg.text, targetLang)}
+                          onClick={() => playTextToSpeech(msg.text, targetLang, undefined, currentEmotion)}
                         >
                           <Volume2 size={12} />
                         </button>

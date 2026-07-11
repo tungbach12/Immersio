@@ -222,11 +222,11 @@ export default function ScenarioDetail() {
     }
 
     try {
-      // Voice must match the language the NPC is actually speaking (scenario.language),
-      // NOT targetLang (the user's practice language). langOverride is only set when
-      // the backend has already translated the NPC reply into another language.
+      // When targetLang differs from scenario.language, the NPC text was translated
+      // by the backend — voice must match targetLang, not the scenario's native voiceId
       const npcLang = langOverride ?? scenario?.language;
-      const selectedVoice = voiceOverride || getVoiceForLanguage(npcLang, scenario?.voiceId);
+      const isPracticingNativeLanguage = !targetLang || targetLang === scenario?.language;
+      const selectedVoice = voiceOverride || getVoiceForLanguage(npcLang, isPracticingNativeLanguage ? scenario?.voiceId : undefined);
       const token = localStorage.getItem("token") || "";
 
       const styleConfig = getStyleForVoice(selectedVoice, emotion ?? "idle");
@@ -1028,7 +1028,7 @@ export default function ScenarioDetail() {
           <div className="relative z-20 w-full max-w-4xl mx-auto flex flex-col gap-4 pointer-events-auto">
 
             {/* Scrolling Dialogue Panel */}
-            <div className="bg-zinc-900/90 backdrop-blur-3xl border border-zinc-800 rounded-[2.5rem] p-6 md:p-8 shadow-2xl min-h-[38vh] flex flex-col justify-between max-h-[45vh]">
+            <div className="bg-zinc-900/90 backdrop-blur-3xl border border-zinc-800 rounded-[2.5rem] p-6 md:p-8 shadow-2xl h-[45vh] flex flex-col">
 
               {/* Header card for Speech Lab */}
               <div className="flex justify-between items-center border-b border-zinc-800 pb-3 mb-3 shrink-0">

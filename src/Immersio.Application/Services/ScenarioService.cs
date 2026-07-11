@@ -18,6 +18,11 @@ namespace Immersio.Application.Services
         private readonly ILLMService _llmService;
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, string> SessionLanguages = new();
 
+        private const string DEFAULT_EMOTIONS_JSON =
+            "{\"idle\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879119/immersio/scenarios/Idle.gif\"," +
+            "\"happy\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879123/immersio/scenarios/happy.gif\"," +
+            "\"angry\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879126/immersio/scenarios/angry.gif\"}";
+
         public ScenarioService(IApplicationDbContext context, ILLMService llmService)
         {
             _context = context;
@@ -257,16 +262,18 @@ namespace Immersio.Application.Services
         {
             var hasScenarios = await _context.Scenarios.AnyAsync(cancellationToken);
             if (hasScenarios)
-{
-    var coffee = await _context.Scenarios
-        .FirstOrDefaultAsync(s => s.Title == "Ordering Coffee (English)", cancellationToken);
-    if (coffee != null)
-    {
-        coffee.UpdateEmotions("{\"idle\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879119/immersio/scenarios/Idle.gif\",\"happy\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879123/immersio/scenarios/happy.gif\",\"angry\":\"https://res.cloudinary.com/drv8ya4wy/image/upload/v1781879126/immersio/scenarios/angry.gif\"}");
-        await _context.SaveChangesAsync(cancellationToken);
-    }
-    return;
-}
+            {
+                var scenariosToUpdate = await _context.Scenarios
+                    .Where(s => s.EmotionsJson == null || s.EmotionsJson == "")
+                    .ToListAsync(cancellationToken);
+                if (scenariosToUpdate.Count > 0)
+                {
+                    foreach (var s in scenariosToUpdate)
+                        s.UpdateEmotions(DEFAULT_EMOTIONS_JSON);
+                    await _context.SaveChangesAsync(cancellationToken);
+                }
+                return;
+            }
 
             var scenariosToSeed = new List<Scenario>
             {
@@ -282,7 +289,8 @@ namespace Immersio.Application.Services
                     contextPrompt: "You are a tourist lost in Shibuya, Tokyo. You are looking for Shibuya Crossing. Ask the user for directions. The user is a local who will provide directions. Respond naturally to their instructions and ask follow-up questions if needed (e.g., about Hachiko Statue). Keep responses brief (1-3 sentences).",
                     initialMessage: "Excuse me! Could you tell me how to get to Shibuya Crossing?",
                     avatarUrl: "/ScenariosImage/Discovery shibuya navigation character.png",
-                    isNavigation: true
+                    isNavigation: true,
+                    emotionsJson: DEFAULT_EMOTIONS_JSON
                 ),
                 new Scenario(
                     title: "Konbini Late Night Run",
@@ -296,7 +304,8 @@ namespace Immersio.Application.Services
                     contextPrompt: "あなたは日本のコンビニの店員です。ユーザーがお弁当と飲み物を買っています。お弁当を温めるか（「お弁当温めますか？」）、お箸が必要か（「お箸はお使いになりますか？」）を尋ね、支払いを担当してください。最後は「ありがとうございました」で締めてください。返答は短く1〜3文にしてください。",
                     initialMessage: "いらっしゃいませ！コンビニへようこそ。ポイントカードはお持ちですか？",
                     avatarUrl: "/ScenariosImage/Konbini late night run character.png",
-                    isNavigation: false
+                    isNavigation: false,
+                    emotionsJson: DEFAULT_EMOTIONS_JSON
                 ),
                 new Scenario(
                     title: "Ordering Coffee (English)",
@@ -326,7 +335,8 @@ namespace Immersio.Application.Services
                     contextPrompt: "You are a friendly waiter at a famous traditional dim sum restaurant in Shanghai. The user is a customer. Recommend some popular dishes like Xiao Long Bao (小笼包) and Har Gow (虾饺). Ask how many people are in their party and if they want tea. Keep responses brief (1-3 sentences).",
                     initialMessage: "您好！欢迎光临。请问几位？要喝什么茶？",
                     avatarUrl: "/ScenariosImage/Ordering dim sum in shanghai character.png",
-                    isNavigation: false
+                    isNavigation: false,
+                    emotionsJson: DEFAULT_EMOTIONS_JSON
                 )
             };
 
@@ -357,7 +367,7 @@ namespace Immersio.Application.Services
                 dto.AvatarUrl,
                 dto.IsNavigation,
                 dto.VoiceId,
-                dto.EmotionsJson
+                string.IsNullOrWhiteSpace(dto.EmotionsJson) ? DEFAULT_EMOTIONS_JSON : dto.EmotionsJson
             );
 
             _context.Scenarios.Add(scenario);

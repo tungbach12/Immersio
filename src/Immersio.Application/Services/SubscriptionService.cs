@@ -23,7 +23,7 @@ namespace Immersio.Application.Services
             _emailService = emailService;
         }
 
-        public async Task<string> CreatePaymentUrlAsync(Guid userId, string tier, string billingCycle, CancellationToken cancellationToken = default)
+        public async Task<string> CreatePaymentUrlAsync(Guid userId, string tier, string billingCycle, string? overrideReturnUrl = null, string? overrideCancelUrl = null, CancellationToken cancellationToken = default)
         {
             var normalizedTier = NormalizeTier(tier);
             var normalizedCycle = NormalizeCycle(billingCycle);
@@ -46,7 +46,7 @@ namespace Immersio.Application.Services
             // PayOS description is limited to 25 characters.
             var description = $"IMMERSIO {normalizedTier}";
 
-            return await _payOsService.CreatePaymentLinkAsync(orderCode, (int)amount, description, cancellationToken);
+            return await _payOsService.CreatePaymentLinkAsync(orderCode, (int)amount, description, overrideReturnUrl, overrideCancelUrl, cancellationToken);
         }
 
         public async Task<PaymentReturnResult> HandlePaymentReturnAsync(long orderCode, CancellationToken cancellationToken = default)

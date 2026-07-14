@@ -53,6 +53,8 @@ namespace Immersio.WebApi.Controllers
                 userId,
                 request.Tier,
                 request.BillingCycle,
+                request.ReturnUrl,
+                request.CancelUrl,
                 cancellationToken);
 
             return Ok(ApiResponse<CreatePaymentResponse>.SuccessResult(new CreatePaymentResponse(paymentUrl)));

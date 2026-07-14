@@ -1,6 +1,12 @@
 namespace Immersio.Application.DTOs.Payment
 {
-    public sealed record CreatePaymentRequest(string Tier, string BillingCycle);
+    public sealed record CreatePaymentRequest(
+        string Tier,
+        string BillingCycle,
+        /// <summary>Override return URL (for mobile deep links). Null = use appsettings default.</summary>
+        string? ReturnUrl = null,
+        /// <summary>Override cancel URL (for mobile deep links). Null = use appsettings default.</summary>
+        string? CancelUrl = null);
 
     public sealed record CreatePaymentResponse(string PaymentUrl);
 

@@ -157,6 +157,8 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseCors("AllowAll");
 
+app.UseStaticFiles();
+
 app.UseSwagger(c =>
 {
     c.RouteTemplate = "api/swagger/{documentName}/swagger.json";

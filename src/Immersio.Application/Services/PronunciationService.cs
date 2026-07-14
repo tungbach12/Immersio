@@ -647,6 +647,30 @@ namespace Immersio.Application.Services
                     mockWordsList.Add(new WordAssessmentDto(cleanW, 90, "None", phonemes));
                 }
 
+                // Log the fallback attempt to the database so it appears in history and counts towards stats!
+                try
+                {
+                    var fallbackScore = 85;
+                    var log = new UserPronunciationLog(userId, targetPhrase, targetPhrase, fallbackScore);
+                    _context.UserPronunciationLogs.Add(log);
+
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+                    if (user != null)
+                    {
+                        user.AddExperience(50);
+                        user.AddLearningHours(0.1);
+                        await _context.SaveChangesAsync(cancellationToken);
+
+                        var cefrAnalysis = await AnalyzeCefrLevelAsync(userId, cancellationToken);
+                        user.SetLanguageLevel(cefrAnalysis.CurrentLevel);
+                        await _context.SaveChangesAsync(cancellationToken);
+                    }
+                }
+                catch (Exception dbEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to save fallback pronunciation log: {dbEx.Message}");
+                }
+
                 return new PronunciationAssessmentResultDto(
                     Transcript: targetPhrase,
                     Score: 85,

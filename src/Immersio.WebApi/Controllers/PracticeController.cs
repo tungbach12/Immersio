@@ -208,6 +208,23 @@ namespace Immersio.WebApi.Controllers
             var result = await _llmService.LookupWordAsync(request.Word, targetLanguage, cancellationToken);
             return Ok(ApiResponse<DictionaryEntryDto>.SuccessResult(result));
         }
+
+        [HttpPost("transcribe")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> TranscribeAudio(
+            [FromForm] Microsoft.AspNetCore.Http.IFormFile audio,
+            CancellationToken cancellationToken)
+        {
+            if (audio == null || audio.Length == 0)
+                return BadRequest(ApiResponse.FailureResult("No audio file was uploaded."));
+
+            using var memoryStream = new System.IO.MemoryStream();
+            await audio.CopyToAsync(memoryStream, cancellationToken);
+            var audioBytes = memoryStream.ToArray();
+
+            var text = await _llmService.TranscribeAudioAsync(audioBytes, audio.FileName, cancellationToken);
+            return Ok(ApiResponse<object>.SuccessResult(new { text }));
+        }
     }
 
     public class TtsRequest

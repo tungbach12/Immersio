@@ -20,11 +20,11 @@ namespace Immersio.Infrastructure.Services
             _configuration = configuration;
         }
 
-        public async Task<string> CreatePaymentLinkAsync(long orderCode, int amount, string description, CancellationToken cancellationToken = default)
+        public async Task<string> CreatePaymentLinkAsync(long orderCode, int amount, string description, string? overrideReturnUrl = null, string? overrideCancelUrl = null, CancellationToken cancellationToken = default)
         {
             var (clientId, apiKey, checksumKey) = GetCredentials();
-            var returnUrl = _configuration["PayOS:ReturnUrl"];
-            var cancelUrl = _configuration["PayOS:CancelUrl"] ?? returnUrl;
+            var returnUrl = overrideReturnUrl ?? _configuration["PayOS:ReturnUrl"];
+            var cancelUrl = overrideCancelUrl ?? _configuration["PayOS:CancelUrl"] ?? returnUrl;
 
             if (string.IsNullOrWhiteSpace(returnUrl))
                 throw new InvalidOperationException("PayOS is not configured. Set PayOS:ReturnUrl.");

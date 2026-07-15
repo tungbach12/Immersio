@@ -22,6 +22,8 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import AITuning from "@/pages/admin/AITuning";
 import UsersManagement from "@/pages/admin/UsersManagement";
 import ScenarioBuilder from "@/pages/admin/ScenarioBuilder";
+import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
+import DeleteAccount from "@/pages/legal/DeleteAccount";
 
 function ThemeManager() {
   const location = useLocation();
@@ -51,6 +53,9 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/payment/payos-return" element={<PayOsReturn />} />
         <Route path="/onboarding" element={<Onboarding />} />
+        {/* Legal pages — bắt buộc cho Google Play Data Safety */}
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/delete-account" element={<DeleteAccount />} />
         
         {/* Student Routes */}
         <Route path="/student" element={<AppLayout />}>

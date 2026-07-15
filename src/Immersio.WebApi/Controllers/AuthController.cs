@@ -125,5 +125,21 @@ namespace Immersio.WebApi.Controllers
             var updatedUser = await _authService.UpdateProfilePictureAsync(userId, request.Url, cancellationToken);
             return Ok(ApiResponse<UserDto>.SuccessResult(updatedUser));
         }
+
+        /// <summary>
+        /// Xóa tài khoản và toàn bộ dữ liệu người dùng (yêu cầu bắt buộc của
+        /// Google Play User Data policy). Hành động không thể hoàn tác.
+        /// </summary>
+        [HttpDelete("me")]
+        [Authorize]
+        public async Task<IActionResult> DeleteAccount(CancellationToken cancellationToken)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized(ApiResponse.FailureResult("Invalid user identity."));
+
+            await _authService.DeleteAccountAsync(userId, cancellationToken);
+            return Ok(ApiResponse.SuccessResult("Account deleted."));
+        }
     }
 }

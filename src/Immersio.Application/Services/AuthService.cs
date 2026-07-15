@@ -374,6 +374,47 @@ namespace Immersio.Application.Services
             return MapToDto(user);
         }
 
+        public async Task DeleteAccountAsync(Guid userId, CancellationToken cancellationToken = default)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
+            if (user is null)
+                throw new NotFoundException("User", userId);
+
+            // ── Xóa cứng toàn bộ dữ liệu người dùng (Google Play User Data policy) ──
+            // Phiên đăng nhập
+            var refreshTokens = await _context.RefreshTokens
+                .Where(t => t.UserId == userId).ToListAsync(cancellationToken);
+            _context.RefreshTokens.RemoveRange(refreshTokens);
+
+            // Mã OTP đặt lại mật khẩu (khóa theo email)
+            var resetCodes = await _context.PasswordResetCodes
+                .Where(c => c.Email == user.Email).ToListAsync(cancellationToken);
+            _context.PasswordResetCodes.RemoveRange(resetCodes);
+
+            // Flashcards (Cards xóa theo cascade của Deck)
+            var decks = await _context.Decks
+                .Where(d => d.UserId == userId).ToListAsync(cancellationToken);
+            _context.Decks.RemoveRange(decks);
+
+            // Phiên hội thoại roleplay (SessionMessages xóa theo cascade)
+            var sessions = await _context.ScenarioSessions
+                .Where(s => s.UserId == userId).ToListAsync(cancellationToken);
+            _context.ScenarioSessions.RemoveRange(sessions);
+
+            // Nhật ký luyện phát âm
+            var logs = await _context.UserPronunciationLogs
+                .Where(l => l.UserId == userId).ToListAsync(cancellationToken);
+            _context.UserPronunciationLogs.RemoveRange(logs);
+
+            // PaymentTransactions được giữ lại (nghĩa vụ lưu chứng từ thanh toán,
+            // FK Restrict) — hồ sơ User được ẩn danh hóa nên không còn định danh cá nhân.
+            user.Anonymize();
+
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
         private static UserDto MapToDto(User user)
         {
             return new UserDto(

@@ -69,6 +69,27 @@ namespace Immersio.Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
+        /// <summary>
+        /// Xóa tài khoản theo yêu cầu người dùng (Google Play User Data policy):
+        /// xóa sạch thông tin định danh cá nhân trên hồ sơ. Bản ghi User được giữ
+        /// lại ở dạng ẩn danh để bảo toàn khóa ngoại của PaymentTransactions
+        /// (nghĩa vụ lưu trữ chứng từ thanh toán).
+        /// </summary>
+        public void Anonymize()
+        {
+            Username = "Deleted User";
+            Email = $"deleted_{Id:N}@deleted.invalid";
+            PasswordHash = string.Empty;
+            ProfilePictureUrl = null;
+            IsPublic = false;
+            NotifEmail = false;
+            NotifPush = false;
+            NotifStreak = false;
+            NotifTips = false;
+            IsDeleted = true;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
         public void UpdateSubscription(string tier, DateTime? expiresAt)
         {
             SubscriptionTier = tier;

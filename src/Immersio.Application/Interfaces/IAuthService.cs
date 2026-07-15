@@ -15,5 +15,6 @@ namespace Immersio.Application.Interfaces
         Task<UserDto> UpgradeSubscriptionAsync(Guid userId, string tier, string billingCycle, CancellationToken cancellationToken = default);
         Task<UserDto> UpdateSettingsAsync(Guid userId, UpdateSettingsRequest request, CancellationToken cancellationToken = default);
         Task<UserDto> UpdateProfilePictureAsync(Guid userId, string url, CancellationToken cancellationToken = default);
+        Task DeleteAccountAsync(Guid userId, CancellationToken cancellationToken = default);
     }
 }

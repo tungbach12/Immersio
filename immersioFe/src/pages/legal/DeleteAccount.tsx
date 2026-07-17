@@ -113,8 +113,8 @@ const DeleteAccount = () => {
                   </li>
                   <li>
                     If you can no longer access your account, email{' '}
-                    <a href="mailto:nguyendaothien2003@gmail.com" className="text-indigo-400">
-                      nguyendaothien2003@gmail.com
+                    <a href="mailto:immerso@nextgenlab.com.vn" className="text-indigo-400">
+                      immerso@nextgenlab.com.vn
                     </a>{' '}
                     from your registered email address and we will delete your account within 7 days.
                     <span className="text-slate-400"> — Nếu không truy cập được tài khoản, gửi email từ địa chỉ

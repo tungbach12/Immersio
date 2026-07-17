@@ -127,7 +127,7 @@ const PrivacyPolicy = () => {
           <section>
             <h2 className="text-xl font-bold text-white mb-2">8. Contact · Liên hệ</h2>
             <p>
-              Questions or data requests: <a href="mailto:nguyendaothien2003@gmail.com" className="text-indigo-400">nguyendaothien2003@gmail.com</a>
+              Questions or data requests: <a href="mailto:immerso@nextgenlab.com.vn" className="text-indigo-400">immerso@nextgenlab.com.vn</a>
             </p>
           </section>
 

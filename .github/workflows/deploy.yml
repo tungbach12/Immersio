@@ -111,7 +111,28 @@ jobs:
       - name: Create Environment File
         run: |
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          # Write .env line by line to avoid YAML parsing issues
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" > /opt/immersio/.env
+          echo "Jwt__Key=${{ secrets.JWT_KEY }}" >> /opt/immersio/.env
+          echo "Jwt__Issuer=ImmersioApi" >> /opt/immersio/.env
+          echo "Jwt__Audience=ImmersioUsers" >> /opt/immersio/.env
+          echo "Jwt__AccessTokenExpiryMinutes=15" >> /opt/immersio/.env
+          echo "Jwt__RefreshTokenExpiryDays=7" >> /opt/immersio/.env
+          echo "Google__ClientId=292647291155-7bfaa0cioukmqmah4g5lhg9qqcd1mu26.apps.googleusercontent.com" >> /opt/immersio/.env
+          echo "Cloudinary__CloudName=drv8ya4wy" >> /opt/immersio/.env
+          echo "Cloudinary__ApiKey=848873137638397" >> /opt/immersio/.env
+          echo "Cloudinary__ApiSecret=_bUe78YdhzgXCgBoeaKulfas3JY" >> /opt/immersio/.env
+          echo "Email__Smtp__Host=smtp.gmail.com" >> /opt/immersio/.env
+          echo "Email__Smtp__Port=587" >> /opt/immersio/.env
+          echo "Email__Smtp__Username=ngovanminhtri05@gmail.com" >> /opt/immersio/.env
+          echo "Email__Smtp__Password=gzqvjzqqwtlypaiv" >> /opt/immersio/.env
+          echo "Email__Smtp__FromEmail=ngovanminhtri05@gmail.com" >> /opt/immersio/.env
+          echo "Email__Smtp__FromName=IMMERSIO" >> /opt/immersio/.env
+          echo "PayOS__ClientId=14d11f61-16c9-4747-84d8-bb61408a9947" >> /opt/immersio/.env
+          echo "PayOS__ApiKey=c8880866-5f72-4832-bbfc-a2364556fb6a" >> /opt/immersio/.env
+          echo "PayOS__ChecksumKey=bf5d332adc1721f42a5101ee1caf28c3d49e4cda4c324d9ecb72420b70f3580f" >> /opt/immersio/.env
+          echo "PayOS__ReturnUrl=https://immersio.me/payment/payos-return" >> /opt/immersio/.env
+          echo "PayOS__CancelUrl=https://immersio.me/payment/payos-return" >> /opt/immersio/.env
           echo "GITHUB_REPOSITORY_OWNER=$OWNER_LOWER" >> /opt/immersio/.env
 
       - name: Login to GHCR

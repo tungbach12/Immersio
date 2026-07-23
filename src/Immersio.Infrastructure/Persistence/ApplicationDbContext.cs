@@ -21,6 +21,12 @@ namespace Immersio.Infrastructure.Persistence
         public DbSet<UserPronunciationLog> UserPronunciationLogs => Set<UserPronunciationLog>();
         public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+            optionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

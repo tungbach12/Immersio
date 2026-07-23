@@ -5,11 +5,6 @@ on:
 
 jobs:
   test:
-    runs-on: self-hosted
+    runs-on: [self-hosted, Linux, ARM64]
     steps:
-      - run: echo "✅ Runner hoạt động! Host: $(hostname), Date: $(date)"
-      - run: docker --version
-      - run: whoami
-      - run: pwd
-# test
-# fix
+      - run: echo "Runner=${{ runner.name }} OS=${{ runner.os }} Host=$(hostname)"

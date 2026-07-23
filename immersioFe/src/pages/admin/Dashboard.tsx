@@ -9,7 +9,9 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  const loadStats = () => {
+    setLoading(true);
+    setError("");
     adminService.getDashboardStats()
       .then((data) => {
         setStats(data);
@@ -21,6 +23,10 @@ export default function AdminDashboard() {
       .finally(() => {
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    loadStats();
   }, []);
 
   if (loading) {
@@ -37,7 +43,7 @@ export default function AdminDashboard() {
       <div className="bg-red-500/10 border border-red-500/20 rounded-3xl p-8 text-center max-w-xl mx-auto my-12">
         <p className="text-red-400 font-bold mb-4">{error || "An unexpected error occurred."}</p>
         <button 
-          onClick={() => { setLoading(true); setError(""); }}
+          onClick={loadStats}
           className="px-6 py-2.5 bg-red-500/20 text-red-300 font-semibold rounded-2xl border border-red-500/30 hover:bg-red-500/30 transition-all text-xs"
         >
           Try Again

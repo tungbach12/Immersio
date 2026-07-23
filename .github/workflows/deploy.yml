@@ -71,6 +71,7 @@ jobs:
           context: ./src
           file: ./src/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64/v8
           tags: |
             ghcr.io/${{ steps.prep.outputs.owner_lower }}/immersio-be:latest
           cache-from: type=gha

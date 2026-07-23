@@ -23,7 +23,10 @@ builder.Services.AddControllers()
 
 // ── DbContext ────────────────────────────────────────────────────────
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+});
 
 builder.Services.AddScoped<IApplicationDbContext>(provider =>
     provider.GetRequiredService<ApplicationDbContext>());

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { CheckCircle2, XCircle, Loader2, ArrowRight } from "lucide-react";
@@ -8,10 +8,27 @@ import { subscriptionService, PaymentReturnResult } from "@/services/subscriptio
 
 type Status = "verifying" | "success" | "failed";
 
+const autoRedirectSeconds = 5;
+
 export default function PayOsReturn() {
   const navigate = useNavigate();
   const [status, setStatus] = useState<Status>("verifying");
   const [result, setResult] = useState<PaymentReturnResult | null>(null);
+  const [countdown, setCountdown] = useState(autoRedirectSeconds);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startCountdown = () => {
+    countdownRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownRef.current!);
+          navigate("/student/dashboard");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -35,16 +52,26 @@ export default function PayOsReturn() {
           } catch {
             /* non-blocking */
           }
+          startCountdown();
         }
       })
       .catch((err) => {
         setResult({ success: false, message: err.message || "Xác thực giao dịch thất bại.", amount: 0 });
         setStatus("failed");
       });
+
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const formatAmount = (amount: number) =>
     amount > 0 ? `${amount.toLocaleString("vi-VN")}đ` : "";
+
+  // SVG circular progress (r=20, circumference ~125.7)
+  const circumference = 2 * Math.PI * 20;
+  const progressOffset = circumference * (1 - countdown / autoRedirectSeconds);
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden font-sans">
@@ -98,9 +125,46 @@ export default function PayOsReturn() {
                   </div>
                 </div>
               )}
+
+              {/* Auto-redirect countdown indicator */}
+              <div className="mt-6 flex items-center gap-3 text-slate-400">
+                <svg width="48" height="48" viewBox="0 0 48 48" className="-rotate-90">
+                  <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3" />
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    fill="none"
+                    stroke="#6366f1"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={progressOffset}
+                    style={{ transition: "stroke-dashoffset 0.9s linear" }}
+                  />
+                  <text
+                    x="24"
+                    y="24"
+                    dominantBaseline="middle"
+                    textAnchor="middle"
+                    className="rotate-90"
+                    style={{ fill: "#a5b4fc", fontSize: "13px", fontWeight: 800, transform: "rotate(90deg)", transformOrigin: "24px 24px" }}
+                  >
+                    {countdown}
+                  </text>
+                </svg>
+                <p className="text-xs font-semibold leading-relaxed text-left">
+                  Tự động chuyển về Dashboard<br />
+                  <span className="text-slate-500">sau {countdown} giây...</span>
+                </p>
+              </div>
+
               <Button
-                onClick={() => navigate("/student/dashboard")}
-                className="w-full h-14 mt-8 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-indigo-600/30 text-white font-black text-xs uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                onClick={() => {
+                  if (countdownRef.current) clearInterval(countdownRef.current);
+                  navigate("/student/dashboard");
+                }}
+                className="w-full h-14 mt-5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-indigo-600/30 text-white font-black text-xs uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
               >
                 <span className="flex items-center justify-center gap-2">Bắt đầu học ngay <ArrowRight size={14} /></span>
               </Button>

@@ -19,6 +19,20 @@ export interface AdminDashboardStats {
   sessionData: SessionPoint[];
 }
 
+export interface PaymentTransactionDto {
+  id: string;
+  txnRef: string;
+  userId: string;
+  username: string;
+  email: string;
+  tier: string;
+  billingCycle: string;
+  amount: number;
+  status: string;
+  createdAt: string;
+  paidAt?: string | null;
+}
+
 export interface AiSettings {
   systemPrompt: string;
   grammarSensitivity: number;
@@ -52,6 +66,12 @@ export const adminService = {
   async getUsers(): Promise<UserDto[]> {
     const response = await authService.fetchWithAuth(`${BASE_URL}/users`);
     if (!response.ok) throw new Error("Failed to fetch users list.");
+    return response.json();
+  },
+
+  async getTransactions(): Promise<PaymentTransactionDto[]> {
+    const response = await authService.fetchWithAuth(`${BASE_URL}/transactions`);
+    if (!response.ok) throw new Error("Failed to fetch payment transactions.");
     return response.json();
   },
 

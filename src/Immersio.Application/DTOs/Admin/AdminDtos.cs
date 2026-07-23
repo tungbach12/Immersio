@@ -33,4 +33,18 @@ namespace Immersio.Application.DTOs.Admin
         string ReasoningEffortFlashcard,
         string ReasoningEffortPhrase
     );
+
+    public sealed record PaymentTransactionDto(
+        Guid Id,
+        string TxnRef,
+        Guid UserId,
+        string Username,
+        string Email,
+        string Tier,
+        string BillingCycle,
+        long Amount,
+        string Status,
+        DateTime CreatedAt,
+        DateTime? PaidAt
+    );
 }

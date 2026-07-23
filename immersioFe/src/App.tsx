@@ -21,6 +21,7 @@ import HelpCenter from "@/pages/student/Help";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AITuning from "@/pages/admin/AITuning";
 import UsersManagement from "@/pages/admin/UsersManagement";
+import TransactionsManagement from "@/pages/admin/TransactionsManagement";
 import ScenarioBuilder from "@/pages/admin/ScenarioBuilder";
 import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
 import DeleteAccount from "@/pages/legal/DeleteAccount";
@@ -77,6 +78,7 @@ export default function App() {
         <Route path="/admin" element={<AppLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<UsersManagement />} />
+          <Route path="transactions" element={<TransactionsManagement />} />
           <Route path="scenarios" element={<ScenarioBuilder />} />
           <Route path="ai-tuning" element={<AITuning />} />
           <Route index element={<Navigate to="dashboard" replace />} />

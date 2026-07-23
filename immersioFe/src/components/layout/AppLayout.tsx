@@ -17,7 +17,8 @@ import {
   Crown,
   Book,
   Brain,
-  Mic
+  Mic,
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -63,6 +64,7 @@ export default function AppLayout() {
   const adminLinks = [
     { icon: BarChart2, label: "Overview", path: "/admin/dashboard" },
     { icon: User, label: "Users", path: "/admin/users" },
+    { icon: CreditCard, label: "Transactions", path: "/admin/transactions" },
     { icon: Layers, label: "Scenarios", path: "/admin/scenarios" },
     { icon: Cpu, label: "AI Tuning", path: "/admin/ai-tuning" },
   ];

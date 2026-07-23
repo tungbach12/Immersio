@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Puter.js ElevenLabs TTS Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 20px; background: #111; color: #eee; }
+    h1 { color: #a78bfa; }
+    textarea { width: 100%; height: 80px; background: #222; color: #eee; border: 1px solid #444; padding: 8px; border-radius: 6px; font-size: 14px; }
+    .row { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
+    select, button { padding: 8px 14px; border-radius: 6px; border: 1px solid #444; background: #222; color: #eee; font-size: 14px; cursor: pointer; }
+    button { background: #7c3aed; border-color: #7c3aed; }
+    button:hover { background: #6d28d9; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #status { margin-top: 12px; padding: 10px; border-radius: 6px; font-size: 13px; background: #1e1e1e; border: 1px solid #333; min-height: 30px; }
+    .ok { color: #4ade80; }
+    .err { color: #f87171; }
+    .info { color: #60a5fa; }
+    label { font-size: 13px; color: #aaa; }
+  </style>
+</head>
+<body>
+  <h1>Puter.js ElevenLabs TTS Test</h1>
+  <p style="color:#aaa;font-size:13px;">Tests free ElevenLabs TTS via Puter.js — no API key needed. Uses <code>eleven_multilingual_v2</code>.</p>
+
+  <label>Text</label>
+  <textarea id="text">こんにちは！今日はいい天気ですね。Welcome to Immersio! 你好世界。Bonjour le monde!</textarea>
+
+  <div class="row">
+    <div>
+      <label>Model</label><br/>
+      <select id="model">
+        <option value="eleven_multilingual_v2">eleven_multilingual_v2 (best quality)</option>
+        <option value="eleven_flash_v2_5">eleven_flash_v2_5 (fast)</option>
+        <option value="eleven_turbo_v2_5">eleven_turbo_v2_5 (fastest)</option>
+        <option value="eleven_v3">eleven_v3 (latest)</option>
+      </select>
+    </div>
+    <div>
+      <label>Voice ID</label><br/>
+      <select id="voice">
+        <option value="21m00Tcm4TlvDq8ikWAM">Rachel (default)</option>
+        <option value="AZnzlk1XvdvUeBnXmlld">Domi</option>
+        <option value="EXAVITQu4vr4xnSDxMaL">Bella</option>
+        <option value="ErXwobaYiN019PkySvjV">Antoni</option>
+        <option value="MF3mGyEYCl7XYWbV9V6O">Elli</option>
+        <option value="TxGEqnHWrfWFTfGW9XjX">Josh</option>
+        <option value="VR6AewLTigWG4xSOukaG">Arnold</option>
+        <option value="pNInz6obpgDQGcFmaJgB">Adam</option>
+        <option value="yoZ06aMxZJJ28mfd3POQ">Sam</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <button id="btn" onclick="speak()">▶ Speak</button>
+    <button onclick="stop()" style="background:#374151;border-color:#374151;">■ Stop</button>
+  </div>
+
+  <div id="status" class="info">Ready. Click Speak to test.</div>
+
+  <script src="https://js.puter.com/v2/"></script>
+  <script>
+    let currentAudio = null;
+
+    function setStatus(msg, cls) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = cls || 'info';
+    }
+
+    function stop() {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+        setStatus('Stopped.', 'info');
+      }
+    }
+
+    async function speak() {
+      const text = document.getElementById('text').value.trim();
+      const model = document.getElementById('model').value;
+      const voice = document.getElementById('voice').value;
+      const btn = document.getElementById('btn');
+
+      if (!text) { setStatus('Enter some text first.', 'err'); return; }
+
+      stop();
+      btn.disabled = true;
+      setStatus('⏳ Requesting audio from Puter → ElevenLabs...', 'info');
+
+      try {
+        const audio = await puter.ai.txt2speech(text, {
+          provider: 'elevenlabs',
+          voice: voice,
+          model: model
+        });
+
+        currentAudio = audio;
+        audio.onended = () => setStatus('✅ Playback finished.', 'ok');
+        audio.play();
+        setStatus(`✅ Playing! Model: ${model}, Voice: ${voice}`, 'ok');
+      } catch (err) {
+        console.error(err);
+        setStatus('❌ Error: ' + (err?.message || JSON.stringify(err)), 'err');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

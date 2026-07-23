@@ -37,6 +37,13 @@ namespace Immersio.WebApi.Controllers
             return Ok(ApiResponse<IEnumerable<UserDto>>.SuccessResult(users));
         }
 
+        [HttpGet("transactions")]
+        public async Task<IActionResult> GetTransactions(CancellationToken cancellationToken)
+        {
+            var transactions = await _adminService.GetTransactionsAsync(cancellationToken);
+            return Ok(ApiResponse<IEnumerable<PaymentTransactionDto>>.SuccessResult(transactions));
+        }
+
         [HttpPost("users/{userId:guid}/subscription")]
         public async Task<IActionResult> UpdateUserSubscription(
             Guid userId,

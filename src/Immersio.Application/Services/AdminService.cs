@@ -76,6 +76,29 @@ namespace Immersio.Application.Services
             );
         }
 
+        public async Task<IEnumerable<PaymentTransactionDto>> GetTransactionsAsync(CancellationToken cancellationToken)
+        {
+            var transactions = await (from t in _context.PaymentTransactions
+                                      join u in _context.Users on t.UserId equals u.Id into usersGroup
+                                      from u in usersGroup.DefaultIfEmpty()
+                                      orderby t.CreatedAt descending
+                                      select new PaymentTransactionDto(
+                                          t.Id,
+                                          t.TxnRef,
+                                          t.UserId,
+                                          u != null ? u.Username : "Deleted User",
+                                          u != null ? u.Email : "N/A",
+                                          t.Tier,
+                                          t.BillingCycle,
+                                          t.Amount,
+                                          t.Status,
+                                          t.CreatedAt,
+                                          t.PaidAt
+                                      )).ToListAsync(cancellationToken);
+
+            return transactions;
+        }
+
         public async Task<IEnumerable<UserDto>> GetUsersAsync(CancellationToken cancellationToken)
         {
             var users = await _context.Users

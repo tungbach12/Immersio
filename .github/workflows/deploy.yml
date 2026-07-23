@@ -77,8 +77,8 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    name: Deploy to Linux VPS
-    runs-on: ubuntu-latest
+    name: Deploy to VPS2
+    runs-on: self-hosted
     needs: [build-frontend, build-backend]
     steps:
       - name: Checkout Repository
@@ -90,55 +90,35 @@ jobs:
           name: frontend-dist
           path: dist
 
-      - name: Compress Frontend Assets (Tarball Optimization)
+      - name: Archive Frontend
         run: tar -czf dist.tar.gz -C dist .
 
-      - name: Copy Deployment Packages to VPS (Single Stream SCP)
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "dist.tar.gz,docker-compose.yml"
-          target: "/home/azureuser/immersio"
+      - name: Deploy Frontend
+        run: |
+          sudo mkdir -p /var/www/immersio
+          sudo rm -rf /var/www/immersio
+          sudo mkdir /var/www/immersio
+          sudo tar -xzf dist.tar.gz -C /var/www/immersio
+          sudo chown -R ubuntu:ubuntu /var/www/immersio
+          sudo chmod -R 755 /var/www/immersio
 
-      - name: Execute remote deployment commands via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_OWNER: ${{ github.repository_owner }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          envs: GITHUB_TOKEN,GITHUB_ACTOR,GITHUB_OWNER,DB_PASSWORD
-          script: |
-            # Create target deployment folder if missing
-            mkdir -p /home/azureuser/immersio
-            cd /home/azureuser/immersio
+      - name: Prepare Docker Compose Directory
+        run: |
+          mkdir -p /opt/immersio
+          cp docker-compose.yml /opt/immersio/
 
-            # Extract frontend assets to Nginx folder and align permissions
-            sudo rm -rf /var/www/immersio/*
-            sudo tar -xzf dist.tar.gz -C /var/www/immersio
-            sudo chown -R azureuser:azureuser /var/www/immersio
-            sudo chmod -R 755 /var/www/immersio
-            rm -f dist.tar.gz
+      - name: Create Environment File
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" > /opt/immersio/.env
+          echo "GITHUB_REPOSITORY_OWNER=$OWNER_LOWER" >> /opt/immersio/.env
 
-            # Set owner lowercase
-            OWNER_LOWER=$(echo "$GITHUB_OWNER" | tr '[:upper:]' '[:lower:]')
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-            # Log into GHCR inside the VPS
-            echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-
-            # Set environment variables for docker compose run via .env file
-            echo "DB_PASSWORD=$DB_PASSWORD" > .env
-            echo "GITHUB_REPOSITORY_OWNER=$OWNER_LOWER" >> .env
-
-            # Pull the latest backend image and restart the docker-compose services
-            docker compose pull
-            docker compose up -d --remove-orphans
-
-            # Clean up old dangling Docker images to free up VPS disk space
-            docker image prune -f
+      - name: Deploy Backend
+        working-directory: /opt/immersio
+        run: |
+          docker compose pull
+          docker compose up -d --remove-orphans
+          docker image prune -f

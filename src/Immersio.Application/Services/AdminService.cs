@@ -22,32 +22,48 @@ namespace Immersio.Application.Services
 
         public async Task<AdminDashboardStatsDto> GetDashboardStatsAsync(CancellationToken cancellationToken)
         {
-            var totalUsers = await _context.Users.CountAsync(u => !u.IsDeleted, cancellationToken);
-            
-            var activeSessions = await _context.ScenarioSessions
-                .CountAsync(s => s.FinishedAt == null, cancellationToken);
+            var totalUsersTask = _context.Users.AsNoTracking().CountAsync(u => !u.IsDeleted, cancellationToken);
+            var activeSessionsTask = _context.ScenarioSessions.AsNoTracking().CountAsync(s => s.FinishedAt == null, cancellationToken);
+            var plusCountTask = _context.Users.AsNoTracking().CountAsync(u => !u.IsDeleted && u.SubscriptionTier == "Plus", cancellationToken);
+            var premiumCountTask = _context.Users.AsNoTracking().CountAsync(u => !u.IsDeleted && u.SubscriptionTier == "Premium", cancellationToken);
 
-            // Calculate revenue based on subscription tiers
-            var plusCount = await _context.Users.CountAsync(u => !u.IsDeleted && u.SubscriptionTier == "Plus", cancellationToken);
-            var premiumCount = await _context.Users.CountAsync(u => !u.IsDeleted && u.SubscriptionTier == "Premium", cancellationToken);
+            await Task.WhenAll(totalUsersTask, activeSessionsTask, plusCountTask, premiumCountTask);
+
+            var totalUsers = await totalUsersTask;
+            var activeSessions = await activeSessionsTask;
+            var plusCount = await plusCountTask;
+            var premiumCount = await premiumCountTask;
+
             var revenueVal = (plusCount * 69000) + (premiumCount * 199000);
             var revenueStr = $"{revenueVal / 1000:N0}.000đ";
 
-            // Calculate average duration from completed sessions
-            var averageDuration = "18m"; // Fallback default
-            var completedSessions = await _context.ScenarioSessions
+            var averageDuration = "18m";
+            var completedDurations = await _context.ScenarioSessions
+                .AsNoTracking()
                 .Where(s => s.FinishedAt != null)
+                .Select(s => (s.FinishedAt!.Value - s.StartedAt).TotalMinutes)
                 .ToListAsync(cancellationToken);
-            if (completedSessions.Any())
+            if (completedDurations.Any())
             {
-                var avgMinutes = completedSessions.Average(s => (s.FinishedAt!.Value - s.StartedAt).TotalMinutes);
-                averageDuration = $"{Math.Round(avgMinutes, 1)}m";
+                averageDuration = $"{Math.Round(completedDurations.Average(), 1)}m";
             }
 
-            // Generate user growth data for past 7 days
             var growthData = new List<GrowthPoint>();
             var sessionData = new List<SessionPoint>();
             var today = DateTime.UtcNow.Date;
+            var sevenDaysAgo = today.AddDays(-6);
+
+            var recentUsers = await _context.Users
+                .AsNoTracking()
+                .Where(u => !u.IsDeleted)
+                .Select(u => u.CreatedAt)
+                .ToListAsync(cancellationToken);
+
+            var recentSessions = await _context.ScenarioSessions
+                .AsNoTracking()
+                .Where(s => s.StartedAt >= sevenDaysAgo)
+                .Select(s => s.StartedAt)
+                .ToListAsync(cancellationToken);
 
             for (int i = 6; i >= 0; i--)
             {
@@ -55,13 +71,8 @@ namespace Immersio.Application.Services
                 var nextDate = date.AddDays(1);
                 var dayName = date.ToString("ddd");
 
-                // Users created up to end of this date
-                var usersCount = await _context.Users
-                    .CountAsync(u => !u.IsDeleted && u.CreatedAt < nextDate, cancellationToken);
-
-                // Sessions started on this day
-                var sessionsCount = await _context.ScenarioSessions
-                    .CountAsync(s => s.StartedAt >= date && s.StartedAt < nextDate, cancellationToken);
+                var usersCount = recentUsers.Count(u => u < nextDate);
+                var sessionsCount = recentSessions.Count(s => s >= date && s < nextDate);
 
                 growthData.Add(new GrowthPoint(dayName, usersCount));
                 sessionData.Add(new SessionPoint(dayName, sessionsCount));
@@ -79,8 +90,8 @@ namespace Immersio.Application.Services
 
         public async Task<IEnumerable<PaymentTransactionDto>> GetTransactionsAsync(CancellationToken cancellationToken)
         {
-            var list = await (from t in _context.PaymentTransactions
-                              join u in _context.Users on t.UserId equals u.Id into usersGroup
+            var list = await (from t in _context.PaymentTransactions.AsNoTracking()
+                              join u in _context.Users.AsNoTracking() on t.UserId equals u.Id into usersGroup
                               from u in usersGroup.DefaultIfEmpty()
                               orderby t.CreatedAt descending
                               select new

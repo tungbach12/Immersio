@@ -8,3 +8,4 @@ jobs:
     runs-on: [self-hosted, Linux, ARM64]
     steps:
       - run: echo "Runner=${{ runner.name }} OS=${{ runner.os }} Host=$(hostname)"
+  

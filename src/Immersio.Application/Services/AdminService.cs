@@ -22,17 +22,10 @@ namespace Immersio.Application.Services
 
         public async Task<AdminDashboardStatsDto> GetDashboardStatsAsync(CancellationToken cancellationToken)
         {
-            var totalUsersTask = _context.Users.AsNoTracking().CountAsync(u => !u.IsDeleted, cancellationToken);
-            var activeSessionsTask = _context.ScenarioSessions.AsNoTracking().CountAsync(s => s.FinishedAt == null, cancellationToken);
-            var plusCountTask = _context.Users.AsNoTracking().CountAsync(u => !u.IsDeleted && u.SubscriptionTier == "Plus", cancellationToken);
-            var premiumCountTask = _context.Users.AsNoTracking().CountAsync(u => !u.IsDeleted && u.SubscriptionTier == "Premium", cancellationToken);
-
-            await Task.WhenAll(totalUsersTask, activeSessionsTask, plusCountTask, premiumCountTask);
-
-            var totalUsers = await totalUsersTask;
-            var activeSessions = await activeSessionsTask;
-            var plusCount = await plusCountTask;
-            var premiumCount = await premiumCountTask;
+            var totalUsers = await _context.Users.AsNoTracking().CountAsync(u => !u.IsDeleted, cancellationToken);
+            var activeSessions = await _context.ScenarioSessions.AsNoTracking().CountAsync(s => s.FinishedAt == null, cancellationToken);
+            var plusCount = await _context.Users.AsNoTracking().CountAsync(u => !u.IsDeleted && u.SubscriptionTier == "Plus", cancellationToken);
+            var premiumCount = await _context.Users.AsNoTracking().CountAsync(u => !u.IsDeleted && u.SubscriptionTier == "Premium", cancellationToken);
 
             var revenueVal = (plusCount * 69000) + (premiumCount * 199000);
             var revenueStr = $"{revenueVal / 1000:N0}.000đ";

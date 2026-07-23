@@ -75,6 +75,14 @@ export const adminService = {
     return response.json();
   },
 
+  async approveTransaction(id: string): Promise<PaymentTransactionDto> {
+    const response = await authService.fetchWithAuth(`${BASE_URL}/transactions/${id}/approve`, {
+      method: "POST"
+    });
+    if (!response.ok) throw new Error("Failed to approve transaction.");
+    return response.json();
+  },
+
   async updateUserSubscription(userId: string, tier: string, cycle: string): Promise<UserDto> {
     const response = await authService.fetchWithAuth(`${BASE_URL}/users/${userId}/subscription`, {
       method: "POST",

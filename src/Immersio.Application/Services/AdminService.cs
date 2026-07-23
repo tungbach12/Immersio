@@ -117,6 +117,44 @@ namespace Immersio.Application.Services
             ));
         }
 
+        public async Task<PaymentTransactionDto> ApproveTransactionAsync(Guid transactionId, CancellationToken cancellationToken)
+        {
+            var transaction = await _context.PaymentTransactions
+                .FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
+            if (transaction == null)
+                throw new KeyNotFoundException("Transaction not found.");
+
+            transaction.Status = "Paid";
+            transaction.PaidAt = DateTime.UtcNow;
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == transaction.UserId && !u.IsDeleted, cancellationToken);
+            if (user != null)
+            {
+                user.SetSubscriptionTier(transaction.Tier);
+                var expiresAt = transaction.BillingCycle.ToLower() == "yearly"
+                    ? DateTime.UtcNow.AddYears(1)
+                    : DateTime.UtcNow.AddMonths(1);
+                user.SetSubscriptionExpiresAt(expiresAt);
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return new PaymentTransactionDto(
+                transaction.Id,
+                transaction.TxnRef,
+                transaction.UserId,
+                user?.Username ?? "Unknown User",
+                user?.Email ?? "N/A",
+                transaction.Tier,
+                transaction.BillingCycle,
+                transaction.Amount,
+                transaction.Status,
+                transaction.CreatedAt,
+                transaction.PaidAt
+            );
+        }
+
         public async Task<IEnumerable<UserDto>> GetUsersAsync(CancellationToken cancellationToken)
         {
             var users = await _context.Users

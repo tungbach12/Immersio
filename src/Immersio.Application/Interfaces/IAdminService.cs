@@ -12,6 +12,7 @@ namespace Immersio.Application.Interfaces
         Task<AdminDashboardStatsDto> GetDashboardStatsAsync(CancellationToken cancellationToken);
         Task<IEnumerable<UserDto>> GetUsersAsync(CancellationToken cancellationToken);
         Task<IEnumerable<PaymentTransactionDto>> GetTransactionsAsync(CancellationToken cancellationToken);
+        Task<PaymentTransactionDto> ApproveTransactionAsync(Guid transactionId, CancellationToken cancellationToken);
         Task<UserDto> UpdateUserSubscriptionAsync(Guid userId, string tier, string cycle, CancellationToken cancellationToken);
         Task<bool> BanUserAsync(Guid userId, CancellationToken cancellationToken);
         Task<SystemSettingsDto> GetAiSettingsAsync(CancellationToken cancellationToken);

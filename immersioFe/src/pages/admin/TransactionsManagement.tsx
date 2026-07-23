@@ -23,6 +23,7 @@ export default function TransactionsManagement() {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadTransactions();
@@ -38,6 +39,19 @@ export default function TransactionsManagement() {
         setError("Không thể tải danh sách giao dịch.");
       })
       .finally(() => setLoading(false));
+  };
+
+  const handleApprove = async (id: string) => {
+    if (!confirm("Bạn có chắc chắn muốn xác nhận thanh toán và kích hoạt gói cho học viên này?")) return;
+    setApprovingId(id);
+    try {
+      await adminService.approveTransaction(id);
+      loadTransactions();
+    } catch (err: any) {
+      alert(err.message || "Kích hoạt đơn hàng thất bại.");
+    } finally {
+      setApprovingId(null);
+    }
   };
 
   const filteredTransactions = transactions.filter((t) => {
@@ -277,10 +291,27 @@ export default function TransactionsManagement() {
                       )}
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-xl font-black text-indigo-400 tracking-tight block">
-                        {formatCurrency(item.amount)}
-                      </span>
+                    <div className="text-right flex items-center gap-4">
+                      <div>
+                        <span className="text-xl font-black text-indigo-400 tracking-tight block">
+                          {formatCurrency(item.amount)}
+                        </span>
+                      </div>
+
+                      {!isPaid && (
+                        <button
+                          disabled={approvingId === item.id}
+                          onClick={() => handleApprove(item.id)}
+                          className="px-4 py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 active:scale-95 text-emerald-300 font-extrabold text-xs rounded-xl border border-emerald-500/30 transition-all flex items-center gap-1.5 shrink-0 shadow-lg shadow-emerald-500/10 cursor-pointer disabled:opacity-50"
+                        >
+                          {approvingId === item.id ? (
+                            <Loader2 className="animate-spin" size={14} />
+                          ) : (
+                            <CheckCircle2 size={14} />
+                          )}
+                          Duyệt đơn
+                        </button>
+                      )}
                     </div>
                   </div>
                 </CardContent>

@@ -52,15 +52,16 @@ namespace Immersio.Application.Services
             for (int i = 6; i >= 0; i--)
             {
                 var date = today.AddDays(-i);
+                var nextDate = date.AddDays(1);
                 var dayName = date.ToString("ddd");
 
-                // Users created up to this date
+                // Users created up to end of this date
                 var usersCount = await _context.Users
-                    .CountAsync(u => !u.IsDeleted && u.CreatedAt.Date <= date, cancellationToken);
+                    .CountAsync(u => !u.IsDeleted && u.CreatedAt < nextDate, cancellationToken);
 
                 // Sessions started on this day
                 var sessionsCount = await _context.ScenarioSessions
-                    .CountAsync(s => s.StartedAt.Date == date, cancellationToken);
+                    .CountAsync(s => s.StartedAt >= date && s.StartedAt < nextDate, cancellationToken);
 
                 growthData.Add(new GrowthPoint(dayName, usersCount));
                 sessionData.Add(new SessionPoint(dayName, sessionsCount));
@@ -78,25 +79,38 @@ namespace Immersio.Application.Services
 
         public async Task<IEnumerable<PaymentTransactionDto>> GetTransactionsAsync(CancellationToken cancellationToken)
         {
-            var transactions = await (from t in _context.PaymentTransactions
-                                      join u in _context.Users on t.UserId equals u.Id into usersGroup
-                                      from u in usersGroup.DefaultIfEmpty()
-                                      orderby t.CreatedAt descending
-                                      select new PaymentTransactionDto(
-                                          t.Id,
-                                          t.TxnRef,
-                                          t.UserId,
-                                          u != null ? u.Username : "Deleted User",
-                                          u != null ? u.Email : "N/A",
-                                          t.Tier,
-                                          t.BillingCycle,
-                                          t.Amount,
-                                          t.Status,
-                                          t.CreatedAt,
-                                          t.PaidAt
-                                      )).ToListAsync(cancellationToken);
+            var list = await (from t in _context.PaymentTransactions
+                              join u in _context.Users on t.UserId equals u.Id into usersGroup
+                              from u in usersGroup.DefaultIfEmpty()
+                              orderby t.CreatedAt descending
+                              select new
+                              {
+                                  t.Id,
+                                  t.TxnRef,
+                                  t.UserId,
+                                  Username = u != null ? u.Username : null,
+                                  Email = u != null ? u.Email : null,
+                                  t.Tier,
+                                  t.BillingCycle,
+                                  t.Amount,
+                                  t.Status,
+                                  t.CreatedAt,
+                                  t.PaidAt
+                              }).ToListAsync(cancellationToken);
 
-            return transactions;
+            return list.Select(t => new PaymentTransactionDto(
+                t.Id,
+                t.TxnRef,
+                t.UserId,
+                t.Username ?? "Deleted User",
+                t.Email ?? "N/A",
+                t.Tier,
+                t.BillingCycle,
+                t.Amount,
+                t.Status,
+                t.CreatedAt,
+                t.PaidAt
+            ));
         }
 
         public async Task<IEnumerable<UserDto>> GetUsersAsync(CancellationToken cancellationToken)

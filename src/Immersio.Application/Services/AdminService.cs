@@ -124,18 +124,16 @@ namespace Immersio.Application.Services
             if (transaction == null)
                 throw new KeyNotFoundException("Transaction not found.");
 
-            transaction.Status = "Paid";
-            transaction.PaidAt = DateTime.UtcNow;
+            transaction.MarkPaid("ADMIN_MANUAL", "00");
 
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Id == transaction.UserId && !u.IsDeleted, cancellationToken);
             if (user != null)
             {
-                user.SetSubscriptionTier(transaction.Tier);
                 var expiresAt = transaction.BillingCycle.ToLower() == "yearly"
                     ? DateTime.UtcNow.AddYears(1)
                     : DateTime.UtcNow.AddMonths(1);
-                user.SetSubscriptionExpiresAt(expiresAt);
+                user.UpdateSubscription(transaction.Tier, expiresAt);
             }
 
             await _context.SaveChangesAsync(cancellationToken);

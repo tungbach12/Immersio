@@ -76,6 +76,7 @@ namespace Immersio.Application.Services
                 {
                     initialMessage = await _llmService.GenerateChatResponseAsync(
                         $"You are a professional language translator. Translate the following opening roleplay dialog sentence of a scenario into {language}. Return ONLY the direct translation, with absolutely no other comments, explanations or markdown quotation: \"{scenario.InitialMessage}\"",
+                        language,
                         Enumerable.Empty<SessionMessageDto>(),
                         "Translate",
                         null,
@@ -136,10 +137,6 @@ namespace Immersio.Application.Services
 
             // 4. Generate AI character reply based on contextual roleplay
             var prompt = session.Scenario.ContextPrompt;
-            if (!string.Equals(language, session.Scenario.Language, StringComparison.OrdinalIgnoreCase))
-            {
-                prompt += $"\n\nCRITICAL INSTRUCTION: The conversation target language is '{language}'. You must respond in '{language}' only. Keep the character style and scenario context consistent.";
-            }
             var validEmotions = new List<string>();
             if (!string.IsNullOrWhiteSpace(session.Scenario.EmotionsJson))
             {
@@ -161,7 +158,7 @@ namespace Immersio.Application.Services
                 validEmotions.AddRange(new[] { "idle", "happy", "angry" });
             }
 
-            var reply = await _llmService.GenerateChatResponseAsync(prompt, history, userMessage, validEmotions, cancellationToken);
+            var reply = await _llmService.GenerateChatResponseAsync(prompt, language, history, userMessage, validEmotions, cancellationToken);
             
             // Parse emotion if present (e.g. "[EMOTION: happy]")
             string emotion = "idle";

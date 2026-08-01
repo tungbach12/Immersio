@@ -10,9 +10,10 @@ namespace Immersio.Application.Interfaces
     public interface ILLMService
     {
         Task<string> GenerateChatResponseAsync(
-            string contextPrompt, 
-            IEnumerable<SessionMessageDto> history, 
-            string userMessage, 
+            string contextPrompt,
+            string targetLanguage,
+            IEnumerable<SessionMessageDto> history,
+            string userMessage,
             IEnumerable<string>? allowedEmotions,
             CancellationToken cancellationToken);
 

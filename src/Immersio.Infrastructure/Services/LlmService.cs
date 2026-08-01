@@ -149,9 +149,10 @@ namespace Immersio.Infrastructure.Services
         }
 
         public async Task<string> GenerateChatResponseAsync(
-            string contextPrompt, 
-            IEnumerable<SessionMessageDto> history, 
-            string userMessage, 
+            string contextPrompt,
+            string targetLanguage,
+            IEnumerable<SessionMessageDto> history,
+            string userMessage,
             IEnumerable<string>? allowedEmotions,
             CancellationToken cancellationToken)
         {
@@ -160,17 +161,22 @@ namespace Immersio.Infrastructure.Services
                 : null;
 
             var systemInstructions = $"You are a roleplay character in a language learning app called IMMERSIO.\n\n" +
+                                     $"RESPONSE LANGUAGE (HARD REQUIREMENT):\n" +
+                                     $"You must write your ENTIRE reply in {targetLanguage}. Never reply in English or any other language, even if the scenario context or conversation history is written in another language. This rule overrides all other instructions.\n\n" +
                                      $"SCENARIO CONTEXT:\n{contextPrompt}\n\n" +
                                      $"INSTRUCTIONS:\n" +
-                                     $"1. Stay in character at all times.\n" +
-                                     $"2. Keep responses concise (1-3 sentences).\n" +
-                                     $"3. Prioritize natural conversation flow.\n" +
-                                     $"4. Do not break character.";
+                                     $"1. Write your entire reply in {targetLanguage} — never switch to English or another language.\n" +
+                                     $"2. Stay in character at all times.\n" +
+                                     $"3. Keep responses concise (1-3 sentences).\n" +
+                                     $"4. Prioritize natural conversation flow.\n" +
+                                     $"5. Do not break character.";
 
             if (emotionsListStr != null && allowedEmotions != null)
             {
-                systemInstructions += $"\n5. You must choose one of the following emotions that fits your reply best: {emotionsListStr}. You MUST start your response with `[EMOTION: <emotion_name>]`. For example: `[EMOTION: {allowedEmotions.FirstOrDefault() ?? "happy"}] Hi! How can I help you today?` or similar.";
+                systemInstructions += $"\n6. You must choose one of the following emotions that fits your reply best: {emotionsListStr}. You MUST start your response with `[EMOTION: <emotion_name>]`. For example: `[EMOTION: {allowedEmotions.FirstOrDefault() ?? "happy"}] Hi! How can I help you today?` or similar.";
             }
+
+            systemInstructions += $"\nREMINDER: Your reply must be written entirely in {targetLanguage}.";
 
             var messagesPayload = new List<object>
             {

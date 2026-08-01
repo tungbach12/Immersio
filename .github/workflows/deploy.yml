@@ -157,6 +157,9 @@ jobs:
           echo "PayOS__ChecksumKey=bf5d332adc1721f42a5101ee1caf28c3d49e4cda4c324d9ecb72420b70f3580f" >> /tmp/immersio.env
           echo "PayOS__ReturnUrl=https://immersio.me/payment/payos-return" >> /tmp/immersio.env
           echo "PayOS__CancelUrl=https://immersio.me/payment/payos-return" >> /tmp/immersio.env
+          echo "Azure__Speech__ApiKey=${{ secrets.AZURE_SPEECH_API_KEY }}" >> /tmp/immersio.env
+          echo "Azure__Speech__Region=southeastasia" >> /tmp/immersio.env
+          echo "Azure__Speech__Endpoint=https://southeastasia.api.cognitive.microsoft.com/" >> /tmp/immersio.env
           echo "GITHUB_REPOSITORY_OWNER=$OWNER_LOWER" >> /tmp/immersio.env
           scp -i ~/.ssh/deploy_key -P 2222 -o StrictHostKeyChecking=no /tmp/immersio.env ubuntu@100.120.66.114:/opt/immersio/.env
 

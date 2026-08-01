@@ -113,19 +113,10 @@ namespace Immersio.Application.Services
             var language = SessionLanguages.TryGetValue(sessionId, out var lang) ? lang : session.Scenario.Language;
 
             // 1. Core Evaluation: real-time accent / spelling / grammar analyzer
-            var correction = await _llmService.AnalyzeGrammarAsync(userMessage, language, cancellationToken);
+            var correctionTask = _llmService.AnalyzeGrammarAsync(userMessage, language, cancellationToken);
 
-            // 2. Append User message
-            var isCorrect = string.Equals(correction.Corrected.Trim(), userMessage.Trim(), StringComparison.OrdinalIgnoreCase) 
-                            || correction.Explanation.Contains("Perfect", StringComparison.OrdinalIgnoreCase);
-
-            var userMsg = new SessionMessage(
-                session.Id, 
-                "user", 
-                userMessage, 
-                isCorrect ? null : correction.Corrected, 
-                isCorrect ? null : correction.Explanation);
-            
+            // 2. Append User message (in-memory, no DbContext access during LLM calls)
+            var userMsg = new SessionMessage(session.Id, "user", userMessage, null, null);
             _context.SessionMessages.Add(userMsg);
             session.Messages.Add(userMsg);
 
@@ -158,7 +149,17 @@ namespace Immersio.Application.Services
                 validEmotions.AddRange(new[] { "idle", "happy", "angry" });
             }
 
-            var reply = await _llmService.GenerateChatResponseAsync(prompt, language, history, userMessage, validEmotions, cancellationToken);
+            // Run grammar correction and chat reply concurrently — both are independent
+            // LLM HTTP calls (no shared DbContext access), so parallelism is safe.
+            var replyTask = _llmService.GenerateChatResponseAsync(prompt, language, history, userMessage, validEmotions, cancellationToken);
+            await Task.WhenAll(correctionTask, replyTask);
+
+            var correction = await correctionTask;
+            var reply = await replyTask;
+
+            var isCorrect = string.Equals(correction.Corrected.Trim(), userMessage.Trim(), StringComparison.OrdinalIgnoreCase)
+                            || correction.Explanation.Contains("Perfect", StringComparison.OrdinalIgnoreCase);
+            userMsg.SetCorrection(isCorrect ? null : correction.Corrected, isCorrect ? null : correction.Explanation);
             
             // Parse emotion if present (e.g. "[EMOTION: happy]")
             string emotion = "idle";

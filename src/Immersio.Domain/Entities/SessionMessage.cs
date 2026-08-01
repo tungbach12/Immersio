@@ -34,5 +34,11 @@ namespace Immersio.Domain.Entities
             CorrectionText = correctionText;
             CorrectionExplanation = correctionExplanation;
         }
+
+        public void SetCorrection(string? correctionText, string? correctionExplanation)
+        {
+            CorrectionText = correctionText;
+            CorrectionExplanation = correctionExplanation;
+        }
     }
 }

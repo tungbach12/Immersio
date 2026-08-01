@@ -131,7 +131,15 @@ namespace Immersio.Infrastructure.Services
                 body["response_format"] = new { type = "json_object" };
 
             if (!string.IsNullOrWhiteSpace(reasoningEffort) && reasoningEffort != "none")
+            {
                 body["reasoning_effort"] = reasoningEffort;
+            }
+            else
+            {
+                // Hard-disable model reasoning for fast responses (e.g. scenario chat).
+                // "none" previously only omitted the field; DeepSeek-family models reason anyway.
+                body["thinking"] = new { type = "disabled" };
+            }
 
             return body;
         }

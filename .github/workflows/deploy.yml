@@ -160,6 +160,7 @@ jobs:
           echo "Azure__Speech__ApiKey=${{ secrets.AZURE_SPEECH_API_KEY }}" >> /tmp/immersio.env
           echo "Azure__Speech__Region=southeastasia" >> /tmp/immersio.env
           echo "Azure__Speech__Endpoint=https://southeastasia.api.cognitive.microsoft.com/" >> /tmp/immersio.env
+          echo "OpenCode__ApiKey=${{ secrets.OPENCODE_API_KEY }}" >> /tmp/immersio.env
           echo "GITHUB_REPOSITORY_OWNER=$OWNER_LOWER" >> /tmp/immersio.env
           scp -i ~/.ssh/deploy_key -P 2222 -o StrictHostKeyChecking=no /tmp/immersio.env ubuntu@100.120.66.114:/opt/immersio/.env
 

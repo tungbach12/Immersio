@@ -24,6 +24,10 @@ namespace Immersio.Infrastructure.Services
         private readonly IApplicationDbContext _context;
         private const string NvidiaEndpoint = "https://integrate.api.nvidia.com/v1/chat/completions";
         private const string DefaultModel = "meta/llama-4-maverick-17b-128e-instruct";
+        private static readonly SemaphoreSlim _configLock = new(1, 1);
+        private static readonly Dictionary<string, (string Model, string Endpoint, string Effort)> _configCache = new();
+        private static readonly Dictionary<string, DateTime> _cacheStamp = new();
+        private static readonly TimeSpan ConfigCacheTtl = TimeSpan.FromSeconds(30);
 
         public LlmService(HttpClient httpClient, IConfiguration configuration, IApplicationDbContext context)
         {
@@ -36,59 +40,37 @@ namespace Immersio.Infrastructure.Services
         {
             try
             {
-                var modelSetting = await _context.SystemSettings
-                    .FirstOrDefaultAsync(s => s.Key == modelKey, cancellationToken);
-                var endpointSetting = await _context.SystemSettings
-                    .FirstOrDefaultAsync(s => s.Key == "LlmEndpoint", cancellationToken);
-
-                // Map modelKey → per-task reasoning effort key
-                var effortKey = modelKey switch
+                // Short-lived snapshot so concurrent LLM calls (e.g. parallel grammar + chat)
+                // never hit the shared DbContext simultaneously. Config changes propagate
+                // within the TTL, and concurrent calls coalesce on the same snapshot.
+                await _configLock.WaitAsync(cancellationToken);
+                (string Model, string Endpoint, string Effort) snapshot;
+                try
                 {
-                    "ModelChat"      => "ReasoningEffortChat",
-                    "ModelGrammar"   => "ReasoningEffortGrammar",
-                    "ModelFeedback"  => "ReasoningEffortFeedback",
-                    "ModelFlashcard" => "ReasoningEffortFlashcard",
-                    "ModelPhrase"    => "ReasoningEffortPhrase",
-                    _                => "ReasoningEffortChat"
-                };
-                var reasoningEffortSetting = await _context.SystemSettings
-                    .FirstOrDefaultAsync(s => s.Key == effortKey, cancellationToken)
-                    ?? await _context.SystemSettings
-                    .FirstOrDefaultAsync(s => s.Key == "ReasoningEffort", cancellationToken);
-
-                var modelName = !string.IsNullOrWhiteSpace(modelSetting?.Value) ? modelSetting.Value : DefaultModel;
-                var endpoint = !string.IsNullOrWhiteSpace(endpointSetting?.Value) ? endpointSetting.Value : NvidiaEndpoint;
-                var reasoningEffort = !string.IsNullOrWhiteSpace(reasoningEffortSetting?.Value) ? reasoningEffortSetting.Value : "none";
-
-                string apiKey = "";
-                if (endpoint.Contains("groq.com", StringComparison.OrdinalIgnoreCase))
-                {
-                    apiKey = _configuration["Groq:ApiKey"] ?? "";
+                    if (_configCache.TryGetValue(modelKey, out var cached)
+                        && DateTime.UtcNow - _cacheStamp[modelKey] < ConfigCacheTtl)
+                    {
+                        snapshot = cached;
+                    }
+                    else
+                    {
+                        snapshot = await ReadModelConfigAsync(modelKey, cancellationToken);
+                        _configCache[modelKey] = snapshot;
+                        _cacheStamp[modelKey] = DateTime.UtcNow;
+                    }
                 }
-                else if (endpoint.Contains("nvidia.com", StringComparison.OrdinalIgnoreCase) || endpoint.Contains("nvidia", StringComparison.OrdinalIgnoreCase))
+                finally
                 {
-                    apiKey = _configuration["Nvidia:ApiKey"] ?? "";
-                }
-                else if (endpoint.Contains("stepfun.com", StringComparison.OrdinalIgnoreCase) || endpoint.Contains("stepfun", StringComparison.OrdinalIgnoreCase))
-                {
-                    apiKey = _configuration["StepFun:ApiKey"] ?? "";
-                }
-                else if (endpoint.Contains("opencode.ai", StringComparison.OrdinalIgnoreCase))
-                {
-                    apiKey = _configuration["OpenCode:ApiKey"] ?? "";
-                }
-                else
-                {
-                    apiKey = _configuration["Groq:ApiKey"] ?? "";
+                    _configLock.Release();
                 }
 
+                string apiKey = ResolveApiKey(snapshot.Endpoint);
                 Console.WriteLine($"\n[AI DIAGNOSTICS] {DateTime.Now:HH:mm:ss} | Triggering AI Service: '{modelKey}'");
-                Console.WriteLine($"  -> Active Model:   {modelName}");
-                Console.WriteLine($"  -> Target Server:  {endpoint}");
-                if (reasoningEffort != "none")
-                    Console.WriteLine($"  -> Reasoning:      {reasoningEffort}");
-
-                return (modelName, endpoint, apiKey, reasoningEffort);
+                Console.WriteLine($"  -> Active Model:   {snapshot.Model}");
+                Console.WriteLine($"  -> Target Server:  {snapshot.Endpoint}");
+                if (snapshot.Effort != "none")
+                    Console.WriteLine($"  -> Reasoning:      {snapshot.Effort}");
+                return (snapshot.Model, snapshot.Endpoint, apiKey, snapshot.Effort);
             }
             catch (Exception ex)
             {
@@ -98,6 +80,46 @@ namespace Immersio.Infrastructure.Services
                 Console.WriteLine($"  -> Fallback Server:{NvidiaEndpoint}");
                 return (DefaultModel, NvidiaEndpoint, defaultKey, "none");
             }
+        }
+
+        private async Task<(string Model, string Endpoint, string Effort)> ReadModelConfigAsync(string modelKey, CancellationToken cancellationToken)
+        {
+            var modelSetting = await _context.SystemSettings
+                .FirstOrDefaultAsync(s => s.Key == modelKey, cancellationToken);
+            var endpointSetting = await _context.SystemSettings
+                .FirstOrDefaultAsync(s => s.Key == "LlmEndpoint", cancellationToken);
+
+            // Map modelKey → per-task reasoning effort key
+            var effortKey = modelKey switch
+            {
+                "ModelChat"      => "ReasoningEffortChat",
+                "ModelGrammar"   => "ReasoningEffortGrammar",
+                "ModelFeedback"  => "ReasoningEffortFeedback",
+                "ModelFlashcard" => "ReasoningEffortFlashcard",
+                "ModelPhrase"    => "ReasoningEffortPhrase",
+                _                => "ReasoningEffortChat"
+            };
+            var reasoningEffortSetting = await _context.SystemSettings
+                .FirstOrDefaultAsync(s => s.Key == effortKey, cancellationToken)
+                ?? await _context.SystemSettings
+                .FirstOrDefaultAsync(s => s.Key == "ReasoningEffort", cancellationToken);
+
+            var modelName = !string.IsNullOrWhiteSpace(modelSetting?.Value) ? modelSetting.Value : DefaultModel;
+            var endpoint = !string.IsNullOrWhiteSpace(endpointSetting?.Value) ? endpointSetting.Value : NvidiaEndpoint;
+            var reasoningEffort = !string.IsNullOrWhiteSpace(reasoningEffortSetting?.Value) ? reasoningEffortSetting.Value : "none";
+
+            return (modelName, endpoint, reasoningEffort);
+        }
+
+        private string ResolveApiKey(string endpoint)
+        {
+            if (endpoint.Contains("nvidia.com", StringComparison.OrdinalIgnoreCase) || endpoint.Contains("nvidia", StringComparison.OrdinalIgnoreCase))
+                return _configuration["Nvidia:ApiKey"] ?? "";
+            if (endpoint.Contains("stepfun.com", StringComparison.OrdinalIgnoreCase) || endpoint.Contains("stepfun", StringComparison.OrdinalIgnoreCase))
+                return _configuration["StepFun:ApiKey"] ?? "";
+            if (endpoint.Contains("opencode.ai", StringComparison.OrdinalIgnoreCase))
+                return _configuration["OpenCode:ApiKey"] ?? "";
+            return _configuration["Groq:ApiKey"] ?? "";
         }
 
         private void SetJsonContent(HttpRequestMessage request, object requestBody)

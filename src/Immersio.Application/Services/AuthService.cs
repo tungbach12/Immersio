@@ -227,6 +227,15 @@ namespace Immersio.Application.Services
 
         public async Task<UserDto> UpgradeSubscriptionAsync(Guid userId, string tier, string billingCycle, CancellationToken cancellationToken = default)
         {
+            // Security (2026-08-16): /api/subscription/upgrade must ONLY allow the
+            // free "Basic" plan. Paid tiers (Plus/Premium) MUST go through
+            // /api/subscription/create-payment → PayOS. Allowing arbitrary tier
+            // here was a payment-bypass hole (any logged-in user could claim
+            // Premium for free).
+            if (!string.Equals(tier, "Basic", StringComparison.OrdinalIgnoreCase))
+                throw new ConflictException(
+                    "Gói trả phí phải được thanh toán qua cổng PayOS. Vui lòng sử dụng luồng thanh toán.");
+
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 

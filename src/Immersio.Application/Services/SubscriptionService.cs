@@ -36,6 +36,18 @@ namespace Immersio.Application.Services
             if (user is null)
                 throw new NotFoundException("User", userId);
 
+            // Idempotency guard (2026-08-16): prevent duplicate payment links from
+            // double-clicks / refresh. If the user already holds an active
+            // subscription for the same tier that isn't about to expire, refuse to
+            // create another transaction instead of silently duplicating rows.
+            if (user.SubscriptionExpiresAt is { } expires
+                && expires > DateTime.UtcNow.AddDays(1)
+                && string.Equals(user.SubscriptionTier, normalizedTier, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ConflictException(
+                    "Bạn đã có gói hoạt động còn hiệu lực. Vui lòng đợi hết hạn hoặc chọn gói khác.");
+            }
+
             // PayOS orderCode must be a unique number.
             var orderCode = DateTimeOffset.UtcNow.ToUnixTimeSeconds() * 1000 + Random.Shared.Next(0, 1000);
 

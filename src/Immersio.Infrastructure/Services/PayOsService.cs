@@ -119,12 +119,14 @@ namespace Immersio.Infrastructure.Services
                 throw new InvalidOperationException("PayOS webhook signature mismatch.");
 
             var orderCode = data.TryGetProperty("orderCode", out var ocEl) && ocEl.TryGetInt64(out var oc) ? oc : 0;
-            var status = data.TryGetProperty("status", out var stEl) ? stEl.GetString() ?? string.Empty : string.Empty;
+            // PayOS webhook data uses the transaction "code" field ("00" = success),
+            // NOT a "status" field.
+            var code = data.TryGetProperty("code", out var cdEl) ? cdEl.GetString() ?? string.Empty : string.Empty;
             var amount = data.TryGetProperty("amount", out var amEl) && amEl.TryGetInt64(out var am) ? am : 0;
             var desc = data.TryGetProperty("description", out var deEl) ? deEl.GetString() ?? string.Empty : string.Empty;
 
             await Task.CompletedTask;
-            return new PayOsWebhookData(orderCode, status, amount, desc);
+            return new PayOsWebhookData(orderCode, code, amount, desc);
         }
 
         internal static string SignObject(JsonElement data, string key)

@@ -117,7 +117,8 @@ namespace Immersio.Application.Services
             if (transaction.IsPaid)
                 return true;
 
-            if (!string.Equals(data.Status, "PAID", StringComparison.OrdinalIgnoreCase))
+            // PayOS webhook signals a successful payment with transaction code "00".
+            if (!string.Equals(data.Status, "00", StringComparison.Ordinal))
                 return true; // Not a payment success notification; nothing to do.
 
             if (data.Amount < transaction.Amount)

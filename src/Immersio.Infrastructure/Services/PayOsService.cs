@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Linq;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -92,6 +93,71 @@ namespace Immersio.Infrastructure.Services
             var amountPaid = data.TryGetProperty("amountPaid", out var paidEl) && paidEl.TryGetInt64(out var paid) ? paid : 0;
 
             return new PayOsPaymentStatus(status, amountPaid);
+        }
+
+        /// <summary>
+        /// Verifies a PayOS webhook/IPN payload and returns the inner webhook data
+        /// object when the HMAC signature matches. PayOS sends:
+        ///   { "code": "00", "desc": "...", "success": true, "data": {...}, "signature": "..." }
+        /// The signature is HMAC-SHA256(checksumKey, sorted-data-query-string) where
+        /// data keys are sorted alphabetically and serialized as key=value&...
+        /// </summary>
+        public async Task<PayOsWebhookData> VerifyWebhookAsync(string rawBody, CancellationToken cancellationToken = default)
+        {
+            using var doc = JsonDocument.Parse(rawBody);
+            var root = doc.RootElement;
+
+            if (!root.TryGetProperty("data", out var data) || data.ValueKind != JsonValueKind.Object)
+                throw new InvalidOperationException("PayOS webhook missing data.");
+            if (!root.TryGetProperty("signature", out var sigEl) || string.IsNullOrWhiteSpace(sigEl.GetString()))
+                throw new InvalidOperationException("PayOS webhook missing signature.");
+
+            var checksumKey = GetCredentials().checksumKey;
+            var expected = SignObject(data, checksumKey);
+
+            if (!string.Equals(expected, sigEl.GetString(), StringComparison.Ordinal))
+                throw new InvalidOperationException("PayOS webhook signature mismatch.");
+
+            var orderCode = data.TryGetProperty("orderCode", out var ocEl) && ocEl.TryGetInt64(out var oc) ? oc : 0;
+            var status = data.TryGetProperty("status", out var stEl) ? stEl.GetString() ?? string.Empty : string.Empty;
+            var amount = data.TryGetProperty("amount", out var amEl) && amEl.TryGetInt64(out var am) ? am : 0;
+            var desc = data.TryGetProperty("description", out var deEl) ? deEl.GetString() ?? string.Empty : string.Empty;
+
+            await Task.CompletedTask;
+            return new PayOsWebhookData(orderCode, status, amount, desc);
+        }
+
+        internal static string SignObject(JsonElement data, string key)
+        {
+            var pairs = new List<string>();
+            var names = data.EnumerateObject().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal).ToList();
+            foreach (var name in names)
+            {
+                var value = data.GetProperty(name);
+                pairs.Add($"{name}={SerializeValue(value)}");
+            }
+            var query = string.Join('&', pairs);
+            return HmacSha256(key, query);
+        }
+
+        private static string SerializeValue(JsonElement value)
+        {
+            switch (value.ValueKind)
+            {
+                case JsonValueKind.Null:
+                    return string.Empty;
+                case JsonValueKind.String:
+                    return value.GetString() ?? string.Empty;
+                case JsonValueKind.True:
+                    return "true";
+                case JsonValueKind.False:
+                    return "false";
+                case JsonValueKind.Number:
+                    return value.GetRawText();
+                default:
+                    // Arrays/objects serialize to raw JSON (PayOS uses flat scalars in practice).
+                    return value.GetRawText();
+            }
         }
 
         private (string clientId, string apiKey, string checksumKey) GetCredentials()

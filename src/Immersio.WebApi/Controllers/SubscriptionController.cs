@@ -71,6 +71,33 @@ namespace Immersio.WebApi.Controllers
 
             return Ok(ApiResponse<PaymentReturnResult>.SuccessResult(result));
         }
+
+        /// <summary>
+        /// PayOS webhook/IPN receiver. PayOS POSTs the signed payment notification here
+        /// regardless of whether the user returns to the returnUrl, so valid payments
+        /// no longer get stuck as Pending. Returns 200 to acknowledge (and let PayOS
+        /// stop retrying); the service layer verifies the HMAC signature before acting.
+        /// </summary>
+        [HttpPost("payos-webhook")]
+        [AllowAnonymous]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> PayOsWebhook(CancellationToken cancellationToken)
+        {
+            using var reader = new StreamReader(Request.Body);
+            var rawBody = await reader.ReadToEndAsync(cancellationToken);
+
+            try
+            {
+                await _subscriptionService.HandlePayOsWebhookAsync(rawBody, cancellationToken);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or System.Text.Json.JsonException)
+            {
+                // Invalid signature / malformed body: acknowledge without processing.
+                return Ok(ApiResponse.FailureResult("Invalid webhook payload."));
+            }
+
+            return Ok(ApiResponse.SuccessResult("OK"));
+        }
     }
 
     public sealed record UpgradeSubscriptionRequest(string Tier, string BillingCycle);

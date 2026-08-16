@@ -92,7 +92,48 @@ namespace Immersio.Application.Services
             if (status.AmountPaid < transaction.Amount)
                 return new PaymentReturnResult(false, "Số tiền thanh toán chưa đủ.", transaction.Tier, transaction.BillingCycle, transaction.Amount);
 
-            transaction.MarkPaid(orderCode.ToString(), status.Status);
+            await CompletePaidTransactionAsync(transaction, orderCode.ToString(), status.Status, cancellationToken);
+
+            return new PaymentReturnResult(true, "Thanh toán thành công.", transaction.Tier, transaction.BillingCycle, transaction.Amount);
+        }
+
+        /// <summary>
+        /// Handles an incoming PayOS webhook/IPN notification. This is the reliable
+        /// path that marks a transaction Paid even when the user never returns to the
+        /// returnUrl (closes the tab), which previously left valid payments stuck as
+        /// Pending until an admin approved them manually.
+        /// </summary>
+        public async Task<bool> HandlePayOsWebhookAsync(string rawBody, CancellationToken cancellationToken = default)
+        {
+            var data = await _payOsService.VerifyWebhookAsync(rawBody, cancellationToken);
+
+            var transaction = await _context.PaymentTransactions
+                .FirstOrDefaultAsync(t => t.TxnRef == data.OrderCode.ToString(), cancellationToken);
+
+            if (transaction is null)
+                return false; // Unknown order — PayOS retries don't need a failure here.
+
+            // Idempotent: already processed.
+            if (transaction.IsPaid)
+                return true;
+
+            if (!string.Equals(data.Status, "PAID", StringComparison.OrdinalIgnoreCase))
+                return true; // Not a payment success notification; nothing to do.
+
+            if (data.Amount < transaction.Amount)
+                return true; // Underpaid — leave Pending, return response says it's not marked paid.
+
+            await CompletePaidTransactionAsync(transaction, data.OrderCode.ToString(), data.Status, cancellationToken);
+            return true;
+        }
+
+        private async Task CompletePaidTransactionAsync(
+            PaymentTransaction transaction,
+            string vnpTransactionNo,
+            string responseCode,
+            CancellationToken cancellationToken)
+        {
+            transaction.MarkPaid(vnpTransactionNo, responseCode);
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == transaction.UserId, cancellationToken);
             if (user is not null)
@@ -111,8 +152,6 @@ namespace Immersio.Application.Services
             {
                 await _context.SaveChangesAsync(cancellationToken);
             }
-
-            return new PaymentReturnResult(true, "Thanh toán thành công.", transaction.Tier, transaction.BillingCycle, transaction.Amount);
         }
 
         private static long GetAmount(string tier, string billingCycle)

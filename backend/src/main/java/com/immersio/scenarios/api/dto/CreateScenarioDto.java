@@ -1,0 +1,1 @@
+package com.immersio.scenarios.api.dto; public record CreateScenarioDto(String title,String language,String level,String category,String description,String duration,String imageUrl,String contextPrompt,String initialMessage,String avatarUrl){}

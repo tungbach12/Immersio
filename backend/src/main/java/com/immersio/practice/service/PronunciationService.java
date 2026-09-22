@@ -1,0 +1,9 @@
+package com.immersio.practice.service;
+import com.immersio.practice.api.dto.*; import com.immersio.practice.domain.*; import com.immersio.practice.repository.*; import org.springframework.stereotype.Service; import java.util.*;
+@Service public class PronunciationService { private final UserPronunciationLogRepository repo; public PronunciationService(UserPronunciationLogRepository r){repo=r;}
+ public PronunciationLogDto logPronunciation(UUID u,CreatePronunciationLogRequest r){var x=repo.save(new UserPronunciationLog(u,r.phrase(),r.transcript(),Math.max(0,Math.min(100,r.score()))));return dto(x);}
+ public List<PronunciationLogDto> getUserLogs(UUID u){return repo.findAllByUserIdOrderByPracticedAtDesc(u).stream().map(this::dto).toList();}
+ public CefrAnalysisDto analyzeCefrLevel(UUID u){var xs=repo.findAllByUserIdOrderByPracticedAtDesc(u);int n=(int)Math.round(xs.stream().mapToInt(UserPronunciationLog::getScore).average().orElse(0));String l=n>=90?"C1":n>=75?"B2":n>=60?"B1":n>=40?"A2":"A1";return new CefrAnalysisDto(l,n,"blue","Keep practicing your pronunciation.",List.of(new SkillScoreDto("pronunciation",n,"Pronunciation accuracy")),List.of("Practice speaking every day."));}
+ public GeneratedPhraseDto generatePhrase(GeneratePhraseRequest r){String topic=r.topic()==null||r.topic().isBlank()?"everyday life":r.topic();return new GeneratedPhraseDto("Tell me about "+topic+".","Nói cho tôi về "+topic+".","A phrase for practicing "+topic+".");}
+ public DictionaryEntryDto lookupWord(DictionaryLookupRequest r){String w=r.word()==null?"":r.word().trim();return new DictionaryEntryDto(w,"Nghĩa của "+w,"/"+w+"/","noun","Definition for "+w,"Example sentence with "+w+".","Câu ví dụ với "+w+".");}
+ private PronunciationLogDto dto(UserPronunciationLog x){return new PronunciationLogDto(x.getId(),x.getPhrase(),x.getTranscript(),x.getScore(),x.getPracticedAt());}}

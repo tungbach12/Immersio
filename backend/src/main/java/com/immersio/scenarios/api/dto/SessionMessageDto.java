@@ -1,0 +1,1 @@
+package com.immersio.scenarios.api.dto; import java.time.Instant; import java.util.UUID; public record SessionMessageDto(UUID id,UUID sessionId,String senderRole,String text,Instant sentAt,String correctionText,String correctionExplanation){}

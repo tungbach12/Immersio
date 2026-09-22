@@ -1,0 +1,1 @@
+package com.immersio.scenarios.api.dto; import com.immersio.flashcards.api.dto.AddCardDto; import java.util.*; public record FinishSessionResponse(String feedback,List<AddCardDto> suggestedFlashcards,UUID sessionId,boolean isFinished){}

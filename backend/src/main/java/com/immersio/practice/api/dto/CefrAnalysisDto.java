@@ -1,0 +1,1 @@
+package com.immersio.practice.api.dto; import java.util.List; public record CefrAnalysisDto(String currentLevel,int overallScore,String colorTheme,String statusMessage,List<SkillScoreDto> skills,List<String> suggestions){}

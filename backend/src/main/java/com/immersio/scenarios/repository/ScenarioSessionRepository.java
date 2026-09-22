@@ -1,0 +1,1 @@
+package com.immersio.scenarios.repository; import com.immersio.scenarios.domain.ScenarioSession; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface ScenarioSessionRepository extends JpaRepository<ScenarioSession,UUID>{Optional<ScenarioSession> findByIdAndUserId(UUID id,UUID userId);}

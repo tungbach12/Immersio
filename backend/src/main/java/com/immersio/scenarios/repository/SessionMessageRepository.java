@@ -1,0 +1,1 @@
+package com.immersio.scenarios.repository; import com.immersio.scenarios.domain.SessionMessage; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface SessionMessageRepository extends JpaRepository<SessionMessage,UUID>{List<SessionMessage> findBySessionIdOrderBySentAtAsc(UUID id);}

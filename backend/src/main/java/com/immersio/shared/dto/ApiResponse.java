@@ -64,4 +64,13 @@ public class ApiResponse<T> {
     public void setErrors(Object errors) {
         this.errors = errors;
     }
+
+    /**
+     * Mirrors the legacy .NET {@code ApiResponse.Detail => Message} alias — the
+     * deployed SPA reads {@code detail} for error text (e.g. login failures).
+     */
+    @com.fasterxml.jackson.annotation.JsonProperty("detail")
+    public String getDetail() {
+        return message;
+    }
 }

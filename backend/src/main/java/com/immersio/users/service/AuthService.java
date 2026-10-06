@@ -92,7 +92,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponse loginWithGoogle(GoogleAuthRequest request) {
-        GoogleTokenVerifier.GoogleProfile profile = googleTokenVerifier.verify(request.idToken());
+        GoogleTokenVerifier.GoogleProfile profile = googleTokenVerifier.verify(request.resolvedToken());
         String email = normalize(profile.email());
         User user = userRepository.findByEmail(email).filter(candidate -> !candidate.isDeleted()).orElse(null);
         if (user == null) {
@@ -160,7 +160,7 @@ public class AuthService {
             resetCode.markUsed();
             throw new UnauthorizedException("Bạn đã nhập sai quá nhiều lần. Vui lòng yêu cầu mã mới.");
         }
-        if (!passwordEncoder.matches(request.code(), resetCode.getCodeHash())) {
+        if (!passwordEncoder.matches(request.resolvedCode(), resetCode.getCodeHash())) {
             resetCode.registerAttempt();
             throw new UnauthorizedException("Mã OTP không hợp lệ hoặc đã hết hạn.");
         }

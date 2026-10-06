@@ -28,10 +28,9 @@ import java.util.Map;
  *
  * <p>Configuration (graceful empty defaults):</p>
  * <ul>
- *   <li>{@code openai.api-key} — sent as {@code Authorization: Bearer} when set;
- *       keyless local endpoints are supported (header omitted)</li>
- *   <li>{@code openai.base-url} — default {@code https://api.openai.com/v1}</li>
- *   <li>{@code openai.model} — default {@code gpt-4o-mini}</li>
+ *   <li>{@code openai.api-key} — 9Router key, sent as {@code Authorization: *** when set</li>
+ *   <li>{@code openai.base-url} — default {@code https://9routerhelios.duckdns.org/v1}</li>
+ *   <li>{@code openai.model} — default {@code immersio}</li>
  * </ul>
  * <p>When the endpoint is unreachable or answers with an error, the legacy
  * .NET default entries are returned so the UI keeps working.</p>
@@ -39,8 +38,8 @@ import java.util.Map;
 @Service
 public class PracticeLlmClient {
 
-    static final String DEFAULT_BASE_URL = "https://api.openai.com/v1";
-    static final String DEFAULT_MODEL = "gpt-4o-mini";
+    static final String DEFAULT_BASE_URL = "https://9routerhelios.duckdns.org/v1";
+    static final String DEFAULT_MODEL = "immersio";
     static final String CHAT_COMPLETIONS_PATH = "/chat/completions";
     static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
     static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(20);
@@ -61,9 +60,9 @@ public class PracticeLlmClient {
     private final HttpClient http;
 
     public PracticeLlmClient(
-            @Value("${openai.api-key:}") String apiKey,
-            @Value("${openai.base-url:https://api.openai.com/v1}") String baseUrl,
-            @Value("${openai.model:gpt-4o-mini}") String model) {
+            @Value("${openai.api-key:${NINE_ROUTER_API_KEY:}}") String apiKey,
+            @Value("${openai.base-url:https://9routerhelios.duckdns.org/v1}") String baseUrl,
+            @Value("${openai.model:immersio}") String model) {
         this.apiKey = apiKey == null ? "" : apiKey.trim();
         String trimmedBase = baseUrl == null ? "" : baseUrl.trim();
         this.baseUrl = trimmedBase.replaceAll("/+$", "");

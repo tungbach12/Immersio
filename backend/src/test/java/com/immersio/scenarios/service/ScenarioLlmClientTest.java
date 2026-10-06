@@ -68,49 +68,28 @@ class ScenarioLlmClientTest {
     // ------------------------------------------------------------------
 
     @Nested
-    @DisplayName("Endpoint to API Key resolution")
+    @DisplayName("Single 9Router API key resolution")
     class ApiKeyResolution {
 
         private final SystemSettingRepository repo = Mockito.mock(SystemSettingRepository.class);
         private final ScenarioLlmClient client = new ScenarioLlmClient(
                 repo,
-                "nv-key-123",
-                "groq-key-456",
-                "step-key-789",
-                "open-key-012",
+                "nine-router-key-123",
                 ScenarioLlmClient.DEFAULT_MODEL,
                 ScenarioLlmClient.DEFAULT_ENDPOINT);
 
         @Test
-        void routesNvidiaHostsToNvidiaKey() {
+        void alwaysReturnsSingleKeyRegardlessOfEndpoint() {
             assertThat(client.resolveApiKey("https://integrate.api.nvidia.com/v1/chat/completions"))
-                    .isEqualTo("nv-key-123");
-            assertThat(client.resolveApiKey("https://custom.nvidia.local/v1"))
-                    .isEqualTo("nv-key-123");
-        }
-
-        @Test
-        void routesStepFunHostsToStepFunKey() {
-            assertThat(client.resolveApiKey("https://api.stepfun.com/v1/chat/completions"))
-                    .isEqualTo("step-key-789");
-        }
-
-        @Test
-        void routesOpenCodeHostsToOpenCodeKey() {
-            assertThat(client.resolveApiKey("https://opencode.ai/zen/v1/chat/completions"))
-                    .isEqualTo("open-key-012");
-        }
-
-        @Test
-        void routesUnknownOrGroqHostsToGroqCatchAll() {
+                    .isEqualTo("nine-router-key-123");
             assertThat(client.resolveApiKey("https://api.groq.com/openai/v1/chat/completions"))
-                    .isEqualTo("groq-key-456");
-            assertThat(client.resolveApiKey("http://localhost:11434/v1/chat/completions"))
-                    .isEqualTo("groq-key-456");
+                    .isEqualTo("nine-router-key-123");
+            assertThat(client.resolveApiKey("https://9routerhelios.duckdns.org/v1/chat/completions"))
+                    .isEqualTo("nine-router-key-123");
             assertThat(client.resolveApiKey(""))
-                    .isEqualTo("groq-key-456");
+                    .isEqualTo("nine-router-key-123");
             assertThat(client.resolveApiKey(null))
-                    .isEqualTo("groq-key-456");
+                    .isEqualTo("nine-router-key-123");
         }
 
         @Test
@@ -140,13 +119,13 @@ class ScenarioLlmClientTest {
             when(repo.findByKey("ReasoningEffortChat")).thenReturn(Optional.of(new SystemSetting("ReasoningEffortChat", "medium")));
 
             ScenarioLlmClient client = new ScenarioLlmClient(
-                    repo, "nv-key", "gr-key", "st-key", "op-key",
+                    repo, "nine-router-key",
                     ScenarioLlmClient.DEFAULT_MODEL, ScenarioLlmClient.DEFAULT_ENDPOINT);
 
             ScenarioLlmClient.ResolvedConfig resolved = client.resolve("ModelChat");
             assertThat(resolved.model()).isEqualTo("custom-model");
             assertThat(resolved.endpoint()).isEqualTo("https://integrate.api.nvidia.com/v1/chat/completions");
-            assertThat(resolved.apiKey()).isEqualTo("nv-key");
+            assertThat(resolved.apiKey()).isEqualTo("nine-router-key");
             assertThat(resolved.reasoningEffort()).isEqualTo("medium");
         }
 
@@ -159,13 +138,13 @@ class ScenarioLlmClientTest {
             when(repo.findByKey("ReasoningEffort")).thenReturn(Optional.of(new SystemSetting("ReasoningEffort", "low")));
 
             ScenarioLlmClient client = new ScenarioLlmClient(
-                    repo, "nv-key", "gr-key", "st-key", "op-key",
+                    repo, "nine-router-key",
                     ScenarioLlmClient.DEFAULT_MODEL, ScenarioLlmClient.DEFAULT_ENDPOINT);
 
             ScenarioLlmClient.ResolvedConfig resolved = client.resolve("ModelGrammar");
             assertThat(resolved.model()).isEqualTo("g-model");
             assertThat(resolved.reasoningEffort()).isEqualTo("low");
-            assertThat(resolved.apiKey()).isEqualTo("gr-key");
+            assertThat(resolved.apiKey()).isEqualTo("nine-router-key");
         }
 
         @Test
@@ -174,14 +153,14 @@ class ScenarioLlmClientTest {
             when(repo.findByKey(Mockito.anyString())).thenThrow(new RuntimeException("DB down"));
 
             ScenarioLlmClient client = new ScenarioLlmClient(
-                    repo, "nv-fallback", "gr-fallback", "", "",
-                    "meta/llama-4-maverick-17b-128e-instruct",
-                    "https://integrate.api.nvidia.com/v1/chat/completions");
+                    repo, "nine-router-fallback",
+                    "immersio",
+                    "https://9routerhelios.duckdns.org/v1/chat/completions");
 
             ScenarioLlmClient.ResolvedConfig resolved = client.resolve("ModelChat");
-            assertThat(resolved.model()).isEqualTo("meta/llama-4-maverick-17b-128e-instruct");
-            assertThat(resolved.endpoint()).isEqualTo("https://integrate.api.nvidia.com/v1/chat/completions");
-            assertThat(resolved.apiKey()).isEqualTo("nv-fallback");
+            assertThat(resolved.model()).isEqualTo("immersio");
+            assertThat(resolved.endpoint()).isEqualTo("https://9routerhelios.duckdns.org/v1/chat/completions");
+            assertThat(resolved.apiKey()).isEqualTo("nine-router-fallback");
             assertThat(resolved.reasoningEffort()).isEqualTo("none");
         }
 
@@ -193,7 +172,7 @@ class ScenarioLlmClientTest {
             when(repo.findByKey("ReasoningEffortFeedback")).thenReturn(Optional.of(new SystemSetting("ReasoningEffortFeedback", "none")));
 
             ScenarioLlmClient client = new ScenarioLlmClient(
-                    repo, "", "gr-key", "", "",
+                    repo, "nine-router-key",
                     ScenarioLlmClient.DEFAULT_MODEL, ScenarioLlmClient.DEFAULT_ENDPOINT);
 
             ScenarioLlmClient.ResolvedConfig first = client.resolve("ModelFeedback");

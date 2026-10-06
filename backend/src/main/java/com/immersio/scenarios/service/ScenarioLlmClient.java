@@ -42,26 +42,24 @@ import java.util.stream.Collectors;
  *       ({@code ModelChat}, {@code ModelGrammar}, {@code ModelFeedback}, {@code ModelFlashcard}
  *       plus the shared {@code LlmEndpoint} and per-feature {@code ReasoningEffort*} keys) and
  *       cached for 30 seconds so concurrent grammar + chat calls never stampede the table.</li>
- *   <li>The API key is derived from the resolved endpoint: NVIDIA → {@code nvidia.api-key},
- *       StepFun → {@code stepfun.api-key}, opencode.ai → {@code opencode.api-key}, anything
- *       else → {@code groq.api-key} (same precedence as .NET).</li>
+ *   <li>All AI traffic goes through a single 9Router endpoint with one API key
+ *       ({@code nine-router.api-key}) — production model {@code immersio}.</li>
  *   <li>When the settings table cannot be read the client falls back to
- *       {@code llm.fallback-model} / {@code llm.fallback-endpoint} and the NVIDIA key —
- *       defaults identical to the .NET constants.</li>
+ *       {@code llm.fallback-model} / {@code llm.fallback-endpoint} and the 9Router key.</li>
  *   <li>Every resolution emits the {@code [AI DIAGNOSTICS]} console block .NET logged.</li>
  * </ul>
  *
- * <p>Property resolution order for keys (all graceful, empty defaults):
- * {@code nvidia.api-key} → {@code Nvidia__ApiKey} (production .env) → {@code NVIDIA_API_KEY}.</p>
+ * <p>Property resolution order for the key:
+ * {@code nine-router.api-key} → {@code NINE_ROUTER_API_KEY}.</p>
  */
 @Service
 public class ScenarioLlmClient {
 
     private static final Logger log = LoggerFactory.getLogger(ScenarioLlmClient.class);
 
-    // .NET LlmService constants — kept identical so fallback behaviour matches production.
-    static final String DEFAULT_MODEL = "meta/llama-4-maverick-17b-128e-instruct";
-    static final String DEFAULT_ENDPOINT = "https://integrate.api.nvidia.com/v1/chat/completions";
+    // 9Router single-endpoint defaults — all AI traffic goes here.
+    static final String DEFAULT_MODEL = "immersio";
+    static final String DEFAULT_ENDPOINT = "https://9routerhelios.duckdns.org/v1/chat/completions";
 
     /** .NET {@code ConfigCacheTtl} — short-lived snapshot of the SystemSettings rows. */
     static final Duration CONFIG_CACHE_TTL = Duration.ofSeconds(30);
@@ -101,7 +99,7 @@ public class ScenarioLlmClient {
     }
 
     private final SystemSettingRepository systemSettings;
-    private final Map<String, String> apiKeys;
+    private final String nineRouterApiKey;
     private final String fallbackModel;
     private final String fallbackEndpoint;
     private final HttpClient http;
@@ -112,18 +110,11 @@ public class ScenarioLlmClient {
 
     public ScenarioLlmClient(
             SystemSettingRepository systemSettings,
-            @Value("${nvidia.api-key:${Nvidia__ApiKey:${NVIDIA_API_KEY:}}}") String nvidiaApiKey,
-            @Value("${groq.api-key:${Groq__ApiKey:${GROQ_API_KEY:}}}") String groqApiKey,
-            @Value("${stepfun.api-key:${StepFun__ApiKey:${STEPFUN_API_KEY:}}}") String stepFunApiKey,
-            @Value("${opencode.api-key:${OpenCode__ApiKey:${OPENCODE_API_KEY:}}}") String openCodeApiKey,
+            @Value("${nine-router.api-key:${NINE_ROUTER_API_KEY:}}") String nineRouterApiKey,
             @Value("${llm.fallback-model:" + DEFAULT_MODEL + "}") String fallbackModel,
             @Value("${llm.fallback-endpoint:" + DEFAULT_ENDPOINT + "}") String fallbackEndpoint) {
         this.systemSettings = systemSettings;
-        this.apiKeys = Map.of(
-                "nvidia", trimToEmpty(nvidiaApiKey),
-                "stepfun", trimToEmpty(stepFunApiKey),
-                "opencode", trimToEmpty(openCodeApiKey),
-                "groq", trimToEmpty(groqApiKey));
+        this.nineRouterApiKey = trimToEmpty(nineRouterApiKey);
         this.fallbackModel = trimToEmpty(fallbackModel).isEmpty() ? DEFAULT_MODEL : trimToEmpty(fallbackModel);
         this.fallbackEndpoint = trimToEmpty(fallbackEndpoint).isEmpty() ? DEFAULT_ENDPOINT : trimToEmpty(fallbackEndpoint);
         this.http = HttpClient.newBuilder().connectTimeout(CONNECT_TIMEOUT).build();
@@ -311,25 +302,14 @@ public class ScenarioLlmClient {
         return "ReasoningEffortChat";
     }
 
-    /** .NET {@code ResolveApiKey}: endpoint substring → provider key, Groq as the catch-all. */
+    /** Single-key resolution: every endpoint uses the 9Router key. */
     String resolveApiKey(String endpoint) {
-        String target = endpoint == null ? "" : endpoint.toLowerCase(Locale.ROOT);
-        if (target.contains("nvidia")) {
-            return apiKeys.get("nvidia");
-        }
-        if (target.contains("stepfun")) {
-            return apiKeys.get("stepfun");
-        }
-        if (target.contains("opencode.ai")) {
-            return apiKeys.get("opencode");
-        }
-        return apiKeys.get("groq");
+        return nineRouterApiKey;
     }
 
-    /** .NET fallback key: {@code Nvidia:ApiKey ?? Groq:ApiKey ?? ""}. */
+    /** Fallback key is the same single 9Router key. */
     private String defaultApiKey() {
-        String nvidia = apiKeys.get("nvidia");
-        return nvidia == null || nvidia.isBlank() ? apiKeys.get("groq") : nvidia;
+        return nineRouterApiKey;
     }
 
     private void logDiagnostics(String modelKey, ModelConfig config) {

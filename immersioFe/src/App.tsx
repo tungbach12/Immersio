@@ -1,30 +1,39 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
-import Splash from "@/pages/Splash";
-import Intro from "@/pages/Intro";
-import Onboarding from "@/pages/Onboarding";
-import Login from "@/pages/auth/Login";
-import Register from "@/pages/auth/Register";
-import ForgotPassword from "@/pages/auth/ForgotPassword";
-import PayOsReturn from "@/pages/payment/PayOsReturn";
-import StudentDashboard from "@/pages/student/Dashboard";
-import Scenarios from "@/pages/student/Scenarios";
-import ScenarioDetail from "@/pages/student/ScenarioDetail";
-import VocalLab from "@/pages/student/VocalLab";
-import FlashcardsPage from "@/pages/student/FlashcardsPage";
-import DictionaryPage from "@/pages/student/DictionaryPage";
-import Profile from "@/pages/student/Profile";
-import Subscription from "@/pages/student/Subscription";
-import Notifications from "@/pages/student/Notifications";
-import HelpCenter from "@/pages/student/Help";
-import AdminDashboard from "@/pages/admin/Dashboard";
-import AITuning from "@/pages/admin/AITuning";
-import UsersManagement from "@/pages/admin/UsersManagement";
-import TransactionsManagement from "@/pages/admin/TransactionsManagement";
-import ScenarioBuilder from "@/pages/admin/ScenarioBuilder";
-import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
-import DeleteAccount from "@/pages/legal/DeleteAccount";
+import { ToastProvider } from "@/components/ui/Toast";
+
+const Intro = lazy(() => import("@/pages/Intro"));
+const Onboarding = lazy(() => import("@/pages/Onboarding"));
+const Login = lazy(() => import("@/pages/auth/Login"));
+const Register = lazy(() => import("@/pages/auth/Register"));
+const ForgotPassword = lazy(() => import("@/pages/auth/ForgotPassword"));
+const PayOsReturn = lazy(() => import("@/pages/payment/PayOsReturn"));
+const StudentDashboard = lazy(() => import("@/pages/student/Dashboard"));
+const Scenarios = lazy(() => import("@/pages/student/Scenarios"));
+const ScenarioDetail = lazy(() => import("@/pages/student/ScenarioDetail"));
+const VocalLab = lazy(() => import("@/pages/student/VocalLab"));
+const FlashcardsPage = lazy(() => import("@/pages/student/FlashcardsPage"));
+const DictionaryPage = lazy(() => import("@/pages/student/DictionaryPage"));
+const Profile = lazy(() => import("@/pages/student/Profile"));
+const Subscription = lazy(() => import("@/pages/student/Subscription"));
+const Notifications = lazy(() => import("@/pages/student/Notifications"));
+const HelpCenter = lazy(() => import("@/pages/student/Help"));
+const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
+const AITuning = lazy(() => import("@/pages/admin/AITuning"));
+const UsersManagement = lazy(() => import("@/pages/admin/UsersManagement"));
+const TransactionsManagement = lazy(() => import("@/pages/admin/TransactionsManagement"));
+const ScenarioBuilder = lazy(() => import("@/pages/admin/ScenarioBuilder"));
+const PrivacyPolicy = lazy(() => import("@/pages/legal/PrivacyPolicy"));
+const DeleteAccount = lazy(() => import("@/pages/legal/DeleteAccount"));
+
+function PageLoading() {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center" role="status" aria-label="Loading page">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
+    </div>
+  );
+}
 
 function ThemeManager() {
   const location = useLocation();
@@ -39,14 +48,13 @@ function ThemeManager() {
   return null;
 }
 
-import { ToastProvider } from "@/components/ui/Toast";
-
 export default function App() {
   return (
     <ToastProvider>
       <Router>
       <ThemeManager />
-      <Routes>
+      <Suspense fallback={<PageLoading />}>
+        <Routes>
         <Route path="/" element={<Intro />} />
         <Route path="/intro" element={<Intro />} />
         <Route path="/login" element={<Login />} />
@@ -83,7 +91,8 @@ export default function App() {
           <Route path="ai-tuning" element={<AITuning />} />
           <Route index element={<Navigate to="dashboard" replace />} />
         </Route>
-      </Routes>
+        </Routes>
+      </Suspense>
       </Router>
     </ToastProvider>
   );

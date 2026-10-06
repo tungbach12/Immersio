@@ -1,7 +1,8 @@
 # Immersio — Deployment Guide
 
 Full step-by-step guide for deploying Immersio to production.
-Architecture: **React SPA (Vercel or VPS + Nginx)** + **ASP.NET Core 9 API (Docker on VPS)** + **PostgreSQL (Docker)**.
+Architecture: **React SPA (Vercel or VPS + Nginx)** + **Java 21 Spring Modulith API (Docker on VPS)** + **PostgreSQL (Docker)**.  
+*(Legacy .NET 9 backend preserved under `src/` as a zero-risk rollback option.)*
 
 ---
 
@@ -10,17 +11,18 @@ Architecture: **React SPA (Vercel or VPS + Nginx)** + **ASP.NET Core 9 API (Dock
 1. [Architecture Overview](#1-architecture-overview)
 2. [Prerequisites](#2-prerequisites)
 3. [VPS Setup (first time only)](#3-vps-setup-first-time-only)
-4. [GitHub Repository Secrets](#4-github-repository-secrets)
-5. [Backend Secrets on VPS](#5-backend-secrets-on-vps)
-6. [Nginx Setup](#6-nginx-setup)
-7. [SSL with Certbot (HTTPS)](#7-ssl-with-certbot-https)
-8. [CI/CD Pipeline (GitHub Actions)](#8-cicd-pipeline-github-actions)
-9. [Frontend on Vercel (alternative)](#9-frontend-on-vercel-alternative)
-10. [Manual Deploy (without CI)](#10-manual-deploy-without-ci)
-11. [Database Management](#11-database-management)
-12. [Monitoring & Logs](#12-monitoring--logs)
-13. [Rollback](#13-rollback)
-14. [Environment Variable Reference](#14-environment-variable-reference)
+4. [Backend Architecture: Java 21 Spring Modulith](#4-backend-architecture-java-21-spring-modulith)
+5. [GitHub Repository Secrets](#5-github-repository-secrets)
+6. [Backend Secrets on VPS](#6-backend-secrets-on-vps)
+7. [Nginx Setup](#7-nginx-setup)
+8. [SSL with Certbot (HTTPS)](#8-ssl-with-certbot-https)
+9. [CI/CD Pipeline (GitHub Actions)](#9-cicd-pipeline-github-actions)
+10. [Frontend on Vercel (alternative)](#10-frontend-on-vercel-alternative)
+11. [Manual Deploy (without CI)](#11-manual-deploy-without-ci)
+12. [Database Management & Cutover](#12-database-management--cutover)
+13. [Monitoring & Logs](#13-monitoring--logs)
+14. [Rollback to .NET](#14-rollback-to-net)
+15. [Environment Variable Reference](#15-environment-variable-reference)
 
 ---
 
@@ -42,7 +44,7 @@ Internet
 | Component | Where | How |
 |-----------|-------|-----|
 | React frontend | VPS `/var/www/immersio` | Built by CI, copied via SCP |
-| ASP.NET Core API | Docker container on VPS | Image pulled from GHCR |
+| Java 21 Spring Modulith API | Docker container on VPS (`ghcr.io/<owner>/immersio-be-java:latest`) | Image pulled from GHCR |
 | PostgreSQL | Docker container on VPS | Volume-mounted, never exposed publicly |
 | Nginx | Native on VPS | Reverse proxy + SPA static host |
 
@@ -127,7 +129,22 @@ ssh -i ~/.ssh/immersio_deploy azureuser@YOUR_VPS_IP
 
 ---
 
-## 4. GitHub Repository Secrets
+## 4. Backend Architecture: Java 21 Spring Modulith
+
+Production runs the Java backend from `backend/` (Spring Boot 4.1, Java 21, Spring Modulith):
+
+| Piece | Detail |
+|---|---|
+| Image | `ghcr.io/<owner>/immersio-be-java:latest` (multi-arch amd64+arm64, built by CI from `backend/Dockerfile`) |
+| Port | `5249` (same as before — nginx config unchanged in that respect) |
+| Config | `backend/src/main/resources/application.yml` — reads the **same env names** the .NET stack used (`Jwt__Key`, `Google__ClientId`, `Email__Smtp__*`, `PayOS__*`, …) via placeholder fallbacks, plus explicit `SPRING_DATASOURCE_*` from `docker-compose.yml` |
+| Schema | Flyway (`backend/src/main/resources/db/migration`). On the existing production DB Flyway **baselines** (V1 is skipped, schema already exists) and Hibernate runs `ddl-auto: validate` at boot |
+| Passwords | Legacy .NET PBKDF2-SHA512 hashes verify transparently and are re-hashed to BCrypt on first login (upgrade-on-login) |
+| Legacy code | `src/` (.NET) + `ghcr.io/<owner>/immersio-be:latest` remain published — rollback is a one-line compose change (see [Rollback to .NET](#14-rollback-to-net)) |
+
+---
+
+## 5. GitHub Repository Secrets
 
 Go to: **GitHub repo → Settings → Secrets and variables → Actions → New repository secret**
 
@@ -148,7 +165,7 @@ openssl rand -base64 32
 
 ---
 
-## 5. Backend Secrets on VPS
+## 6. Backend Secrets on VPS
 
 The backend reads secrets from `secrets.env` in the deployment folder. This file is **never committed to git** and **never sent by CI** — you create it once on the VPS manually.
 
@@ -207,9 +224,9 @@ chmod 600 /home/azureuser/immersio/secrets.env
 
 ---
 
-## 6. Nginx Setup
+## 7. Nginx Setup
 
-### 6.1 Copy config to VPS
+### 7.1 Copy config to VPS
 
 ```bash
 # From local machine
@@ -225,7 +242,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-### 6.2 If using a domain — update server_name
+### 7.2 If using a domain — update server_name
 
 Edit `/etc/nginx/sites-available/immersio`:
 
@@ -240,7 +257,7 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ---
 
-## 7. SSL with Certbot (HTTPS)
+## 8. SSL with Certbot (HTTPS)
 
 ```bash
 # Replace with your actual domain
@@ -256,7 +273,7 @@ Certbot automatically modifies your Nginx config to add SSL and redirect HTTP �
 
 ---
 
-## 8. CI/CD Pipeline (GitHub Actions)
+## 9. CI/CD Pipeline (GitHub Actions)
 
 The workflow file is at [.github/workflows/deploy.yml](.github/workflows/deploy.yml).
 
@@ -269,7 +286,7 @@ push to main
     │     npm ci → npm run build → upload artifact (dist/)
     │
     ├── [Job: build-backend]  (runs in parallel)
-    │     docker buildx → push image to ghcr.io/OWNER/immersio-be:latest
+    │     docker buildx → push image to ghcr.io/OWNER/immersio-be-java:latest
     │
     └── [Job: deploy]  (waits for both jobs above)
           download artifact (dist/)
@@ -285,9 +302,9 @@ push to main
 
 ### Enable pipeline
 
-1. All 4 secrets from [Section 4](#4-github-repository-secrets) must be set.
-2. `secrets.env` must exist on VPS (see [Section 5](#5-backend-secrets-on-vps)).
-3. Nginx must be running (see [Section 6](#6-nginx-setup)).
+1. All 4 secrets from [Section 5](#5-github-repository-secrets) must be set.
+2. `secrets.env` must exist on VPS (see [Section 6](#6-backend-secrets-on-vps)).
+3. Nginx must be running (see [Section 7](#7-nginx-setup)).
 4. Push to `main` — GitHub Actions starts automatically.
 
 ### Monitor a running pipeline
@@ -298,11 +315,11 @@ push to main
 
 ---
 
-## 9. Frontend on Vercel (alternative)
+## 10. Frontend on Vercel (alternative)
 
 If you want to host the frontend on Vercel separately instead of on the VPS:
 
-### 9.1 Connect repo
+### 10.1 Connect repo
 
 1. Log in to [vercel.com](https://vercel.com)
 2. **New Project → Import** your GitHub repo
@@ -311,7 +328,7 @@ If you want to host the frontend on Vercel separately instead of on the VPS:
 5. Build command: `npm run build`
 6. Output directory: `dist`
 
-### 9.2 Set environment variables in Vercel dashboard
+### 10.2 Set environment variables in Vercel dashboard
 
 **Project → Settings → Environment Variables:**
 
@@ -321,20 +338,20 @@ If you want to host the frontend on Vercel separately instead of on the VPS:
 | `APP_URL` | Your Vercel URL (e.g. `https://immersio.vercel.app`) |
 | `GROQ_API_KEY` | Your Groq API key (used by serverless `/api/chat` and `/api/tts` routes) |
 
-### 9.3 Update backend CORS
+### 10.3 Update backend CORS
 
 In `secrets.env` on VPS, add your Vercel domain to the allowed origins:
 ```env
 AllowedOrigins=https://immersio.vercel.app
 ```
 
-### 9.4 Auto-deploy
+### 10.4 Auto-deploy
 
 Every push to `main` triggers a Vercel deployment automatically. No further setup needed.
 
 ---
 
-## 10. Manual Deploy (without CI)
+## 11. Manual Deploy (without CI)
 
 Useful for one-off deploys or if GitHub Actions is not set up yet.
 
@@ -344,10 +361,10 @@ Useful for one-off deploys or if GitHub Actions is not set up yet.
 # Login to GHCR
 echo $GITHUB_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
 
-# Build and push
-cd src
-docker build -t ghcr.io/YOUR_GITHUB_USERNAME/immersio-be:latest .
-docker push ghcr.io/YOUR_GITHUB_USERNAME/immersio-be:latest
+# Build and push (multi-arch: add --platform linux/amd64,linux/arm64/v8 with buildx)
+cd backend
+docker build -t ghcr.io/YOUR_GITHUB_USERNAME/immersio-be-java:latest .
+docker push ghcr.io/YOUR_GITHUB_USERNAME/immersio-be-java:latest
 ```
 
 ### Build frontend
@@ -391,22 +408,32 @@ docker image prune -f
 
 ---
 
-## 11. Database Management
+## 12. Database Management & Cutover
 
-### Run EF Core migrations (production)
+### Schema migrations (production)
 
-Migrations run automatically on startup via `app.MigrateDatabase()` in `Program.cs`. No manual step needed after deploy.
+Migrations are **Flyway** SQL files in `backend/src/main/resources/db/migration/V*__*.sql` and run automatically on startup.
 
-### Manual migration (if needed)
+On the **existing production database** (schema created by the .NET EF Core era):
 
-```bash
-# From local machine, targeting production DB (use carefully)
-cd src
-dotnet ef database update \
-  --project Immersio.Infrastructure \
-  --startup-project Immersio.WebApi \
-  --connection "Host=YOUR_VPS_IP;Port=5432;Database=ImmersioDb;Username=postgres;Password=YOUR_DB_PASSWORD"
-```
+1. The schema is non-empty and there is no `flyway_schema_history` table → Flyway **baselines at V1**, i.e. `V1__initial_schema.sql` is *skipped* (no re-creation, no data touched).
+2. Hibernate then runs `spring.jpa.hibernate.ddl-auto: validate` — the app refuses to start if any entity does not match the live schema (this is the cutover safety gate).
+3. The only write Flyway makes is one baseline row in `flyway_schema_history`.
+
+Fresh databases get the full `V1` schema applied normally.
+
+### Adding a migration
+
+Create `V<N>__<description>.sql` (N = next version). **Never edit an already-applied file** — production has it recorded by checksum.
+
+### Cutover checklist (.NET → Java)
+
+1. Take a DB backup first: `docker exec immersio-db pg_dump -U postgres -d ImmersioDb -Fc > pre-java-cutover.dump`
+2. Push to `main` → CI builds `immersio-be-java:latest`, deploys via compose.
+3. Verify: `curl http://localhost/api/health` → `{"success":true,...,"status":"UP"}`.
+4. Verify login with an existing account (legacy PBKDF2 hash → BCrypt upgrade path).
+5. Watch logs: `docker logs immersio-api --tail 200` — Flyway baseline line + Hibernate validate success.
+6. If anything is wrong → [Rollback to .NET](#14-rollback-to-net) (one line + `docker compose up -d`).
 
 ### Backup database
 
@@ -430,7 +457,7 @@ docker exec -i immersio-db psql -U postgres ImmersioDb < ~/backup_20260101.sql
 
 ---
 
-## 12. Monitoring & Logs
+## 13. Monitoring & Logs
 
 ### Container status
 
@@ -481,26 +508,37 @@ curl http://localhost/api/health
 
 ---
 
-## 13. Rollback
+## 14. Rollback to .NET
 
-### Rollback Docker image to previous
+The legacy ASP.NET backend remains published as `ghcr.io/<owner>/immersio-be:latest`, and the
+previous image stays cached on the VPS (`docker image prune -f` only removes *dangling* images).
+
+### Instant rollback (VPS, ~15 seconds)
 
 ```bash
-# On VPS
-docker compose down
+ssh ubuntu@100.120.66.114 -p 2222
+cd /opt/immersio
 
-# Tag the previous image (if you have the digest)
-docker pull ghcr.io/YOUR_GITHUB_USERNAME/immersio-be:previous-tag
+# keep a copy of the Java compose first (so the next CI push is the only thing that reverts it)
+cp docker-compose.yml docker-compose.java.yml
 
-# Edit docker-compose.yml to use that tag temporarily
-# Then restart
+# flip back to the .NET image
+sed -i 's|immersio-be-java:latest|immersio-be:latest|' docker-compose.yml
+
 docker compose up -d
+curl -s http://127.0.0.1:5249/api/health   # .NET has no /api/health — use /swagger instead if needed
+docker logs immersio-api --tail 50
 ```
 
-### Quick rollback via GitHub Actions
+### Durable rollback (source of truth)
 
-1. Find the last good commit in GitHub → **Actions** tab
-2. Manually re-run that workflow run (click **Re-run jobs**)
+```bash
+git revert <java-cutover-commit> && git push origin main
+# CI redeploys both frontend and the .NET backend image
+```
+
+> Note: the database does NOT need rolling back. Flyway only added a
+> `flyway_schema_history` table; the .NET EF Core stack ignores it.
 
 ### Rollback frontend only
 
@@ -512,7 +550,7 @@ sudo rsync -a /var/www/immersio-backup/ /var/www/immersio/
 
 ---
 
-## 14. Environment Variable Reference
+## 15. Environment Variable Reference
 
 ### GitHub Actions secrets
 

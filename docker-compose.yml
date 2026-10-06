@@ -26,17 +26,18 @@ services:
           memory: 128M
 
   immersio-api:
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-tungbach12}/immersio-be:latest
+    # Java 21 Spring Modulith backend (see backend/). The legacy .NET image is
+    # still published as immersio-be:latest — rollback = revert this image line.
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-tungbach12}/immersio-be-java:latest
     container_name: immersio-api
     restart: always
     environment:
-      - ConnectionStrings__DefaultConnection=Host=postgres-db;Port=5432;Database=ImmersioDb;Username=postgres;Password=${DB_PASSWORD:-your_secure_password_here}
-      - ASPNETCORE_ENVIRONMENT=Production
-      - DOTNET_GCHeapHardLimit=300000000
-      - DOTNET_GCConserveMemory=9
-      - DOTNET_EnableDiagnostics=0
-      - ASPNETCORE_threadPool_minThreads=8
-      - ASPNETCORE_threadPool_maxThreads=50
+      # Spring datasource (application.yml binds these; .NET-style vars in .env
+      # are mapped by backend/src/main/resources/application.yml as fallbacks)
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/ImmersioDb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-your_secure_password_here}
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=55 -Djava.security.egd=file:/dev/urandom
     env_file:
       - .env
       - path: secrets.env
@@ -51,9 +52,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 640M
         reservations:
-          memory: 256M
+          memory: 320M
 
 volumes:
   pgdata:

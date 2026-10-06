@@ -1,0 +1,1 @@
+package com.immersio.scenarios.api.dto; import java.math.BigDecimal; import java.util.UUID; public record ScenarioItemDto(UUID id,UUID scenarioId,String name,BigDecimal price,String imageUrl,String icon){}

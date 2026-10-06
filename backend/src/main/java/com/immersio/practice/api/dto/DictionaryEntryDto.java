@@ -1,0 +1,1 @@
+package com.immersio.practice.api.dto; public record DictionaryEntryDto(String word,String translation,String phonetic,String partOfSpeech,String definition,String example,String exampleTranslation){}

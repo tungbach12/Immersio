@@ -41,7 +41,7 @@ jobs:
           retention-days: 1
 
   build-backend:
-    name: Build & Push C# Backend Container
+    name: Build & Push Java Backend Container
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -69,12 +69,12 @@ jobs:
       - name: Build and Push Backend Image
         uses: docker/build-push-action@v5
         with:
-          context: ./src
-          file: ./src/Dockerfile
+          context: ./backend
+          file: ./backend/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64/v8
           tags: |
-            ghcr.io/${{ steps.prep.outputs.owner_lower }}/immersio-be:latest
+            ghcr.io/${{ steps.prep.outputs.owner_lower }}/immersio-be-java:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

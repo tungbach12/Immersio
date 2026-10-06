@@ -7,6 +7,12 @@
 *.userprefs
 *.sln.docstates
 
+## Ignore Java & Maven build artifacts
+backend/target/
+target/
+*.class
+.mvn/wrapper/maven-wrapper.jar
+
 ## Ignore IDE configuration
 .vs/
 .idea/

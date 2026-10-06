@@ -1,0 +1,95 @@
+server:
+  port: 5249
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  application:
+    name: immersio-backend
+  servlet:
+    multipart:
+      # Boot 4.1 defaults are 1MB/10MB — too small for image uploads (10MB cap)
+      # and audio pronunciation blobs; mirrors the .NET 50MB nginx/app limits.
+      max-file-size: 10MB
+      max-request-size: 12MB
+  mail:
+    host: ${EMAIL_SMTP_HOST:${Email__Smtp__Host:localhost}}
+    port: ${EMAIL_SMTP_PORT:${Email__Smtp__Port:587}}
+    username: ${EMAIL_SMTP_USERNAME:${Email__Smtp__Username:}}
+    password: ${EMAIL_SMTP_PASSWORD:${Email__Smtp__Password:}}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ImmersioDb}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+      connection-timeout: 20000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+jwt:
+  # Prefer explicit JWT_SECRET; fall back to the .NET-era Jwt__Key from the prod .env
+  secret: ${JWT_SECRET:${Jwt__Key:dGhpc2lzYXZlcnlsb25nc2VjcmV0a2V5Zm9yaW1tZXJzaW9hcGlqd3R0b2tlbjEyMzQ1Njc4OTA=}}
+  access-token-expiration-minutes: 15
+  refresh-token-expiration-days: 7
+
+google:
+  client-id: ${GOOGLE_CLIENT_ID:${Google__ClientId:}}
+
+email:
+  smtp:
+    from-email: ${EMAIL_SMTP_FROM_EMAIL:${Email__Smtp__FromEmail:}}
+    from-name: ${EMAIL_SMTP_FROM_NAME:${Email__Smtp__FromName:IMMERSIO}}
+
+# ── Feature providers (fallbacks read the same env names the .NET stack used) ──
+payos:
+  client-id: ${PAYOS_CLIENT_ID:${PayOS__ClientId:}}
+  api-key: ${PAYOS_API_KEY:${PayOS__ApiKey:}}
+  checksum-key: ${PAYOS_CHECKSUM_KEY:${PayOS__ChecksumKey:}}
+  return-url: ${PAYOS_RETURN_URL:${PayOS__ReturnUrl:https://immersio.me/payment/payos-return}}
+  cancel-url: ${PAYOS_CANCEL_URL:${PayOS__CancelUrl:https://immersio.me/payment/payos-return}}
+
+azure:
+  speech:
+    api-key: ${AZURE_SPEECH_API_KEY:${Azure__Speech__ApiKey:}}
+    region: ${AZURE_SPEECH_REGION:${Azure__Speech__Region:centralindia}}
+    endpoint: ${AZURE_SPEECH_ENDPOINT:${Azure__Speech__Endpoint:}}
+
+# OpenAI-compatible chat (practice LLM + scenario fallback). Defaults form a
+# coherent Groq trio; override all three together for another provider.
+openai:
+  api-key: ${OPENAI_API_KEY:${Groq__ApiKey:${OpenCode__ApiKey:}}}
+  base-url: ${OPENAI_BASE_URL:https://api.groq.com/openai/v1}
+  model: ${OPENAI_MODEL:llama-3.3-70b-versatile}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://immersio.me,https://www.immersio.me,http://localhost:3000,http://localhost:5173,https://immersio.vercel.app}

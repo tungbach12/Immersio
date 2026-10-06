@@ -1,0 +1,1 @@
+package com.immersio.scenarios.repository; import com.immersio.scenarios.domain.Scenario; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface ScenarioRepository extends JpaRepository<Scenario,UUID>{List<Scenario> findByDeletedFalseOrderByTitleAsc(); Optional<Scenario> findByIdAndDeletedFalse(UUID id);}

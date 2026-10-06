@@ -215,7 +215,10 @@ class ScenarioLlmClientTest {
                 assertThat(body).doesNotContainKey("reasoning_effort");
                 assertThat(body).doesNotContainKey("max_tokens");
                 assertThat(body.get("thinking")).isEqualTo(Map.of("type", "disabled"));
-                assertThat(body.get("response_format")).isEqualTo(Map.of("type", "json_object"));
+                // response_format is deliberately omitted: the 9Router combo routes to
+                // upstreams that reject json_object mode (~92% 400s). JSON is prompted
+                // for in the system message and extracted by the parsers instead.
+                assertThat(body).doesNotContainKey("response_format");
             }
         }
     }

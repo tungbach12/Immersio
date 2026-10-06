@@ -383,9 +383,12 @@ public class ScenarioLlmClient {
         if (maxTokens > 0) {
             body.put("max_tokens", maxTokens);
         }
-        if (jsonMode) {
-            body.put("response_format", Map.of("type", "json_object"));
-        }
+        // NOTE: `response_format:json_object` is deliberately NOT sent for jsonMode calls.
+        // The 9Router 'immersio' combo load-balances across upstreams that reject
+        // json_object mode (~92% HTTP 400), which silently broke grammar checks and
+        // flashcards. Every JSON prompt already demands "strictly valid JSON" and
+        // parseGrammarContent/parseFlashcards strip markdown fences, so the prompt is
+        // the contract. `jsonMode` is retained to document intent at the call sites.
         if (reasoningEffort != null && !reasoningEffort.isBlank() && !"none".equals(reasoningEffort)) {
             body.put("reasoning_effort", reasoningEffort);
         } else {

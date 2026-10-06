@@ -117,7 +117,10 @@ public class PracticeLlmClient {
                 Map.of("role", "user", "content", userPrompt)));
         body.put("temperature", temperature);
         body.put("stream", false);
-        body.put("response_format", Map.of("type", "json_object"));
+        // response_format:json_object is intentionally omitted — the 9Router 'immersio'
+        // combo routes to upstreams that reject it (~92% HTTP 400). The system prompt
+        // already requests strictly valid JSON and parseDictionaryContent/
+        // parsePhraseContent strip markdown fences before parsing.
 
         HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(baseUrl + CHAT_COMPLETIONS_PATH))
                 .timeout(REQUEST_TIMEOUT)

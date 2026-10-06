@@ -42,7 +42,12 @@ public class PracticeLlmClient {
     static final String DEFAULT_MODEL = "immersio";
     static final String CHAT_COMPLETIONS_PATH = "/chat/completions";
     static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
-    static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(20);
+    /**
+     * Dictionary/phrase calls go through the same 9Router combo as the scenario
+     * client, which can spend a long time reasoning. 20s was too tight; keep under
+     * the 600s nginx proxy_read_timeout on the 9Router host.
+     */
+    static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(120);
 
     static final String DEFAULT_TRANSLATION = "Nghĩa của từ.";
     static final String DEFAULT_PHONETIC = "/.../";

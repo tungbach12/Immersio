@@ -37,7 +37,7 @@ public class RouterTtsClient {
     static final String DEFAULT_BASE_URL = "https://9routerhelios.duckdns.org/v1";
     static final String AUDIO_SPEECH_PATH = "/audio/speech";
     static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
-    static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
+    static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(90);
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 

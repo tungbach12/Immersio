@@ -64,8 +64,13 @@ public class ScenarioLlmClient {
     /** .NET {@code ConfigCacheTtl} — short-lived snapshot of the SystemSettings rows. */
     static final Duration CONFIG_CACHE_TTL = Duration.ofSeconds(30);
     static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
-    /** .NET {@code HttpClient} default timeout. */
-    static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(100);
+    /**
+     * 9Router's 'immersio' combo routes to upstreams that may run long reasoning
+     * passes for heavy JSON prompts — a measured flashcard call took 110s end to end.
+     * The old 100s (.NET parity) value cut it off mid-flight, so nothing was returned.
+     * Keep this under the nginx proxy_read_timeout (600s) on the 9Router host.
+     */
+    static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(300);
 
     static final String SETTING_ENDPOINT = "LlmEndpoint";
     static final String SETTING_GENERIC_EFFORT = "ReasoningEffort";

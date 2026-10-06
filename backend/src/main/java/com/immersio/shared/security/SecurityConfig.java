@@ -39,6 +39,16 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Missing/expired/invalid token must yield 401 (like .NET's JwtBearer
+                // challenge) — the SPA only triggers its silent token refresh on 401.
+                // Spring's default entry point answers 403, which would strand sessions.
+                .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, exception) -> {
+                    response.setStatus(401);
+                    response.setContentType("application/json");
+                    response.getWriter().write(
+                            "{\"success\":false,\"data\":null,\"message\":\"Authentication required.\","
+                                    + "\"errors\":null,\"detail\":\"Authentication required.\"}");
+                }))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/api/auth/**",

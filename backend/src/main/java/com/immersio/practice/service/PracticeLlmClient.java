@@ -28,9 +28,9 @@ import java.util.Map;
  *
  * <p>Configuration (graceful empty defaults):</p>
  * <ul>
- *   <li>{@code openai.api-key} — 9Router key, sent as {@code Authorization: *** when set</li>
- *   <li>{@code openai.base-url} — default {@code https://9routerhelios.duckdns.org/v1}</li>
- *   <li>{@code openai.model} — default {@code immersio}</li>
+ *   <li>{@code nine-router.api-key} — 9Router key, sent as {@code Authorization: Bearer} when set</li>
+ *   <li>{@code nine-router.base-url} — default {@code https://9routerhelios.duckdns.org/v1}</li>
+ *   <li>{@code nine-router.model} — default {@code immersio}</li>
  * </ul>
  * <p>When the endpoint is unreachable or answers with an error, the legacy
  * .NET default entries are returned so the UI keeps working.</p>
@@ -60,9 +60,9 @@ public class PracticeLlmClient {
     private final HttpClient http;
 
     public PracticeLlmClient(
-            @Value("${openai.api-key:${NINE_ROUTER_API_KEY:}}") String apiKey,
-            @Value("${openai.base-url:https://9routerhelios.duckdns.org/v1}") String baseUrl,
-            @Value("${openai.model:immersio}") String model) {
+            @Value("${nine-router.api-key:${NINE_ROUTER_API_KEY:}}") String apiKey,
+            @Value("${nine-router.base-url:https://9routerhelios.duckdns.org/v1}") String baseUrl,
+            @Value("${nine-router.model:immersio}") String model) {
         this.apiKey = apiKey == null ? "" : apiKey.trim();
         String trimmedBase = baseUrl == null ? "" : baseUrl.trim();
         this.baseUrl = trimmedBase.replaceAll("/+$", "");

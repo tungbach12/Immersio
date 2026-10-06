@@ -98,15 +98,27 @@ public class PracticeController {
             return ResponseEntity.badRequest().body(ApiResponse.failureResult(
                     "TTS is not configured. Set nine-router.api-key (NINE_ROUTER_API_KEY) or azure.speech.api-key."));
         }
+        // Prefer 9Router; fall back to Azure when 9Router is unconfigured OR fails.
+        if (routerTts.isConfigured()) {
+            try {
+                byte[] audio = routerTts.synthesize(request.text(), request.voice(), null);
+                return ResponseEntity.ok().contentType(MediaType.valueOf("audio/mpeg")).body(audio);
+            } catch (Exception routerEx) {
+                if (!azure.isConfigured()) {
+                    if (routerEx instanceof RouterTtsException routerTtsException) {
+                        return ResponseEntity.status(routerTtsException.getStatusCode())
+                                .body(ApiResponse.failureResult("9Router TTS error: " + routerTtsException.getDetail()));
+                    }
+                    return ResponseEntity.internalServerError()
+                            .body(ApiResponse.failureResult("9Router TTS failed: " + routerEx.getMessage()));
+                }
+                // Azure is configured — fall through to it as a real fallback.
+            }
+        }
         try {
-            byte[] audio = routerTts.isConfigured()
-                    ? routerTts.synthesize(request.text(), request.voice(), null)
-                    : azure.synthesizeSpeech(
-                            request.text(), request.voice(), request.style(), request.styleDegree());
+            byte[] audio = azure.synthesizeSpeech(
+                    request.text(), request.voice(), request.style(), request.styleDegree());
             return ResponseEntity.ok().contentType(MediaType.valueOf("audio/mpeg")).body(audio);
-        } catch (RouterTtsException ex) {
-            return ResponseEntity.status(ex.getStatusCode())
-                    .body(ApiResponse.failureResult("9Router TTS error: " + ex.getDetail()));
         } catch (AzureSpeechException ex) {
             return ResponseEntity.status(ex.getStatusCode())
                     .body(ApiResponse.failureResult("Azure TTS error: " + ex.getDetail()));

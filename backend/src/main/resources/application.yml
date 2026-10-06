@@ -84,16 +84,12 @@ azure:
     region: ${AZURE_SPEECH_REGION:${Azure__Speech__Region:centralindia}}
     endpoint: ${AZURE_SPEECH_ENDPOINT:${Azure__Speech__Endpoint:}}
 
-# OpenAI-compatible chat routed through 9Router (practice LLM + scenario calls).
-# Override all three together for another provider.
+# Single AI provider config: all chat/JSON/TTS goes through 9Router.
+# One source of truth — do not add a second overlapping block (see review notes).
 nine-router:
   base-url: ${NINE_ROUTER_BASE_URL:https://9routerhelios.duckdns.org/v1}
   api-key: ${NINE_ROUTER_API_KEY:}
-
-openai:
-  api-key: ${OPENAI_API_KEY:${NINE_ROUTER_API_KEY:}}
-  base-url: ${OPENAI_BASE_URL:https://9routerhelios.duckdns.org/v1}
-  model: ${OPENAI_MODEL:immersio}
+  model: ${NINE_ROUTER_MODEL:immersio}
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:https://immersio.me,https://www.immersio.me,http://localhost:3000,http://localhost:5173,https://immersio.vercel.app}

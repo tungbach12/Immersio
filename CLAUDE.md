@@ -190,7 +190,7 @@ Copy `src/Immersio.WebApi/appsettings.example.json` → `appsettings.json` (not 
 | `ConnectionStrings:DefaultConnection` | PostgreSQL connection string |
 | `Jwt:Key` | ≥32-byte base64 secret |
 | `Google:ClientId` | Google OAuth (must match frontend) |
-| `Groq:ApiKey`, `Gemini:ApiKey`, `Nvidia:ApiKey` | LLM providers |
+| `NINE_ROUTER_API_KEY` | 9Router key (all AI routes through 9Router VPS1) |
 | `Azure:Speech` | Pronunciation scoring |
 | `Cloudinary` | Image uploads |
 | `Email:Smtp` | Gmail SMTP |
@@ -235,11 +235,11 @@ Copy `immersioFe/.env.example` → `.env` (not committed):
 | Key | Purpose |
 |---|---|
 | `VITE_GOOGLE_CLIENT_ID` | Google OAuth (must match backend) |
-| `GROQ_API_KEY` | Groq API key for server-side TTS/chat proxy |
+| `NINE_ROUTER_API_KEY` | 9Router key (all backend AI goes through 9Router VPS1) |
 
 ### Architecture
 
-**Dev server**: `server.ts` runs Vite middleware + Express (`api/app.ts`) in parallel. Express proxies `/api/tts` and `/api/chat` to Groq to keep the API key server-side.
+**Dev server**: `server.ts` runs Vite middleware on an Express app (all AI goes through the Java backend → 9Router VPS1; the Groq proxy routes were removed).
 
 **API base**: `API_BASE` in `src/services/auth.ts` — `http://localhost:5249` locally, `""` (same-origin) in production.
 

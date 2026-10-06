@@ -8,6 +8,7 @@ import { adminService, AiSettings } from "@/services/admin";
 import { cn } from "@/lib/utils";
 
 const CATALOG_MODELS = [
+  { value: "immersio", name: "immersio (9Router VPS1)", desc: "Production model via 9Router VPS1 — single combo for all features." },
   { value: "llama-3.3-70b-versatile", name: "Llama 3.3 70B (Groq Default)", desc: "Great all-rounder, excellent Vietnamese support & extremely fast." },
   { value: "nvidia/nemotron-mini-4b-instruct", name: "NVIDIA Nemotron Mini 4B (NVIDIA)", desc: "Optimized SLM. Ultra-low latency, perfect for conversational roleplay." },
   { value: "nvidia/llama-3.1-nemotron-70b-instruct", name: "NVIDIA Llama 3.1 Nemotron 70B", desc: "Superb language correction, evaluation, and precise spelling analyzer." },
@@ -43,6 +44,17 @@ type ProviderPreset = {
 };
 
 const PROVIDER_PRESETS: ProviderPreset[] = [
+  {
+    name: "9Router VPS1 (immersio)",
+    shortLabel: "9Router",
+    endpoint: "https://9routerhelios.duckdns.org/v1/chat/completions",
+    chat: "immersio",
+    grammar: "immersio",
+    feedback: "immersio",
+    flashcard: "immersio",
+    phrase: "immersio",
+    effortChat: "none", effortGrammar: "none", effortFeedback: "none", effortFlashcard: "none", effortPhrase: "none"
+  },
   {
     name: "Groq Default",
     shortLabel: "Llama 3.3",

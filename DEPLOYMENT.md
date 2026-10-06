@@ -187,12 +187,8 @@ Jwt__RefreshTokenExpiryDays=7
 # Google OAuth
 Google__ClientId=YOUR_GOOGLE_CLIENT_ID_HERE
 
-# AI providers
-Groq__ApiKey=YOUR_GROQ_API_KEY_HERE
-Gemini__ApiKey=YOUR_GEMINI_API_KEY_HERE
-Nvidia__ApiKey=YOUR_NVIDIA_API_KEY_HERE
-StepFun__ApiKey=YOUR_STEPFUN_API_KEY_HERE
-OpenCode__ApiKey=YOUR_OPENCODE_API_KEY_HERE
+# AI providers (all AI routes through 9Router VPS1)
+NINE_ROUTER_API_KEY=YOUR_9ROUTER_API_KEY_HERE
 
 # Azure Speech (pronunciation scoring)
 Azure__Speech__Key=YOUR_AZURE_SPEECH_KEY
@@ -336,7 +332,7 @@ If you want to host the frontend on Vercel separately instead of on the VPS:
 |---|---|
 | `VITE_GOOGLE_CLIENT_ID` | Your Google Client ID |
 | `APP_URL` | Your Vercel URL (e.g. `https://immersio.vercel.app`) |
-| `GROQ_API_KEY` | Your Groq API key (used by serverless `/api/chat` and `/api/tts` routes) |
+| `NINE_ROUTER_API_KEY` | 9Router VPS1 key (all backend AI: chat, JSON, TTS) |
 
 ### 10.3 Update backend CORS
 
@@ -576,10 +572,7 @@ sudo rsync -a /var/www/immersio-backup/ /var/www/immersio/
 | `Jwt__Issuer` | Token issuer (`ImmersioApi`) |
 | `Jwt__Audience` | Token audience (`ImmersioUsers`) |
 | `Google__ClientId` | Google OAuth client ID |
-| `Groq__ApiKey` | Groq LLM API key |
-| `Gemini__ApiKey` | Google Gemini API key |
-| `Nvidia__ApiKey` | Nvidia NIM API key |
-| `StepFun__ApiKey` | StepFun API key |
+| `NINE_ROUTER_API_KEY` | 9Router VPS1 API key (all backend AI: chat, JSON, TTS) |
 | `OpenCode__ApiKey` | OpenCode API key |
 | `Azure__Speech__Key` | Azure Cognitive Services key |
 | `Azure__Speech__Region` | Azure region (e.g. `southeastasia`) |
@@ -599,7 +592,7 @@ sudo rsync -a /var/www/immersio-backup/ /var/www/immersio/
 | Variable | Purpose |
 |---|---|
 | `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID (must match backend) |
-| `GROQ_API_KEY` | Groq API key for server-side TTS/chat proxy |
+| `NINE_ROUTER_API_KEY` | 9Router VPS1 key (all backend AI: chat, JSON, TTS) |
 | `APP_URL` | Frontend URL for CORS/OAuth redirect |
 
 ---

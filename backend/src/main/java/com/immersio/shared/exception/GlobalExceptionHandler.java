@@ -54,8 +54,17 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failureResult("Validation failed", fieldErrors));
     }
 
+    private static final org.slf4j.Logger log =
+            org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    /**
+     * Last-resort handler. It MUST log the exception: swallowing it into a bare 500
+     * makes production failures undiagnosable (this is how a broken /finish went
+     * unnoticed — 500 with no stack trace anywhere).
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception ex) {
+        log.error("Unhandled exception", ex);
         return ResponseEntity.status(500)
                 .body(ApiResponse.failureResult("Internal server error"));
     }

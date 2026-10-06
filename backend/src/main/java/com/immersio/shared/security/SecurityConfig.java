@@ -7,7 +7,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -43,11 +42,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/api/auth/**",
+                                "/api/health",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/actuator/**",
                                 "/api/practice/tts",
-                                "/api/practice/generate-phrase")
+                                "/api/practice/generate-phrase",
+                                // PayOS: the SPA verifies the return without a session and PayOS
+                                // posts the signed webhook directly (both were anonymous in .NET).
+                                "/api/subscription/payos-return",
+                                "/api/subscription/payos-webhook")
                         .permitAll()
                         .anyRequest()
                         .authenticated())
@@ -71,6 +75,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        // BCrypt for new hashes + transparent verification of legacy .NET PBKDF2 hashes
+        return new CompatiblePasswordEncoder();
     }
 }

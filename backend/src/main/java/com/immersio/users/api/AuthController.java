@@ -4,6 +4,7 @@ import com.immersio.shared.dto.ApiResponse;
 import com.immersio.shared.security.JwtTokenProvider;
 import com.immersio.users.api.dto.AuthResponse;
 import com.immersio.users.api.dto.ForgotPasswordRequest;
+import com.immersio.users.api.dto.GoogleAuthRequest;
 import com.immersio.users.api.dto.LoginRequest;
 import com.immersio.users.api.dto.RefreshTokenRequest;
 import com.immersio.users.api.dto.RegisterRequest;
@@ -45,6 +46,11 @@ public class AuthController {
     @PostMapping("/login")
     public ApiResponse<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ApiResponse.successResult(authService.login(request), "Login successful");
+    }
+
+    @PostMapping("/google")
+    public ApiResponse<AuthResponse> loginWithGoogle(@Valid @RequestBody GoogleAuthRequest request) {
+        return ApiResponse.successResult(authService.loginWithGoogle(request), "Login successful");
     }
 
     @PostMapping("/refresh")

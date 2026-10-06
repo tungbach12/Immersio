@@ -1,9 +1,170 @@
 package com.immersio.practice.service;
-import com.immersio.practice.api.dto.*; import com.immersio.practice.domain.*; import com.immersio.practice.repository.*; import org.springframework.stereotype.Service; import java.util.*;
-@Service public class PronunciationService { private final UserPronunciationLogRepository repo; public PronunciationService(UserPronunciationLogRepository r){repo=r;}
- public PronunciationLogDto logPronunciation(UUID u,CreatePronunciationLogRequest r){var x=repo.save(new UserPronunciationLog(u,r.phrase(),r.transcript(),Math.max(0,Math.min(100,r.score()))));return dto(x);}
- public List<PronunciationLogDto> getUserLogs(UUID u){return repo.findAllByUserIdOrderByPracticedAtDesc(u).stream().map(this::dto).toList();}
- public CefrAnalysisDto analyzeCefrLevel(UUID u){var xs=repo.findAllByUserIdOrderByPracticedAtDesc(u);int n=(int)Math.round(xs.stream().mapToInt(UserPronunciationLog::getScore).average().orElse(0));String l=n>=90?"C1":n>=75?"B2":n>=60?"B1":n>=40?"A2":"A1";return new CefrAnalysisDto(l,n,"blue","Keep practicing your pronunciation.",List.of(new SkillScoreDto("pronunciation",n,"Pronunciation accuracy")),List.of("Practice speaking every day."));}
- public GeneratedPhraseDto generatePhrase(GeneratePhraseRequest r){String topic=r.topic()==null||r.topic().isBlank()?"everyday life":r.topic();return new GeneratedPhraseDto("Tell me about "+topic+".","Nói cho tôi về "+topic+".","A phrase for practicing "+topic+".");}
- public DictionaryEntryDto lookupWord(DictionaryLookupRequest r){String w=r.word()==null?"":r.word().trim();return new DictionaryEntryDto(w,"Nghĩa của "+w,"/"+w+"/","noun","Definition for "+w,"Example sentence with "+w+".","Câu ví dụ với "+w+".");}
- private PronunciationLogDto dto(UserPronunciationLog x){return new PronunciationLogDto(x.getId(),x.getPhrase(),x.getTranscript(),x.getScore(),x.getPracticedAt());}}
+
+import com.immersio.practice.api.dto.CefrAnalysisDto;
+import com.immersio.practice.api.dto.CreatePronunciationLogRequest;
+import com.immersio.practice.api.dto.DictionaryEntryDto;
+import com.immersio.practice.api.dto.DictionaryLookupRequest;
+import com.immersio.practice.api.dto.GeneratePhraseRequest;
+import com.immersio.practice.api.dto.GeneratedPhraseDto;
+import com.immersio.practice.api.dto.PronunciationAssessmentDto;
+import com.immersio.practice.api.dto.PronunciationLogDto;
+import com.immersio.practice.api.dto.SkillScoreDto;
+import com.immersio.practice.domain.UserPronunciationLog;
+import com.immersio.practice.repository.UserPronunciationLogRepository;
+import com.immersio.users.domain.User;
+import com.immersio.users.repository.UserRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+
+/**
+ * Practice module domain service: pronunciation logging/history, CEFR
+ * analysis, Azure-backed pronunciation assessment and delegation of the AI
+ * dictionary/phrase features to {@link PracticeLlmClient}.
+ */
+@Service
+public class PronunciationService {
+
+    private final UserPronunciationLogRepository repo;
+    private final UserRepository users;
+    private final AzureSpeechClient azure;
+    private final PracticeLlmClient llm;
+
+    public PronunciationService(UserPronunciationLogRepository repo,
+                                UserRepository users,
+                                AzureSpeechClient azure,
+                                PracticeLlmClient llm) {
+        this.repo = repo;
+        this.users = users;
+        this.azure = azure;
+        this.llm = llm;
+    }
+
+    // ------------------------------------------------------------------
+    // Logging / history / CEFR (unchanged behaviour from the Java stub)
+    // ------------------------------------------------------------------
+
+    public PronunciationLogDto logPronunciation(UUID userId, CreatePronunciationLogRequest request) {
+        UserPronunciationLog saved = repo.save(new UserPronunciationLog(
+                userId, request.phrase(), request.transcript(),
+                Math.max(0, Math.min(100, request.score()))));
+        return toLogDto(saved);
+    }
+
+    public List<PronunciationLogDto> getUserLogs(UUID userId) {
+        return repo.findAllByUserIdOrderByPracticedAtDesc(userId).stream()
+                .map(this::toLogDto)
+                .toList();
+    }
+
+    public CefrAnalysisDto analyzeCefrLevel(UUID userId) {
+        List<UserPronunciationLog> logs = repo.findAllByUserIdOrderByPracticedAtDesc(userId);
+        int score = (int) Math.round(logs.stream()
+                .mapToInt(UserPronunciationLog::getScore)
+                .average()
+                .orElse(0));
+        String level = score >= 90 ? "C1"
+                : score >= 75 ? "B2"
+                : score >= 60 ? "B1"
+                : score >= 40 ? "A2"
+                : "A1";
+        return new CefrAnalysisDto(level, score, "blue",
+                "Keep practicing your pronunciation.",
+                List.of(new SkillScoreDto("pronunciation", score, "Pronunciation accuracy")),
+                List.of("Practice speaking every day."));
+    }
+
+    // ------------------------------------------------------------------
+    // AI-backed features (real endpoint, defaults only as failure fallback)
+    // ------------------------------------------------------------------
+
+    /** Port of .NET GeneratePhraseAsync defaults (English / Intermediate / General). */
+    public GeneratedPhraseDto generatePhrase(GeneratePhraseRequest request) {
+        String language = isBlank(request.language()) ? "English" : request.language();
+        String level = isBlank(request.level()) ? "Intermediate" : request.level();
+        String topic = isBlank(request.topic()) ? "General" : request.topic();
+        return llm.generatePhrase(language, level, topic);
+    }
+
+    /** Port of .NET DictionaryLookup: validates nothing (controller does), resolves language. */
+    public DictionaryEntryDto lookupWord(DictionaryLookupRequest request) {
+        String word = request.word() == null ? "" : request.word().trim();
+        return llm.lookupWord(word, request.resolvedTargetLanguage());
+    }
+
+    // ------------------------------------------------------------------
+    // Azure pronunciation assessment
+    // ------------------------------------------------------------------
+
+    /**
+     * Assesses uploaded audio against the target phrase using Azure Speech,
+     * logs the attempt and returns the frontend-facing result.
+     *
+     * <p>Degrades exactly like the legacy backend: mock scoring while the
+     * Azure key is unset, and a logged fallback result when the upstream
+     * call fails.</p>
+     */
+    public PronunciationAssessmentDto assessPronunciation(UUID userId, byte[] audioBytes, String targetPhrase) {
+        if (!azure.isConfigured()) {
+            PronunciationAssessmentDto mock = PronunciationAssessmentParser.fallback(
+                    targetPhrase, targetPhrase, 95,
+                    "Perfect accent! (Azure Sandbox Mock Mode - Key not set yet).",
+                    index -> ThreadLocalRandom.current().nextInt(85, 100));
+            save(userId, targetPhrase, targetPhrase, 95);
+            return mock;
+        }
+        try {
+            String azureJson = azure.assessPronunciation(audioBytes, targetPhrase);
+            PronunciationAssessmentDto result = PronunciationAssessmentParser.parse(azureJson, targetPhrase);
+            save(userId, targetPhrase, result.transcript(), result.score());
+            return result;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return fallbackAssessment(userId, targetPhrase);
+        } catch (Exception ex) {
+            return fallbackAssessment(userId, targetPhrase);
+        }
+    }
+
+    private PronunciationAssessmentDto fallbackAssessment(UUID userId, String targetPhrase) {
+        PronunciationAssessmentDto fallback = PronunciationAssessmentParser.fallback(
+                targetPhrase, targetPhrase, 85,
+                "Connection failed. Fallback simulation active: Great effort!",
+                index -> 90);
+        try {
+            save(userId, targetPhrase, targetPhrase, 85);
+        } catch (Exception ex) {
+            // Legacy behaviour: never fail the assessment because logging failed.
+        }
+        return fallback;
+    }
+
+    private void save(UUID userId, String phrase, String transcript, int score) {
+        repo.save(new UserPronunciationLog(userId, phrase, transcript, score));
+        // .NET parity gamification: +50 XP, +0.1 learning hours, update language level from CEFR
+        if (userId != null && users != null) {
+            try {
+                users.findById(userId).ifPresent(user -> {
+                    user.addExperience(50);
+                    user.addLearningHours(0.1);
+                    CefrAnalysisDto cefr = analyzeCefrLevel(userId);
+                    user.setLanguageLevel(cefr.currentLevel());
+                    users.save(user);
+                });
+            } catch (Exception ignored) {
+                // Assessment response is the deliverable; gamification failures never fail it
+            }
+        }
+    }
+
+    private PronunciationLogDto toLogDto(UserPronunciationLog log) {
+        return new PronunciationLogDto(log.getId(), log.getPhrase(), log.getTranscript(),
+                log.getScore(), log.getPracticedAt());
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+}

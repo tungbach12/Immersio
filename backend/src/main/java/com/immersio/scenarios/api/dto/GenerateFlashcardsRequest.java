@@ -1,1 +1,1 @@
-package com.immersio.scenarios.api.dto; public record GenerateFlashcardsRequest(String deckName){}
+package com.immersio.scenarios.api.dto; import java.util.List; public record GenerateFlashcardsRequest(String deckName,List<String> options){}

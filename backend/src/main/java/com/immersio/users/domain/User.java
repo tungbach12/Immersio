@@ -186,6 +186,13 @@ public class User {
         touch();
     }
 
+    /** Port of .NET User.SetLanguageLevel (called after CEFR analysis). */
+    public void setLanguageLevel(String level) {
+        if (level == null || level.isBlank()) return;
+        currentLanguageLevel = level;
+        touch();
+    }
+
     public void resetPassword(String newPasswordHash) {
         if (newPasswordHash == null || newPasswordHash.isBlank()) return;
         passwordHash = newPasswordHash;

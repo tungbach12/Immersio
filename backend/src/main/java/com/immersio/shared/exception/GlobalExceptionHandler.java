@@ -27,6 +27,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(401).body(ApiResponse.failureResult(ex.getMessage()));
     }
 
+    /**
+     * Method-security denials ({@code @PreAuthorize}) must surface as 403 like the
+     * legacy .NET [Authorize(Roles=...)] pipeline — without this, the generic
+     * Exception handler below would swallow them into a 500.
+     */
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(
+            org.springframework.security.access.AccessDeniedException ex) {
+        return ResponseEntity.status(403).body(ApiResponse.failureResult("Access denied."));
+    }
+
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ApiResponse<Void>> handleDomainException(DomainException ex) {
         return ResponseEntity.status(400).body(ApiResponse.failureResult(ex.getMessage()));

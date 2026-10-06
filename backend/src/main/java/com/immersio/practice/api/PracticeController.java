@@ -12,6 +12,8 @@ import com.immersio.practice.api.dto.TtsRequest;
 import com.immersio.practice.service.AzureSpeechClient;
 import com.immersio.practice.service.AzureSpeechException;
 import com.immersio.practice.service.PronunciationService;
+import com.immersio.practice.service.RouterTtsClient;
+import com.immersio.practice.service.RouterTtsException;
 import com.immersio.shared.dto.ApiResponse;
 import com.immersio.shared.exception.DomainException;
 import com.immersio.shared.exception.UnauthorizedException;
@@ -44,11 +46,14 @@ public class PracticeController {
 
     private final PronunciationService service;
     private final AzureSpeechClient azure;
+    private final RouterTtsClient routerTts;
     private final JwtTokenProvider jwt;
 
-    public PracticeController(PronunciationService service, AzureSpeechClient azure, JwtTokenProvider jwt) {
+    public PracticeController(PronunciationService service, AzureSpeechClient azure,
+                              RouterTtsClient routerTts, JwtTokenProvider jwt) {
         this.service = service;
         this.azure = azure;
+        this.routerTts = routerTts;
         this.jwt = jwt;
     }
 
@@ -89,14 +94,19 @@ public class PracticeController {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.failureResult("Text parameter is required."));
         }
-        if (!azure.isConfigured()) {
+        if (!azure.isConfigured() && !routerTts.isConfigured()) {
             return ResponseEntity.badRequest().body(ApiResponse.failureResult(
-                    "Azure Speech ApiKey not set yet. Configure azure.speech.api-key to preview voice."));
+                    "TTS is not configured. Set nine-router.api-key (NINE_ROUTER_API_KEY) or azure.speech.api-key."));
         }
         try {
-            byte[] audio = azure.synthesizeSpeech(
-                    request.text(), request.voice(), request.style(), request.styleDegree());
+            byte[] audio = routerTts.isConfigured()
+                    ? routerTts.synthesize(request.text(), request.voice(), null)
+                    : azure.synthesizeSpeech(
+                            request.text(), request.voice(), request.style(), request.styleDegree());
             return ResponseEntity.ok().contentType(MediaType.valueOf("audio/mpeg")).body(audio);
+        } catch (RouterTtsException ex) {
+            return ResponseEntity.status(ex.getStatusCode())
+                    .body(ApiResponse.failureResult("9Router TTS error: " + ex.getDetail()));
         } catch (AzureSpeechException ex) {
             return ResponseEntity.status(ex.getStatusCode())
                     .body(ApiResponse.failureResult("Azure TTS error: " + ex.getDetail()));

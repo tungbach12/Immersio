@@ -7,6 +7,7 @@ import com.immersio.flashcards.api.dto.AddCardDto;
 import com.immersio.scenarios.api.dto.CorrectionResultDto;
 import com.immersio.scenarios.api.dto.ScenarioContextDto;
 import com.immersio.scenarios.api.dto.SessionMessageDto;
+import com.immersio.shared.ai.ChatCompletionBody;
 import com.immersio.users.domain.SystemSetting;
 import com.immersio.users.repository.SystemSettingRepository;
 import org.slf4j.Logger;
@@ -349,9 +350,16 @@ public class ScenarioLlmClient {
         return firstChoiceContent(response.body());
     }
 
-    /** Content of the first chat-completion choice, or {@code null} when the payload has none. */
+    /**
+     * Content of the first chat-completion choice, or {@code null} when the payload has none.
+     *
+     * <p>The body is normalised first: 9Router appends an SSE terminator
+     * ({@code data: [DONE]}) to {@code /v1/chat/completions} responses even when the
+     * request was non-streaming, and Jackson rejects trailing tokens. Without this the
+     * call throws and every JSON feature silently falls back.</p>
+     */
     static String firstChoiceContent(String responseBody) throws IOException {
-        JsonNode choices = MAPPER.readTree(responseBody).path("choices");
+        JsonNode choices = MAPPER.readTree(ChatCompletionBody.extractJsonObject(responseBody)).path("choices");
         if (!choices.isArray() || choices.isEmpty()) {
             return null;
         }

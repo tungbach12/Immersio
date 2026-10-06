@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.immersio.practice.api.dto.DictionaryEntryDto;
 import com.immersio.practice.api.dto.GeneratedPhraseDto;
+import com.immersio.shared.ai.ChatCompletionBody;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -141,7 +142,7 @@ public class PracticeLlmClient {
             throw new IOException("AI endpoint returned status " + response.statusCode());
         }
 
-        JsonNode root = MAPPER.readTree(response.body());
+        JsonNode root = MAPPER.readTree(ChatCompletionBody.extractJsonObject(response.body()));
         JsonNode choices = root.path("choices");
         if (!choices.isArray() || choices.isEmpty()) {
             throw new IOException("AI endpoint returned no choices");

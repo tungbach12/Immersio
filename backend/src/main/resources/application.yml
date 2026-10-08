@@ -92,4 +92,4 @@ nine-router:
   model: ${NINE_ROUTER_MODEL:immersio}
 
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://immersio.me,https://www.immersio.me,http://localhost:3000,http://localhost:5173,https://immersio.vercel.app}
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://immersio.me,http://localhost:3000,http://localhost:5173}

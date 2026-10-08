@@ -255,7 +255,7 @@ Copy `immersioFe/.env.example` → `.env` (not committed):
 
 **Path alias**: `@` → `src/` (configured in `vite.config.ts` and `tsconfig.json`).
 
-**Deployment**: Vercel. `vercel.json` routes all non-`/api` paths to the SPA. `api/index.ts` is the Vercel serverless function entry.
+**Deployment**: nginx static on VPS2. CI builds `dist/` and `scp`s it to `/var/www/immersio`, served at `https://immersio.me` by the same nginx that proxies `/api` to the backend. `vercel.json` is vestigial — nothing deploys to Vercel.
 
 ---
 
@@ -263,7 +263,7 @@ Copy `immersioFe/.env.example` → `.env` (not committed):
 
 | Target | How |
 |---|---|
-| Frontend | Vercel — auto-deploys from `main` |
+| Frontend | GitHub Actions → build → `scp` to `/var/www/immersio` on VPS2 (nginx) |
 | Backend | GitHub Actions → GHCR Docker image → SSH to VPS |
 | VPS | Docker Compose + Nginx reverse proxy |
 

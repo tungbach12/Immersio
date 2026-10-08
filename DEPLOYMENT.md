@@ -330,16 +330,20 @@ If you want to host the frontend on Vercel separately instead of on the VPS:
 
 | Name | Value |
 |---|---|
-| `VITE_GOOGLE_CLIENT_ID` | Your Google Client ID |
-| `APP_URL` | Your Vercel URL (e.g. `https://immersio.vercel.app`) |
+| `VITE_GOOGLE_CLIENT_ID` | Your Google Client ID (authorize `https://immersio.me` as a Web application origin) |
+| `APP_URL` | The public site origin (e.g. `https://immersio.me`) |
 | `NINE_ROUTER_API_KEY` | 9Router VPS1 key (all backend AI: chat, JSON, TTS) |
 
 ### 10.3 Update backend CORS
 
-In `secrets.env` on VPS, add your Vercel domain to the allowed origins:
+In `secrets.env` on VPS, add the public site origin to the allowed origins:
 ```env
-AllowedOrigins=https://immersio.vercel.app
+AllowedOrigins=https://immersio.me
 ```
+
+> The frontend is **not** deployed to Vercel. CI builds it and `scp`s `dist/` to
+> `/var/www/immersio` on VPS2, where nginx serves it alongside the API. Any
+> `*.vercel.app` URL in this repo is stale — `https://immersio.me` is the live site.
 
 ### 10.4 Auto-deploy
 

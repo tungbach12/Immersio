@@ -210,9 +210,20 @@ public class ScenarioLlmClient {
                         entry("user", historyText(history))),
                 FLASHCARD_TEMPERATURE, config.reasoningEffort(), 0, true);
         try {
-            return parseFlashcards(postChat(config, body, "GenerateFlashcardsAsync"));
+            String content = postChat(config, body, "GenerateFlashcardsAsync");
+            List<AddCardDto> parsed = parseFlashcards(content);
+            log.warn("[FC-TRACE] model={} temp={} effort={} contentLen={} parsed={} contentHead={}",
+                    config.model(), FLASHCARD_TEMPERATURE, config.reasoningEffort(),
+                    content == null ? -1 : content.length(), parsed.size(),
+                    content == null ? "<null>" : content.substring(0, Math.min(220, content.length()))
+                            .replace("\n", "\\n"));
+            return parsed;
         } catch (Exception ex) {
-            log.debug("Flashcard extraction failed: {}", ex.getMessage());
+            // Was log.debug, which hid a real HTTP 400 (illegal temperature) behind an
+            // empty card list. Surface it so production failures are diagnosable.
+            log.warn("Flashcard extraction failed for model '{}': {}",
+                    config.model(), ex.getMessage());
+            log.debug("Flashcard extraction failure detail", ex);
             return List.of();
         }
     }

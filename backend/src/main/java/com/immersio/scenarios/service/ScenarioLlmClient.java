@@ -90,6 +90,15 @@ public class ScenarioLlmClient {
     static final String FEEDBACK_FAILURE_REPLY =
             "Great job practicing today! I'm currently unable to generate detailed feedback, but keep up the good work!";
 
+    // Sampling temperatures accepted by the models in the 9Router 'immersio' combo.
+    // Only 0, 0.6 and 1 are legal: sending 0.2/0.7 made the upstream answer HTTP 400
+    // ("invalid temperature: only 0, 0.6 or 1 is allowed for this model"), which the
+    // callers then swallowed into empty output. Keep these in the legal set.
+    static final double FLASHCARD_TEMPERATURE = 0.6;
+    static final double GRAMMAR_TEMPERATURE = 0.6;
+    static final double CHAT_TEMPERATURE = 0.6;
+    static final double FEEDBACK_TEMPERATURE = 0.6;
+
     static final String FEEDBACK_SYSTEM_PROMPT = """
             Analyze the conversation and provide encouraging feedback (2-3 paragraphs) for a language learner. Highlight strengths and areas for improvement. Speak directly to the student.""";
 
@@ -147,7 +156,7 @@ public class ScenarioLlmClient {
             payload.add(entry("user", nullSafe(userMessage)));
         }
 
-        Map<String, Object> body = buildRequestBody(config.model(), payload, 0.7, config.reasoningEffort(), 1024, false);
+        Map<String, Object> body = buildRequestBody(config.model(), payload, CHAT_TEMPERATURE, config.reasoningEffort(), 1024, false);
         try {
             String content = postChat(config, body, "GenerateChatResponseAsync");
             return content != null ? content : CHAT_NO_CONTENT_REPLY;
@@ -164,7 +173,7 @@ public class ScenarioLlmClient {
         Map<String, Object> body = buildRequestBody(config.model(), List.of(
                         entry("system", grammarSystemPrompt(targetLanguage)),
                         entry("user", message)),
-                0.2, config.reasoningEffort(), 0, true);
+                GRAMMAR_TEMPERATURE, config.reasoningEffort(), 0, true);
         try {
             String content = postChat(config, body, "AnalyzeGrammarAsync");
             if (content != null && !content.isBlank()) {
@@ -182,7 +191,7 @@ public class ScenarioLlmClient {
         Map<String, Object> body = buildRequestBody(config.model(), List.of(
                         entry("system", FEEDBACK_SYSTEM_PROMPT),
                         entry("user", feedbackUserPrompt(contextPrompt, history))),
-                0.7, config.reasoningEffort(), 0, false);
+                FEEDBACK_TEMPERATURE, config.reasoningEffort(), 0, false);
         try {
             String content = postChat(config, body, "GenerateSessionFeedbackAsync");
             return content != null ? content : FEEDBACK_NO_CONTENT_REPLY;
@@ -199,7 +208,7 @@ public class ScenarioLlmClient {
         Map<String, Object> body = buildRequestBody(config.model(), List.of(
                         entry("system", flashcardSystemPrompt(targetLanguage, scenario)),
                         entry("user", historyText(history))),
-                0.2, config.reasoningEffort(), 0, true);
+                FLASHCARD_TEMPERATURE, config.reasoningEffort(), 0, true);
         try {
             return parseFlashcards(postChat(config, body, "GenerateFlashcardsAsync"));
         } catch (Exception ex) {
@@ -215,7 +224,7 @@ public class ScenarioLlmClient {
         Map<String, Object> body = buildRequestBody(config.model(), List.of(
                         entry("system", customFlashcardSystemPrompt(targetLanguage, options, scenario)),
                         entry("user", historyText(history))),
-                0.2, config.reasoningEffort(), 0, true);
+                FLASHCARD_TEMPERATURE, config.reasoningEffort(), 0, true);
         try {
             return parseFlashcards(postChat(config, body, "GenerateCustomFlashcardsAsync"));
         } catch (Exception ex) {

@@ -835,7 +835,10 @@ public class ScenarioLlmClient {
             return null;
         }
         try {
-            return MAPPER.readTree(content);
+            // Normalise 9Router framing first: a trailing `data: [DONE]` makes a raw
+            // readTree throw, and the catch below would turn that into a silent empty
+            // result (zero flashcards, no grammar correction).
+            return MAPPER.readTree(ChatCompletionBody.extractJsonObject(content));
         } catch (JsonProcessingException ex) {
             return null;
         }

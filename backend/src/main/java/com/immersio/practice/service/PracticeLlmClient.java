@@ -288,7 +288,9 @@ public class PracticeLlmClient {
             return null;
         }
         try {
-            return MAPPER.readTree(content);
+            // Strip 9Router's SSE framing before parsing; otherwise a trailing
+            // `data: [DONE]` throws here and silently degrades to placeholder output.
+            return MAPPER.readTree(ChatCompletionBody.extractJsonObject(content));
         } catch (JsonProcessingException ex) {
             return null;
         }

@@ -27,6 +27,9 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 public class PronunciationService {
 
+    /** Matches the Phrase/Transcript column width (length=2000) in UserPronunciationLog. */
+    private static final int MAX_TEXT_LENGTH = 2000;
+
     private final UserPronunciationLogRepository repo;
     private final UserRepository users;
     private final AzureSpeechClient azure;
@@ -47,10 +50,31 @@ public class PronunciationService {
     // ------------------------------------------------------------------
 
     public PronunciationLogDto logPronunciation(UUID userId, CreatePronunciationLogRequest request) {
+        // Phrase/Transcript are NOT NULL columns. Clients post varying shapes (the SPA
+        // vocal lab sends `targetWord`, older builds send `phrase`/`transcript`), so
+        // normalise here instead of letting a null bubble up as a 500.
+        String phrase = orUnknown(request.phrase(), request.transcript());
+        String transcript = orUnknown(request.transcript(), request.phrase());
         UserPronunciationLog saved = repo.save(new UserPronunciationLog(
-                userId, request.phrase(), request.transcript(),
+                userId, truncate(phrase), truncate(transcript),
                 Math.max(0, Math.min(100, request.score()))));
         return toLogDto(saved);
+    }
+
+    /** First non-blank candidate, else a non-blank placeholder (the columns are NOT NULL). */
+    private static String orUnknown(String... candidates) {
+        for (String candidate : candidates) {
+            if (candidate != null && !candidate.isBlank()) {
+                return candidate;
+            }
+        }
+        return "unknown";
+    }
+
+    /** Trims to the column width so an over-long utterance cannot fail the insert. */
+    private static String truncate(String value) {
+        String safe = value == null ? "unknown" : value;
+        return safe.length() <= MAX_TEXT_LENGTH ? safe : safe.substring(0, MAX_TEXT_LENGTH);
     }
 
     public List<PronunciationLogDto> getUserLogs(UUID userId) {

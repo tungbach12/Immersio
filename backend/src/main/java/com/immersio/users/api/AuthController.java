@@ -1,6 +1,7 @@
 package com.immersio.users.api;
 
 import com.immersio.shared.dto.ApiResponse;
+import com.immersio.shared.exception.UnauthorizedException;
 import com.immersio.shared.security.JwtTokenProvider;
 import com.immersio.users.api.dto.AuthResponse;
 import com.immersio.users.api.dto.ForgotPasswordRequest;
@@ -13,6 +14,7 @@ import com.immersio.users.api.dto.UpdateAvatarRequest;
 import com.immersio.users.api.dto.UpdateSettingsRequest;
 import com.immersio.users.api.dto.UserDto;
 import com.immersio.users.service.AuthService;
+import io.jsonwebtoken.JwtException;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -99,9 +101,26 @@ public class AuthController {
         return ApiResponse.successResult(null, "Account deleted");
     }
 
+    /**
+     * Resolves the caller's user id from the Authorization header.
+     *
+     * <p>{@code /api/auth/**} is {@code permitAll}, so Spring's 401 entry point does not
+     * cover these routes: the controller must reject a missing/blank/malformed header
+     * itself. It used to dereference a null header and surface as a 500.
+     */
     private UUID userId(String authHeader) {
+        if (authHeader == null || authHeader.isBlank()) {
+            throw new UnauthorizedException("Authentication required.");
+        }
         String token = authHeader.startsWith(BEARER_PREFIX)
                 ? authHeader.substring(BEARER_PREFIX.length()).trim() : authHeader;
-        return jwtTokenProvider.extractUserId(token);
+        if (token.isBlank() || !jwtTokenProvider.validateToken(token)) {
+            throw new UnauthorizedException("Invalid or expired token.");
+        }
+        try {
+            return jwtTokenProvider.extractUserId(token);
+        } catch (JwtException | IllegalArgumentException ex) {
+            throw new UnauthorizedException("Invalid or expired token.");
+        }
     }
 }

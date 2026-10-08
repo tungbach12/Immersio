@@ -210,14 +210,7 @@ public class ScenarioLlmClient {
                         entry("user", historyText(history))),
                 FLASHCARD_TEMPERATURE, config.reasoningEffort(), 0, true);
         try {
-            String content = postChat(config, body, "GenerateFlashcardsAsync");
-            List<AddCardDto> parsed = parseFlashcards(content);
-            log.warn("[FC-TRACE] model={} temp={} effort={} contentLen={} parsed={} contentHead={}",
-                    config.model(), FLASHCARD_TEMPERATURE, config.reasoningEffort(),
-                    content == null ? -1 : content.length(), parsed.size(),
-                    content == null ? "<null>" : content.substring(0, Math.min(220, content.length()))
-                            .replace("\n", "\\n"));
-            return parsed;
+            return parseFlashcards(postChat(config, body, "GenerateFlashcardsAsync"));
         } catch (Exception ex) {
             // Was log.debug, which hid a real HTTP 400 (illegal temperature) behind an
             // empty card list. Surface it so production failures are diagnosable.

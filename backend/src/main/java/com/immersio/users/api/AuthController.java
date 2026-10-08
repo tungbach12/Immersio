@@ -79,7 +79,8 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ApiResponse<UserDto> me(@RequestHeader("Authorization") String authHeader) {
+    public ApiResponse<UserDto> me(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         return ApiResponse.successResult(authService.getMe(userId(authHeader)));
     }
 
@@ -96,7 +97,8 @@ public class AuthController {
     }
 
     @DeleteMapping("/me")
-    public ApiResponse<Void> deleteAccount(@RequestHeader("Authorization") String authHeader) {
+    public ApiResponse<Void> deleteAccount(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         authService.deleteAccount(userId(authHeader));
         return ApiResponse.successResult(null, "Account deleted");
     }

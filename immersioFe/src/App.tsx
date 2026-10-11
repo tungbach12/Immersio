@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useLayoutEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -37,8 +37,9 @@ function PageLoading() {
 
 function ThemeManager() {
   const location = useLocation();
-  useEffect(() => {
+  useLayoutEffect(() => {
     const isAdmin = location.pathname.startsWith("/admin");
+    document.documentElement.dataset.workspaceTheme = isAdmin ? "admin" : location.pathname.startsWith("/student") ? "student" : "public";
     if (isAdmin) {
       document.documentElement.classList.add("dark");
     } else {

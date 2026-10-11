@@ -1,502 +1,88 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import {
-  Flame,
-  Trophy,
-  Target,
-  ArrowRight,
-  Play,
-  BookOpen,
-  Star,
-  Monitor,
-  ChevronDown,
-  ChevronUp,
-  Zap,
-  Mic,
-  Brain,
-} from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { scenarios } from "@/data/scenarios";
+import { Link } from "react-router-dom";
+import { Flame, Brain, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { authService, UserDto } from "@/services/auth";
-import { practiceService, CefrAnalysisDto } from "@/services/practice";
-import { scenarioService, Scenario } from "@/services/scenario";
-import { getDecks } from "@/services/decks";
-import { cn } from "@/lib/utils";
-
-const CEFR_CONFIG: Record<
-  string,
-  { gradient: string; glow: string; ring: string; label: string; emoji: string }
-> = {
-  "Unassigned": {
-    gradient: "from-[#432c25] via-[#5b3e34] to-[#f25b29]",
-    glow: "shadow-orange-500/20",
-    ring: "ring-orange-400/50 bg-white/10",
-    label: "Not yet assessed · Practice in Vocal Lab to begin",
-    emoji: "✨",
-  },
-  A1: {
-    gradient: "from-slate-700 via-slate-600 to-slate-800",
-    glow: "shadow-slate-400/40",
-    ring: "ring-slate-500/60",
-    label: "Breakthrough",
-    emoji: "🌱",
-  },
-  A2: {
-    gradient: "from-amber-700 via-amber-600 to-amber-800",
-    glow: "shadow-amber-500/40",
-    ring: "ring-amber-500/60",
-    label: "Elementary",
-    emoji: "🌿",
-  },
-  B1: {
-    gradient: "from-emerald-700 via-emerald-600 to-teal-700",
-    glow: "shadow-emerald-500/40",
-    ring: "ring-emerald-500/60",
-    label: "Intermediate",
-    emoji: "⚡",
-  },
-  B2: {
-    gradient: "from-indigo-700 via-blue-600 to-indigo-800",
-    glow: "shadow-indigo-500/40",
-    ring: "ring-indigo-500/60",
-    label: "Upper-Inter",
-    emoji: "🔥",
-  },
-  C1: {
-    gradient: "from-purple-700 via-violet-600 to-purple-800",
-    glow: "shadow-purple-500/40",
-    ring: "ring-purple-500/60",
-    label: "Advanced",
-    emoji: "💎",
-  },
-  C2: {
-    gradient: "from-rose-600 via-pink-500 to-orange-500",
-    glow: "shadow-rose-500/50",
-    ring: "ring-rose-400/70",
-    label: "Mastery",
-    emoji: "👑",
-  },
-};
-
-function formatExp(exp: number): string {
-  if (exp >= 1000) return `${(exp / 1000).toFixed(1)}k`;
-  return String(exp);
-}
+import { PageHeading } from "@/components/learning/PageHeading";
+import { ContentState } from "@/components/learning/ContentState";
+import { DailyInvitation } from "@/features/dashboard/components/DailyInvitation";
+import { LearningMetrics } from "@/features/dashboard/components/LearningMetrics";
+import { ProgressDetails } from "@/features/dashboard/components/ProgressDetails";
+import { RecommendedConversations } from "@/features/dashboard/components/RecommendedConversations";
+import { useLearningDashboard } from "@/features/dashboard/hooks/useLearningDashboard";
 
 export default function StudentDashboard() {
-  const [user, setUser] = useState<UserDto | null>(authService.getUser());
-  const [cefrData, setCefrData] = useState<CefrAnalysisDto | null>(null);
-  const [showCefrBreakdown, setShowCefrBreakdown] = useState(false);
-  const [loadingCefr, setLoadingCefr] = useState(false);
-  const [dbScenarios, setDbScenarios] = useState<Scenario[]>([]);
-  const [practiceLanguage] = useState<string>(() => {
-    return localStorage.getItem("practice_language") || "English";
-  });
-
-  const [totalDue, setTotalDue] = useState<number>(0);
-  const [dueDecks, setDueDecks] = useState<{ id: string; name: string; dueCount: number }[]>([]);
-
-  useEffect(() => {
-    // Sync latest user from server
-    authService
-      .getMe()
-      .then((latest) => {
-        authService.updateUser(latest);
-        setUser(latest);
-      })
-      .catch((err) => console.error("Profile sync failed:", err));
-
-    // Load real scenarios from database
-    scenarioService.getScenarios()
-      .then((list) => setDbScenarios(list))
-      .catch((err) => console.error("Failed to load scenarios for dashboard:", err));
-
-    // Load due cards count for reminders
-    getDecks()
-      .then((data) => {
-        const dueList = data
-          .filter(d => (d.dueCardsCount || 0) > 0)
-          .map(d => ({ id: d.id, name: d.name, dueCount: d.dueCardsCount || 0 }));
-        setDueDecks(dueList);
-        const total = dueList.reduce((sum, d) => sum + d.dueCount, 0);
-        setTotalDue(total);
-
-        // Notify client-side if permissions granted and has due cards
-        if (total > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-          const alreadyNotified = sessionStorage.getItem("notified_flashcards_today");
-          if (!alreadyNotified) {
-            new Notification("IMMERSIO", {
-              body: `Hôm nay bạn có ${total} thẻ từ vựng cần ôn tập. Click để bắt đầu ôn ngay! 🔥`,
-              icon: "/logo.png"
-            });
-            sessionStorage.setItem("notified_flashcards_today", "true");
-          }
-        }
-      })
-      .catch((err) => console.error("Failed to load decks for dashboard stats:", err));
-  }, []);
-
-  // Determine active scenarios (use real database ones if loaded, otherwise fallback to local mocks)
-  const recommendedScenarios = dbScenarios.length > 0 
-    ? dbScenarios.slice(0, 3) 
-    : (scenarios as unknown as Scenario[]).slice(0, 3);
-
-  const handleToggleCefr = async () => {
-    if (showCefrBreakdown) {
-      setShowCefrBreakdown(false);
-      return;
-    }
-    if (!cefrData) {
-      setLoadingCefr(true);
-      try {
-        const analysis = await practiceService.getCefrAnalysis();
-        setCefrData(analysis);
-      } catch (err) {
-        console.error("CEFR fetch failed:", err);
-      } finally {
-        setLoadingCefr(false);
-      }
-    }
-    setShowCefrBreakdown(true);
-  };
-
-  const level = user?.currentLanguageLevel?.split(" ")[0] ?? "Unassigned";
-  const cefrConfig = CEFR_CONFIG[level] ?? CEFR_CONFIG["Unassigned"];
-  const streak = user?.streakCount ?? 0;
-  const exp = user?.experiencePoints ?? 0;
-  const hours = user?.learningHours ?? 0;
-
+  const dashboard = useLearningDashboard();
   return (
-    <div className="space-y-8 pb-10">
-      {/* Welcome Header */}
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-display font-black text-slate-100 italic tracking-tight leading-tight">
-              Hello,{" "}
-              <span className="text-indigo-400">
-                {user?.username?.trim() || "Learner"}!
-              </span>{" "}
-              👋
-            </h1>
-            <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] mt-1">
-              Your learning journey continues
-            </p>
+    <div>
+      <PageHeading
+        eyebrow="Your learning journal"
+        title={`Hello, ${dashboard.user?.username?.trim() || "Learner"}.`}
+        description="A small step today. A little more confidence tomorrow."
+        actions={
+          <div className="workspace-streak">
+            <Flame size={19} />
+            <span>
+              <strong>{dashboard.user?.streakCount || 0}</strong>
+              <small>day streak</small>
+            </span>
           </div>
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="flex items-center gap-2 bg-white/5 px-4 py-2.5 rounded-2xl border border-white/5 shadow-sm"
-          >
-            <Flame className="text-orange-500 fill-orange-500" size={18} />
-            <span className="font-black text-white text-sm">{streak}</span>
-          </motion.div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-6 gap-4">
-        {/* Dynamic CEFR Level Card */}
-        <Card
-          className={cn(
-            "col-span-6 lg:col-span-4 text-white border-none shadow-2xl rounded-[2.5rem] overflow-hidden relative group cursor-pointer",
-            cefrConfig.glow,
-            "shadow-2xl"
-          )}
-          onClick={handleToggleCefr}
-        >
-          <div
-            className={cn(
-              "absolute inset-0 bg-gradient-to-br opacity-95 transition-opacity duration-700",
-              cefrConfig.gradient
-            )}
-          />
-          {/* Animated glow orbs */}
-          <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24 blur-3xl animate-pulse" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16 blur-2xl" />
-
-          <CardContent className="p-8 md:p-10 flex flex-col justify-between relative z-10">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/20 mb-4">
-                  <Trophy size={14} className="text-amber-300" />
-                  <span className="text-white font-black text-[10px] uppercase tracking-widest">
-                    Elite Learner
-                  </span>
-                </div>
-                <p className="text-white/70 font-bold text-[10px] uppercase tracking-[0.2em] mb-1">
-                  Current CEFR Level
-                </p>
-                <div className="flex items-end gap-4">
-                  <h3 className="text-4xl md:text-5xl font-black font-display italic tracking-tighter">
-                    {user?.currentLanguageLevel ?? "Unassigned"}
-                  </h3>
-                  <span className="text-3xl mb-1">{cefrConfig.emoji}</span>
-                </div>
-                <p className="text-white/60 text-xs font-bold mt-1 uppercase tracking-widest">
-                  {cefrConfig.label}
-                </p>
-              </div>
-
-              {/* CEFR Badge Ring */}
-              <div
-                className={cn(
-                  "w-16 h-16 rounded-full ring-4 bg-white/10 backdrop-blur-md flex items-center justify-center flex-shrink-0 mt-2 transition-transform group-hover:scale-110",
-                  cefrConfig.ring
-                )}
-              >
-                <span className="text-2xl font-black text-white tracking-tighter">
-                  {level === "Unassigned" ? "?" : level}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between mt-5">
-              <div className="flex items-center gap-2 text-white/80 text-[10px] font-bold">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                </span>
-                <span>Top 5% Global Rank this month</span>
-              </div>
-              <button className="flex items-center gap-1.5 text-white/70 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors">
-                {loadingCefr ? (
-                  <span className="animate-spin text-sm">⏳</span>
-                ) : showCefrBreakdown ? (
-                  <>
-                    Hide Analysis <ChevronUp size={14} />
-                  </>
-                ) : (
-                  <>
-                    Skill Breakdown <ChevronDown size={14} />
-                  </>
-                )}
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Stats Grid */}
-        <div className="col-span-3 lg:col-span-1 glass-card rounded-[2.2rem] p-6 flex flex-col items-center justify-center text-center gap-3 accent-glow border-glow">
-          <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 border-2 border-white/40">
-            <Target size={24} strokeWidth={2.5} />
-          </div>
-          <div>
-            <h3 className="text-2xl font-black text-slate-100 tracking-tighter italic">
-              {formatExp(exp)}
-            </h3>
-            <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mt-0.5">
-              Experience
-            </p>
-          </div>
-        </div>
-
-        <div className="col-span-3 lg:col-span-1 glass-card rounded-[2.2rem] p-6 flex flex-col items-center justify-center text-center gap-3 accent-glow border-glow">
-          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 border-2 border-white/40">
-            <BookOpen size={24} strokeWidth={2.5} />
-          </div>
-          <div>
-            <h3 className="text-2xl font-black text-slate-100 tracking-tighter italic">
-              {Math.round(hours)}h
-            </h3>
-            <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mt-0.5">
-              Learning
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* CEFR Breakdown Accordion */}
+        }
+      />
+      <DailyInvitation
+        totalDue={dashboard.totalDue}
+        reviewPath={dashboard.reviewPath}
+      />
+      <LearningMetrics
+        user={dashboard.user}
+        expanded={dashboard.showAnalysis}
+        loading={dashboard.loadingAnalysis}
+        onToggle={dashboard.toggleAnalysis}
+      />
       <AnimatePresence>
-        {showCefrBreakdown && cefrData && (
+        {dashboard.showAnalysis && (
           <motion.div
+            id="practice-analysis"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ type: "spring", damping: 30, stiffness: 250 }}
             className="overflow-hidden"
           >
-            <div className="bg-slate-900/60 border border-white/5 rounded-[2.5rem] p-8 space-y-6 shadow-xl shadow-black/30 backdrop-blur-2xl">
-              {/* Header */}
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center border border-white/5">
-                  <Brain size={18} className="text-indigo-400" />
-                </div>
-                <div>
-                  <h3 className="font-black text-slate-100 text-lg tracking-tight italic">
-                    CEFR Analysis
-                  </h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em]">
-                    {cefrData.statusMessage}
-                  </p>
-                </div>
-                <div className="ml-auto text-right">
-                  <span className="text-3xl font-black text-slate-100 italic tracking-tighter">
-                    {cefrData.overallScore}
-                  </span>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                    / 100
-                  </p>
-                </div>
-              </div>
-
-              {/* Skill Progress Bars */}
-              <div className="space-y-4">
-                {cefrData.skills.map((skill, i) => (
-                  <div key={i}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-2">
-                        {i === 0 ? (
-                          <Monitor size={13} className="text-indigo-400" />
-                        ) : i === 1 ? (
-                          <Mic size={13} className="text-emerald-400" />
-                        ) : (
-                          <BookOpen size={13} className="text-amber-400" />
-                        )}
-                        <span className="text-[11px] font-black text-slate-300 uppercase tracking-widest">
-                          {skill.name}
-                        </span>
-                      </div>
-                      <span className="text-sm font-black text-slate-100 italic">
-                        {skill.score}%
-                      </span>
-                    </div>
-                    <div className="h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5 p-0.5">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${skill.score}%` }}
-                        transition={{
-                          duration: 1.2,
-                          ease: "circOut",
-                          delay: i * 0.15,
-                        }}
-                        className={cn(
-                          "h-full rounded-full shadow-sm",
-                          i === 0
-                            ? "bg-gradient-to-r from-indigo-500 to-indigo-600"
-                            : i === 1
-                            ? "bg-gradient-to-r from-emerald-500 to-teal-500"
-                            : "bg-gradient-to-r from-amber-400 to-amber-500"
-                        )}
-                      />
-                    </div>
-                    <p className="text-[10px] text-slate-400 font-medium mt-1">
-                      {skill.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Study Suggestions */}
-              {cefrData.suggestions.length > 0 && (
-                <div className="bg-white/5 rounded-2xl p-5 space-y-2 border border-white/5">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3">
-                    💡 Study Suggestions
-                  </p>
-                  {cefrData.suggestions.map((s, i) => (
-                    <div key={i} className="flex items-start gap-2.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0 mt-1.5" />
-                      <p className="text-xs text-slate-300 font-medium leading-relaxed">
-                        {s}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <Link to="/student/vocal-lab">
-                <Button className="w-full h-12 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-black uppercase tracking-widest text-[10px] border border-white/10 gap-2 transition-transform active:scale-95">
-                  <Zap size={14} className="text-indigo-400" />
-                  Practice Now to Level Up
-                  <ArrowRight size={13} />
-                </Button>
-              </Link>
+            <div className="mb-6" aria-live="polite">
+              {dashboard.loadingAnalysis ? (
+                <ContentState
+                  loading
+                  description="Gathering your practice progress…"
+                />
+              ) : dashboard.analysisError ? (
+                <ContentState description="Your progress could not be loaded. Close this panel and open it again to retry." />
+              ) : dashboard.analysis ? (
+                <ProgressDetails analysis={dashboard.analysis} />
+              ) : null}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Flashcard Review Reminder Banner */}
-      {totalDue > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative bg-slate-900/95 border border-slate-800 rounded-[2.5rem] p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl overflow-hidden group mb-8"
-        >
-          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-2xl -mr-10 -mt-10 animate-pulse" />
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 bg-indigo-500/15 border border-indigo-500/30 rounded-2xl flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
-              <Brain size={24} className="animate-bounce" />
-            </div>
-            <div>
-              <h3 className="font-black text-white text-base tracking-tight italic uppercase">Nhắc nhở ôn tập thẻ từ</h3>
-              <p className="text-xs text-slate-300 font-bold mt-1.5 max-w-md leading-relaxed">
-                Hôm nay bạn có <span className="text-orange-400 font-black">{totalDue} từ vựng</span> cần ôn tập. 
-                Gợi ý ôn tập: <span className="text-amber-400 font-black">"{dueDecks[0]?.name || "Từ vựng hàng ngày"}"</span> để giữ vững chuỗi học tập!
-              </p>
-            </div>
+      {dashboard.totalDue > 0 && (
+        <div className="workspace-review-note">
+          <Brain size={23} />
+          <div>
+            <h3>A few familiar words are waiting.</h3>
+            <p>
+              {dashboard.totalDue} words are ready for review. Start with “
+              {dashboard.dueDecks[0]?.name}”.
+            </p>
           </div>
-          <Link to={`/student/flashcards/${dueDecks[0]?.id || ""}`} className="w-full md:w-auto">
-            <Button className="w-full md:w-auto px-8 h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] uppercase tracking-widest transition-transform active:scale-95 shadow-lg shadow-indigo-500/20 border border-white/10">
-              Ôn tập ngay <ArrowRight size={14} className="ml-2" />
-            </Button>
+          <Link to={dashboard.reviewPath} className="workspace-inline-link">
+            A little review <ArrowRight size={14} />
           </Link>
-        </motion.div>
+        </div>
       )}
-
-      {/* Recommendations */}
-      <section>
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-black text-slate-100 italic tracking-tight">
-            Daily Picks
-          </h2>
-          <Button
-            variant="ghost"
-            className="text-[10px] font-black text-slate-400 uppercase tracking-widest rounded-xl px-0 hover:bg-transparent hover:text-indigo-400 transition-colors"
-          >
-            Refresh
-          </Button>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {recommendedScenarios.map((scenario) => (
-            <Link
-              to={`/student/scenarios/${scenario.id}?lang=${practiceLanguage}`}
-              key={scenario.id}
-              className="block group"
-            >
-              <div className="glass-card rounded-[2.5rem] overflow-hidden h-full flex flex-col border border-white/5 hover:border-indigo-500/20 transition-all duration-500">
-                <div className="h-48 bg-slate-800 relative overflow-hidden">
-                  <img
-                    src={scenario.image}
-                    alt={scenario.title}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                  />
-                  <div className="absolute top-4 left-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md text-indigo-300 text-[9px] font-black uppercase tracking-widest shadow-xl border border-white/10">
-                    {scenario.level}
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <div className="p-7 flex-1 flex flex-col">
-                  <div className="flex justify-between items-start mb-3 gap-2">
-                    <h3 className="font-black text-lg text-slate-100 tracking-tight line-clamp-1 group-hover:text-indigo-400 transition-colors uppercase leading-none">
-                      {scenario.title}
-                    </h3>
-                    <div className="flex items-center gap-1 text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-lg text-[9px] font-black border border-amber-500/20 flex-shrink-0">
-                      <Star size={10} fill="currentColor" /> {scenario.rating}
-                    </div>
-                  </div>
-                  <p className="text-slate-400 text-xs font-medium mb-6 line-clamp-2 flex-1 leading-relaxed">
-                    {scenario.description}
-                  </p>
-                  <Button className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-[9px] h-12 shadow-lg shadow-indigo-950/20 transition-all group-hover:shadow-indigo-500/10">
-                    Continue
-                  </Button>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      <RecommendedConversations
+        loading={dashboard.loadingScenarios}
+        error={dashboard.scenarioError}
+        scenarios={dashboard.scenarioList}
+        language={dashboard.language}
+        onRetry={dashboard.loadScenarios}
+      />
     </div>
   );
 }

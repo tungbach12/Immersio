@@ -1,0 +1,312 @@
+.word-card-flip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 14px;
+  color: var(--primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+.word-review-complete {
+  display: flex;
+  gap: 35px;
+  align-items: center;
+  margin-top: 30px;
+}
+.word-review-complete h2 {
+  font-size: 28px;
+  margin-bottom: 15px;
+}
+.word-review-complete p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--slate-400);
+  max-width: 55ch;
+}
+.word-review-complete > div > span {
+  display: block;
+  margin-top: 13px;
+  font-size: 11px;
+  color: var(--primary);
+}
+.word-review-distribution > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 25px;
+}
+.word-review-distribution span {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.word-review-distribution small {
+  color: var(--slate-400);
+  font-size: 11px;
+}
+.word-review-distribution strong {
+  font:
+    26px Georgia,
+    serif;
+}
+.word-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+.word-collection-summary {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  padding: 20px 0 24px;
+  border-top: 1px solid var(--slate-700);
+  margin-top: 30px;
+}
+.word-collection-summary > span {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--slate-400);
+}
+.word-collection-summary strong {
+  color: var(--card-foreground);
+  font-weight: 600;
+}
+.word-collection-summary .word-collection-due {
+  margin-left: auto;
+  color: var(--primary);
+}
+.word-collection-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+.word-collection-card {
+  border: 1px solid var(--slate-700);
+  background: var(--surface);
+  border-radius: 17px;
+  overflow: hidden;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.word-collection-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--primary);
+  box-shadow: 0 12px 28px -18px #145b5050;
+}
+.word-collection-cover {
+  height: 155px;
+  background: #e2e8d3;
+  color: #295e49;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 22px,
+    #345e4922 23px,
+    transparent 24px
+  );
+}
+.word-collection-cover > span {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  background: #fffdf6bd;
+  border: 1px solid #b0b995;
+}
+.collection-tone-1 .word-collection-cover {
+  background-color: #ede1bf;
+  color: #81652c;
+}
+.collection-tone-2 .word-collection-cover {
+  background-color: #ead8cb;
+  color: #96664a;
+}
+.word-collection-body {
+  padding: 23px;
+}
+.word-collection-body h2 {
+  font-size: 23px;
+  margin-bottom: 9px;
+}
+.word-collection-body p {
+  color: var(--slate-400);
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+.word-collection-skeleton {
+  height: 295px;
+  background: var(--surface-hover);
+  border-radius: 17px;
+}
+.flashcard-workspace .backface-hidden {
+  background: var(--surface);
+  box-shadow: 0 15px 36px -22px #173f3745;
+  border-color: var(--slate-700);
+}
+.flashcard-workspace .backface-hidden[style] {
+  background: #edf0df;
+}
+@media (max-width: 1100px) {
+  .word-collection-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 767px) {
+  .word-review-complete {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 25px;
+  }
+  .word-review-complete h2 {
+    font-size: 25px;
+  }
+  .word-review-distribution h2 {
+    font-size: 24px;
+  }
+  .word-review-distribution > div {
+    gap: 10px;
+  }
+  .word-review-actions > button {
+    flex: 1;
+    font-size: 12px;
+  }
+  .word-collection-grid {
+    grid-template-columns: 1fr;
+  }
+  .word-collection-summary {
+    gap: 16px 22px;
+  }
+  .word-collection-summary .word-collection-due {
+    margin-left: 0;
+  }
+  .word-collection-cover {
+    height: 135px;
+  }
+}
+.word-progress-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 30px 0 24px;
+}
+.word-progress-metrics > div {
+  padding: 22px;
+  border: 1px solid var(--slate-700);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.word-progress-metrics span {
+  font-size: 11px;
+  color: var(--slate-400);
+}
+.word-progress-metrics strong {
+  display: block;
+  font:
+    35px Georgia,
+    serif;
+  margin-top: 12px;
+  color: var(--card-foreground);
+}
+.word-progress-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+.word-progress-panels h2 {
+  font-size: 25px;
+}
+.word-progress-description,
+.word-progress-note {
+  color: var(--slate-400);
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 13px 0 23px;
+}
+.word-progress-note {
+  font-size: 11px;
+  margin: 22px 0 0;
+}
+.word-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 16px 0;
+  font-size: 12px;
+}
+.word-progress-row > div {
+  flex: 1;
+  height: 7px;
+  border-radius: 8px;
+  background: var(--surface-hover);
+}
+.word-progress-row > div > span {
+  display: block;
+  height: 100%;
+  border-radius: 8px;
+  background: var(--primary);
+}
+.word-progress-row > strong {
+  min-width: 18px;
+  text-align: right;
+  font-weight: 500;
+}
+.word-progress-decks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 20px;
+}
+.word-progress-decks button {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--slate-700);
+  text-align: left;
+  cursor: pointer;
+}
+.word-progress-decks button > span {
+  flex: 1;
+}
+.word-progress-decks strong {
+  font-weight: 500;
+  font-size: 14px;
+  display: block;
+}
+.word-progress-decks small {
+  font-size: 11px;
+  color: var(--slate-400);
+}
+@media (max-width: 767px) {
+  .word-progress-metrics {
+    gap: 8px;
+  }
+  .word-progress-metrics > div {
+    padding: 15px 12px;
+  }
+  .word-progress-metrics span {
+    font-size: 10px;
+  }
+  .word-progress-metrics strong {
+    font-size: 28px;
+  }
+  .word-progress-panels {
+    grid-template-columns: 1fr;
+  }
+}

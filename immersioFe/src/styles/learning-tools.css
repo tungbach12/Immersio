@@ -1,0 +1,132 @@
+.learning-paper {
+  padding: 28px;
+  border: 1px solid var(--slate-700);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 5px 24px -18px #153e3538;
+}
+.learning-input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  border: 1px solid var(--slate-700);
+  background: var(--background);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--card-foreground);
+  font: inherit;
+  font-size: 14px;
+}
+.learning-input::placeholder {
+  color: var(--slate-500);
+}
+.learning-inline-error {
+  border: 1px solid #b5755540;
+  border-radius: 12px;
+  background: #b575550e;
+  padding: 15px 18px;
+  color: #935238;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.learning-dialog {
+  width: min(480px, calc(100vw - 32px));
+  max-height: 85dvh;
+  border: 1px solid var(--slate-700);
+  border-radius: 22px;
+  background: var(--surface);
+  color: var(--card-foreground);
+  padding: 0;
+  margin: auto;
+  box-shadow: 0 24px 90px #092d2640;
+  overflow: auto;
+  font-family: var(--font-body);
+}
+.learning-dialog::backdrop {
+  background: #0c302c80;
+  backdrop-filter: blur(5px);
+}
+.learning-dialog-body {
+  padding: 28px;
+}
+.learning-dialog-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.learning-dialog-heading h2 {
+  font:
+    30px Georgia,
+    serif;
+  letter-spacing: -0.04em;
+}
+.learning-dialog-description {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--slate-400);
+}
+.learning-deck-list {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0;
+  max-height: 260px;
+  overflow: auto;
+}
+.learning-deck-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--slate-700);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: left;
+  background: var(--background);
+  color: var(--card-foreground);
+  cursor: pointer;
+}
+.learning-deck-option:hover {
+  background: var(--surface-hover);
+  border-color: var(--primary);
+}
+.learning-deck-option > span {
+  flex: 1;
+}
+.learning-deck-option strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+}
+.learning-deck-option small {
+  color: var(--slate-400);
+  font-size: 11px;
+}
+.learning-deck-create {
+  padding-top: 18px;
+  border-top: 1px solid var(--slate-700);
+}
+.learning-deck-create label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+.learning-deck-create > div {
+  display: flex;
+  gap: 10px;
+}
+.learning-dialog :where(button, input):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+@media (max-width: 767px) {
+  .learning-paper {
+    padding: 22px;
+  }
+  .learning-dialog-body {
+    padding: 23px;
+  }
+  .learning-deck-create > div {
+    flex-direction: column;
+  }
+}

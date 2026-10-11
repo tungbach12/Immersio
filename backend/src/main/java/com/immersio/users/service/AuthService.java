@@ -68,7 +68,7 @@ public class AuthService {
         if (userRepository.existsByEmail(email)) throw new ConflictException("Email is already registered.");
         if (userRepository.existsByUsername(username)) throw new ConflictException("Username is already taken.");
         User user = new User(username, email, passwordEncoder.encode(request.password()));
-        if (userRepository.count() == 0) user.setRole("Admin"); // first user becomes admin (.NET parity)
+        AdminService.bootstrapAdminRole(userRepository, user); // first user becomes admin (.NET parity)
         user = userRepository.save(user);
         emailService.sendSafe(user.getEmail(), EmailTemplates.welcome(user.getUsername()));
         return issueTokens(user);
@@ -103,7 +103,7 @@ public class AuthService {
                 username = usernameBase + counter++;
             }
             user = new User(username, email, "");
-            if (userRepository.count() == 0) user.setRole("Admin"); // first user becomes admin (.NET parity)
+            AdminService.bootstrapAdminRole(userRepository, user); // first user becomes admin (.NET parity)
             user = userRepository.save(user);
         }
         return issueTokens(user);

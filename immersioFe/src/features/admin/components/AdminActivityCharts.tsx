@@ -25,6 +25,10 @@ const tooltipStyle = {
 export function AdminActivityCharts({ stats }: { stats: AdminDashboardStats }) {
   const gradient = useId();
   const reducedMotion = useReducedMotion();
+  // Recharts throws on an undefined series, and the endpoint may legitimately
+  // return [] for a fresh install. Fall back to an empty array.
+  const growthData = stats.growthData ?? [];
+  const sessionData = stats.sessionData ?? [];
   return (
     <div className="admin-charts">
       <section className="learning-paper">
@@ -37,7 +41,7 @@ export function AdminActivityCharts({ stats }: { stats: AdminDashboardStats }) {
         >
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={stats.growthData}
+              data={growthData}
               margin={{ top: 10, right: 8, left: -18, bottom: 0 }}
             >
               <defs>
@@ -87,7 +91,7 @@ export function AdminActivityCharts({ stats }: { stats: AdminDashboardStats }) {
         >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={stats.sessionData}
+              data={sessionData}
               margin={{ top: 10, right: 8, left: -18, bottom: 0 }}
             >
               <CartesianGrid

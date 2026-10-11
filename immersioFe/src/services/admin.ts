@@ -10,13 +10,19 @@ export interface SessionPoint {
   sessions: number;
 }
 
+/**
+ * Mirrors the summary fields returned by Java `AdminDashboardStatsDto`.
+ * Chart series are optional so deployments without activity history still
+ * render the dashboard safely.
+ */
 export interface AdminDashboardStats {
   totalUsers: number;
-  activeSessions: number;
-  averageDuration: string;
-  revenue: string;
-  growthData: GrowthPoint[];
-  sessionData: SessionPoint[];
+  activeSubscriptions: number;
+  totalRevenueVnd: number;
+  totalScenarios: number;
+  totalCards: number;
+  growthData?: GrowthPoint[];
+  sessionData?: SessionPoint[];
 }
 
 export interface PaymentTransactionDto {

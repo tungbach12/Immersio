@@ -2,7 +2,7 @@
 
 > **Version:** Based on ECC `main` (git: `affaan-m/ECC`) — covers v2.0.0+
 > **Scope:** Full harness — agents, skills, rules, hooks, commands, and cross-platform support
-> **Project:** Immersio — ASP.NET Core 9 backend + React 19/Vite frontend
+> **Project:** Immersio — Java 21 Spring Boot backend + React 19/Vite frontend
 
 ---
 
@@ -91,7 +91,7 @@ mkdir -p ~/.claude/rules/ecc/
 cp -r /tmp/ECC/rules/common ~/.claude/rules/ecc/
 
 # === Step 2b — Language-specific (pick ALL you need) ===
-# For Immersio: React 19 + TypeScript + ASP.NET Core 9
+# For Immersio: React 19 + TypeScript + Java 21 Spring Boot
 cp -r /tmp/ECC/rules/web          ~/.claude/rules/ecc/    # React, Vite, Next.js, CSS
 cp -r /tmp/ECC/rules/typescript   ~/.claude/rules/ecc/    # TypeScript / JavaScript
 cp -r /tmp/ECC/rules/react        ~/.claude/rules/ecc/    # React-specific
@@ -176,13 +176,13 @@ See `ECC/examples/CLAUDE.md` for a full example. At minimum include:
 npm run dev        # Dev server
 npm run build      # Production build
 npm run lint       # TypeScript / ESLint
-dotnet run --project src/Immersio.WebApi    # Backend
+cd backend && ./mvnw spring-boot:run         # Backend
 ```
 
 ## Tech Stack
 
 - React 19 + TypeScript + Vite
-- ASP.NET Core 9 + PostgreSQL
+- Java 21 Spring Boot (Modulith) + PostgreSQL
 - Tailwind CSS v4 + Radix UI
 ```
 
@@ -640,7 +640,7 @@ When you say something like *"write a React component"* in Claude Code, the conv
 │  ────────────────                                                       │
 │  9. User exits Claude or sends /exit                                   │
 │  10. → Stop hook fires:                                                │
-│       • Runs final build verification (dotnet build, npm run build)      │
+│       • Runs final build verification (mvn verify, npm run build)      │
 │       • Runs test suite (if configured)                                 │
 │       • Optionally commits changes                                        │
 │                                                                          │
@@ -780,7 +780,7 @@ Merged hook list for THIS project only
 | **Auto-format** (plugin) | `tool == 'Write' \|\| 'Edit'` | Runs Prettier on `.ts`/`.tsx` files |
 | **Type check** (plugin) | `tool == 'Write' \|\| 'Edit'` | Runs `tsc --noEmit --incremental` |
 | **Context injection** (plugin) | `SessionStart` | Loads `CLAUDE.md`, rules, memory |
-| **Build verification** (plugin) | `Stop` | Runs `dotnet build` + `npm run build` |
+| **Build verification** (plugin) | `Stop` | Runs `./mvnw verify` + `npm run build` |
 
 ### Disabling Hooks Temporarily
 
@@ -1143,7 +1143,7 @@ As of `2026-06-27` (following a complete `~/.claude` directory restore), the Imm
 
 | Layer | Technology | ECC Rules Active |
 |---|---|---|
-| Backend | ASP.NET Core 9, C#, PostgreSQL | `common/` + `csharp/` |
+| Backend | Java 21 Spring Boot, PostgreSQL | `common/` + `java/` |
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS v4 | `common/` + `web/` + `typescript/` + `react/` |
 | ORM | Entity Framework Core | `common/` + `csharp/` |
 | Auth | JWT + Google OAuth | `common/` + `security.md` |

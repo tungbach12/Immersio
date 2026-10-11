@@ -9,7 +9,7 @@ metadata:
 
 > **Scope:** How ECC (Everything Claude Code) persists memory across sessions.
 > **Covers:** `.tmp` summaries, `memory.md`, CLAUDE.md, Continuous Learning v2 (CLv2), and hook-driven persistence.
-> **Project:** Immersio — ASP.NET Core 9 + React 19/Vite
+> **Project:** Immersio — Java 21 Spring Boot + React 19/Vite
 
 ---
 
@@ -48,7 +48,7 @@ These are **automatically generated session summaries** written by the `Stop` an
     "Explained how hooks work step-by-step"
   ],
   "pending_tasks": ["Need update docs after next audit run"],
-  "tech_stack": "ASP.NET Core 9 + React 19 + Vite + PostgreSQL",
+  "tech_stack": "Java 21 Spring Boot + React 19 + Vite + PostgreSQL",
   "models_used": ["sonnet", "opus"],
   "total_cost_usd": 1.23
 }
@@ -103,12 +103,12 @@ These are **manual, persistent, git-tracked** memory sources. They survive forev
 
 ## Tech Stack
 - React 19 + TypeScript + Vite
-- ASP.NET Core 9 + PostgreSQL
+- Java 21 Spring Boot (Modulith) + PostgreSQL
 - Tailwind CSS v4 + Radix UI
 
 ## Commands
 npm run dev        # Dev server on :3000
-dotnet run --project src/Immersio.WebApi   # Backend on :5249
+cd backend && ./mvnw spring-boot:run    # Backend on :5249
 ```
 
 #### `.claude/memory.md` (Project-level persistent notes)

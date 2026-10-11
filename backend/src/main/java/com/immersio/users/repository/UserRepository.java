@@ -16,6 +16,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     List<User> findAllByIsDeletedFalse();
     long countByIsDeletedFalse();
 
+    /** Used by the admin bootstrap to detect an install that already has an administrator. */
+    long countByRoleAndEmailIgnoreCase(String role, String email);
+
     @Query("select count(u) from User u where u.isDeleted = false and u.subscriptionTier <> 'Basic' "
             + "and u.subscriptionExpiresAt > :now")
     long countActiveSubscriptions(java.time.Instant now);

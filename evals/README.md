@@ -15,5 +15,5 @@ evals/
 
 ```bash
 cd immersioFe && npm run lint   # Frontend type-check
-dotnet test                     # Backend unit tests
+cd backend && ./mvnw test      # Backend unit tests
 ```

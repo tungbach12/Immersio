@@ -121,7 +121,7 @@ git status/diff/log/add/commit/checkout/branch/fetch/pull
 ls, find, Read(**)
 # npm run lint/build/dev/test
 # python -m pytest / pip install
-# dotnet build/run/test
+# ./mvnw test
 ```
 
 ---

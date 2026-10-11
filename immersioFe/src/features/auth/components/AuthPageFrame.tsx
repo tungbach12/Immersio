@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ArrowLeft, BookOpen, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import "../auth.css";
 
@@ -28,8 +28,8 @@ export function AuthPageFrame({
       <div className="auth-shell">
         <aside className="auth-story" aria-label="About Immersio">
           <Link to="/" className="auth-brand" aria-label="Immersio home">
-            <span className="auth-brand-mark"><BookOpen size={20} strokeWidth={1.8} /></span>
-            <span>immersio</span>
+            <span className="auth-brand-mark"><img src="/immersio-mark.svg" alt="" /></span>
+            <span>Immersio</span>
           </Link>
 
           <div className="auth-story-main">
@@ -60,6 +60,10 @@ export function AuthPageFrame({
         </aside>
 
         <section className="auth-form-panel" aria-labelledby="auth-title">
+          <Link to="/" className="auth-mobile-brand" aria-label="Immersio home">
+            <img src="/immersio-mark.svg" alt="" />
+            <span>Immersio</span>
+          </Link>
           <Link to="/" className="auth-back-link"><ArrowLeft size={15} /> Back to home</Link>
           <div className="auth-form-content">
             <header className="auth-form-heading">

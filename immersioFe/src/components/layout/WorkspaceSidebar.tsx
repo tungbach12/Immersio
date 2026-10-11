@@ -1,7 +1,6 @@
 import { forwardRef } from "react";
 import { Link } from "react-router-dom";
 import {
-  BookOpen,
   ArrowUpRight,
   HelpCircle,
   LogOut,
@@ -33,7 +32,7 @@ export function WorkspaceBrand() {
   return (
     <span className="workspace-brand">
       <span className="workspace-brand-mark" aria-hidden="true">
-        <BookOpen size={24} strokeWidth={1.5} />
+        <img src="/immersio-mark.svg" alt="" />
       </span>
       <span>
         Immersio<span className="workspace-brand-dot">.</span>

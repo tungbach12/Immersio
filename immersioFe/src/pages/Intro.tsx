@@ -48,7 +48,7 @@ const Intro = () => {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
           <Link to="/" className="flex items-center gap-2 group transition-transform duration-300 hover:scale-[1.02]">
             <div className="bg-white p-2 rounded-xl shadow-md border border-white/10">
-              <img src="/logo.png" alt="IMMERSIO Logo" className="h-7 md:h-8 w-auto object-contain rounded-lg" />
+              <img src="/immersio-mark.svg" alt="" className="h-8 w-8 object-contain rounded-lg" />
             </div>
             <span className="font-black text-xl italic tracking-tighter text-white">IMMERSIO</span>
           </Link>
@@ -767,7 +767,8 @@ const Intro = () => {
             {/* Column 1: Brand & Socials */}
             <div className="space-y-8">
               <div className="flex items-center gap-2 bg-white p-2.5 rounded-xl w-fit border border-white/10">
-                <img src="/logo.png" alt="IMMERSIO Logo" className="h-8 w-auto object-contain rounded-lg" />
+                <img src="/immersio-mark.svg" alt="" className="h-10 w-10 object-contain rounded-lg" />
+                <span className="text-sm font-black italic tracking-tight text-slate-900">IMMERSIO</span>
               </div>
               <p className="text-xs text-slate-500 leading-relaxed font-semibold">
                 Ứng dụng học ngoại ngữ tiên phong áp dụng công nghệ Voice AI tiên tiến nhất, tạo dựng môi trường tự nhiên giúp học viên tự tin làm chủ ngôn ngữ giao tiếp.

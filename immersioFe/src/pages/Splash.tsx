@@ -19,8 +19,9 @@ export default function Splash() {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="z-10 flex flex-col items-center text-center px-4"
       >
-        <div className="mb-8 p-6 bg-white rounded-[3rem] shadow-2xl border border-white/20">
-          <img src="/logo.png" alt="IMMERSIO Logo" className="h-32 md:h-40 w-auto object-contain rounded-[2rem]" />
+        <div className="mb-8 flex flex-col items-center gap-4 p-6 bg-white rounded-[3rem] shadow-2xl border border-white/20">
+          <img src="/immersio-mark.svg" alt="" className="h-24 w-24 md:h-28 md:w-28 object-contain rounded-[2rem]" />
+          <span className="text-slate-900 font-black italic tracking-tight text-xl">IMMERSIO</span>
         </div>
         
         <p className="text-lg md:text-xl text-indigo-100 max-w-md mb-12 font-light mt-4">

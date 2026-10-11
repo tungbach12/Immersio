@@ -36,7 +36,8 @@
 .tpp-nav{position:absolute;left:0;right:0;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px clamp(16px,4cqw,44px);color:var(--tpp-navc,#f3eee4);transition:color .5s;pointer-events:none}
 .tpp-nav>*{pointer-events:auto}
 .tpp-stage[data-tone=light] .tpp-nav,.tpp-stage[data-tone=light] .tpp-rail{--tpp-navc:var(--tpp-ink)}
-.tpp-brand{font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;white-space:nowrap}
+.tpp-brand{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;white-space:nowrap}
+.tpp-brand::before{content:"";display:block;flex:none;width:36px;height:36px;border-radius:10px;background:url("/immersio-mark.svg") center/contain no-repeat}
 .tpp-links{display:flex;gap:clamp(12px,2.2cqw,28px)}
 .tpp-link{position:relative;font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.7;transition:opacity .3s}
 .tpp-link:hover,.tpp-link[aria-current=true]{opacity:1}

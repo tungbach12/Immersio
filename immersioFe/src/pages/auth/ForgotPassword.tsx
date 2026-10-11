@@ -91,7 +91,7 @@ export default function ForgotPassword() {
               whileHover={{ scale: 1.05 }}
               className="mb-4 p-3.5 bg-white rounded-2xl shadow-xl border border-white/10"
             >
-              <img src="/logo.png" alt="IMMERSIO Logo" className="h-12 w-auto object-contain rounded-xl" />
+              <img src="/immersio-mark.svg" alt="Immersio" className="h-12 w-12 object-contain rounded-xl" />
             </motion.div>
             <h1 className="text-2xl font-black text-white italic uppercase tracking-tight text-center">
               {step === "done" ? "Hoàn tất" : "Quên mật khẩu"}

@@ -79,7 +79,7 @@ export default function Onboarding() {
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
       <div className="max-w-4xl w-full">
         <div className="flex justify-center mb-8">
-          <img src="/logo.png" alt="IMMERSIO Logo" className="h-16 w-auto object-contain rounded-2xl animate-pulse" />
+          <img src="/immersio-mark.svg" alt="Immersio" className="h-16 w-16 object-contain rounded-2xl animate-pulse" />
         </div>
         <div className="text-center mb-12">
           <h1 className="text-4xl font-display font-bold text-slate-100 mb-4 italic">

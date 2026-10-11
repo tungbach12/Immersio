@@ -41,7 +41,7 @@ export function useLearningDashboard() {
         ) {
           new Notification("Immersio", {
             body: `${total} words are ready for a little review today.`,
-            icon: "/logo.png",
+            icon: "/immersio-mark.svg",
           });
           sessionStorage.setItem("notified_flashcards_today", "true");
         }

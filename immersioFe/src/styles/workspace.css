@@ -201,11 +201,17 @@
 
 .workspace-brand-mark {
   width: 35px;
-  height: 38px;
+  height: 35px;
   display: grid;
   place-items: center;
-  border: 1px solid #a4bc9870;
-  border-radius: 2px;
+  overflow: hidden;
+  border-radius: 9px;
+}
+
+.workspace-brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .workspace-brand-dot {
@@ -596,7 +602,8 @@ html[data-workspace-theme="student"]
     font-size: 25px;
   }
   .workspace-mobile-header .workspace-brand-mark {
-    display: none;
+    width: 30px;
+    height: 30px;
   }
   .workspace-admin-label {
     font-size: 9px;

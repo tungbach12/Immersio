@@ -4,6 +4,7 @@
 .tpp-sec-h{font-size:clamp(28px,min(3.9cqw,6cqh),55px)}
 .tpp-label{letter-spacing:.16em}
 .tpp-brand{font-size:15px;letter-spacing:.12em}
+.tpp-brand::before{width:38px;height:38px}
 .tpp-nav{padding-top:21px}
 .tpp-link{font-size:10px;letter-spacing:.14em}
 .learn-backdrop{background:radial-gradient(ellipse at 50% 20%,#236959 0%,#145b50 55%,#10483e 100%)}

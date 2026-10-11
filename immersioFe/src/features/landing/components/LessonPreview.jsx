@@ -67,7 +67,7 @@ export function LessonPreview({ goal, onGoalChange }) {
 
   return <div className="learn-demo tpp-paper">
     <div className="learn-demo-top">
-      <span className="tpp-label">A little practice, right here</span>
+      <span className="tpp-label">Sample lesson · choose a reply</span>
       <span className="learn-lesson-count">01 / 01</span>
     </div>
     <div className="learn-goals" role="group" aria-label="Choose a practice situation">

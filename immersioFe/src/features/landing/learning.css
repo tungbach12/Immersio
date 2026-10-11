@@ -164,7 +164,7 @@
   .learn-footer button{font-size:7px !important;letter-spacing:.08em}
 }
 @container tpp (max-height:730px){
-  .learn-hero-copy{top:23% !important}
+  .learn-hero-copy{top:28% !important}
   .learn-hero-intro{margin-top:14px}
   .learn-hero-actions{margin-top:18px}
   .learn-hero-footnote{margin-top:11px}

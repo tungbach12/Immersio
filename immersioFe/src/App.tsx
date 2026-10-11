@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "r
 import AppLayout from "@/components/layout/AppLayout";
 import { ToastProvider } from "@/components/ui/Toast";
 
-const Intro = lazy(() => import("@/pages/Intro"));
+const Landing = lazy(() => import("@/pages/Landing"));
 const Onboarding = lazy(() => import("@/pages/Onboarding"));
 const Login = lazy(() => import("@/pages/auth/Login"));
 const Register = lazy(() => import("@/pages/auth/Register"));
@@ -39,13 +39,15 @@ function ThemeManager() {
   const location = useLocation();
   useLayoutEffect(() => {
     const isAdmin = location.pathname.startsWith("/admin");
-    document.documentElement.dataset.workspaceTheme = isAdmin ? "admin" : location.pathname.startsWith("/student") ? "student" : "public";
+    const isLanding = location.pathname === "/" || location.pathname === "/intro";
+    document.documentElement.dataset.workspaceTheme = isAdmin ? "admin" : isLanding ? "landing" : location.pathname.startsWith("/student") ? "student" : "public";
+    window.scrollTo({ top: 0, behavior: "instant" });
     if (isAdmin) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
     }
-  }, [location]);
+  }, [location.pathname]);
   return null;
 }
 
@@ -56,8 +58,8 @@ export default function App() {
       <ThemeManager />
       <Suspense fallback={<PageLoading />}>
         <Routes>
-        <Route path="/" element={<Intro />} />
-        <Route path="/intro" element={<Intro />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="/intro" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

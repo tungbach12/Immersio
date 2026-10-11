@@ -479,19 +479,19 @@ function ImmersioLanding({
           <Reveal d={.25} className={"learn-hero-actions " + (animateIn ? "tpp-rise" : "")} style={{
           "--rd": ".75s"
         }}>
-            <button type="button" className="tpp-tag learn-primary" onClick={() => Z(4)}>Try a little English <span aria-hidden="true">↗</span></button>
-            <button type="button" className="learn-text-link" onClick={() => Z(1)}>Explore the approach <span aria-hidden="true">↓</span></button>
+            <button type="button" className="tpp-tag learn-primary" onClick={() => Z(4)}>Try a sample lesson <span aria-hidden="true">↗</span></button>
+            <button type="button" className="learn-text-link" onClick={() => Z(1)}>How Immersio works <span aria-hidden="true">↓</span></button>
           </Reveal>
-          <Reveal d={.3}><p className="learn-hero-footnote">A small beginning. No sign-up needed.</p></Reveal>
+          <Reveal d={.3}><p className="learn-hero-footnote">Try the sample. No account needed.</p></Reveal>
         </div>
         <div className="tpp-par learn-hero-plane" data-dp={-14}><div className={animateIn ? "tpp-flyin" : ""}><div className="tpp-glide"><PaperPlane /></div></div></div>
         <button type="button" className="tpp-note tpp-paper learn-hero-note" onClick={() => Z(2)}><span>{p}</span><span className="learn-note-label">a note to your future self</span></button>
-      </div>} lowerBg={<><StudyBackdrop tone="light" /><JournalLines /></>} lower={<div className="learn-hero-bottom"><button type="button" className="tpp-label" onClick={() => Z(1)}><span className="tpp-hint" aria-hidden="true">↓</span> A new chapter, just below</button><span className="tpp-label tpp-wide">Listen. Speak. Stay curious.</span></div>} />,
+      </div>} lowerBg={<><StudyBackdrop tone="light" /><JournalLines /></>} lower={<div className="learn-hero-bottom"><button type="button" className="tpp-label" onClick={() => Z(1)}><span className="tpp-hint" aria-hidden="true">↓</span> See how it works</button><span className="tpp-label tpp-wide">Talk with AI. Save words. Review.</span></div>} />,
     Ie = <div className="tpp-paper relative h-full overflow-clip learn-about-front">
       <GrainTexture opacity={.3} /><div className="tpp-pc-grid relative">
         <div className="learn-about-art"><div className="learn-about-picture"><LearningImage src={Q.photo} kind="conversation" alt="Two learners sharing an everyday conversation" /></div><div className="learn-about-mini"><LearningImage kind="words" /><span className="tpp-tape" /></div><span className="learn-hand-note learn-about-art-note">Good words. Good company.</span></div>
         <div className="learn-postcard-divider"><span className="tpp-label tpp-wide">a little note from Immersio</span></div>
-        <div className="learn-about-copy"><p className="tpp-label learn-small-heading">A FRIENDLIER WAY TO LEARN</p><h2 className="tpp-h">{Q.title}</h2><p className="learn-about-subtitle">{Q.subtitle}</p><div className="tpp-rule tpp-hw learn-about-letter">{Q.text}</div><div className="learn-about-signoff"><span className="tpp-hand">— Immersio</span><button type="button" className="tpp-label" onClick={() => Gt(true)}>Our approach ↻</button></div></div>
+        <div className="learn-about-copy"><p className="tpp-label learn-small-heading">A FRIENDLIER WAY TO LEARN</p><h2 className="tpp-h">{Q.title}</h2><p className="learn-about-subtitle">{Q.subtitle}</p><div className="tpp-rule tpp-hw learn-about-letter">{Q.text}</div><div className="learn-about-signoff"><span className="tpp-hand">— Immersio</span><button type="button" className="tpp-label" onClick={() => Gt(true)}>See how it works ↻</button></div></div>
       </div></div>,
     Ge = <div className="tpp-paper relative h-full overflow-clip" style={{
       borderRadius: 3
@@ -501,7 +501,7 @@ function ImmersioLanding({
             }}>{"Make yourself at home"}</p><h3 className="tpp-h mt-1" style={{
               fontSize: "clamp(22px, min(3cqw, 5cqh), 38px)",
               fontWeight: 400
-            }}>{"Learn a little. Live a little."}</h3><p className="mt-1 text-[13px]" style={{
+        }}>{"Learn by doing."}</h3><p className="mt-1 text-[13px]" style={{
               opacity: .75
             }}>{role}</p></div><div style={{
             transform: "rotate(-10deg)",
@@ -520,7 +520,7 @@ function ImmersioLanding({
             }}>{i.value}</dd></div>)}</dl><div className="mt-3 flex flex-wrap gap-2">{(Q.skills || []).map(i => <span key={i} className="tpp-chip">{i}</span>)}</div><div className="mt-3 flex items-center justify-between"><button type="button" className="tpp-label" style={{
             fontSize: 10,
             color: k.accent
-          }} onClick={() => Z(4)}>Try a conversation →</button><button type="button" className="tpp-label" style={{
+          }} onClick={() => Z(4)}>Try a sample lesson →</button><button type="button" className="tpp-label" style={{
             fontSize: 10,
             color: k.accent
           }} onClick={() => Gt(!1)}>{"↺ Front"}</button></div></div></div>,
@@ -644,7 +644,7 @@ function ImmersioLanding({
                 color: k.accent,
                 borderBottom: "1px solid currentColor",
                 paddingBottom: 2
-              }} onClick={() => We(A)}>{"Try a conversation →"}</button>}</div></div><div className="mt-4 flex items-center justify-between gap-3" style={{
+              }} onClick={() => We(A)}>{"Try this sample →"}</button>}</div></div><div className="mt-4 flex items-center justify-between gap-3" style={{
             color: "#f3eee4"
           }}><div className="flex items-center gap-2"><button type="button" className="tpp-round" aria-label="Previous practice" onClick={() => ot(-1)}>{"←"}</button><button type="button" className="tpp-round" aria-label="Next practice" onClick={() => ot(1)}>{"→"}</button></div><div className="flex items-center gap-1.5" role="group" aria-label="Practice activities">{V.map((i, l) => <button key={l} type="button" className="tpp-pip" aria-label={i.name} aria-current={l === $} onClick={() => l !== $ && ot(l - $)} />)}</div></div></Reveal></div></div>} lowerBg={<StudyBackdrop />} lower={<div className="relative h-full"><span className="tpp-label absolute" style={{
         left: "clamp(16px,4cqw,44px)",
@@ -662,9 +662,9 @@ function ImmersioLanding({
     }}><JournalLines /><GrainTexture uid={v} opacity={.45} /></div>} upper={<div className="tpp-fill flex flex-col" style={{
       paddingTop: "clamp(64px, 10cqh, 96px)",
       color: k.ink
-    }}><Reveal d={0} className="learn-journey-heading flex items-end justify-between gap-4 px-[clamp(16px,5cqw,64px)]"><div><p className="tpp-label" style={{
+      }}><Reveal d={0} className="learn-journey-heading flex items-end justify-between gap-4 px-[clamp(16px,5cqw,64px)]"><div><p className="tpp-label" style={{
             color: k.accent
-          }}>{"YOUR LEARNING JOURNAL · ONE STEP AT A TIME"}</p><h2 className="tpp-h tpp-sec-h mt-2">{routeTitle}</h2></div><div className="tpp-wide" style={{
+          }}>{"HOW IT WORKS · ONE STEP AT A TIME"}</p><h2 className="tpp-h tpp-sec-h mt-2">{routeTitle}</h2></div><div className="tpp-wide" style={{
           color: k.ink,
           opacity: .7
         }}><LearningBadge /></div></Reveal><div ref={Vt} className="relative mx-[clamp(16px,5cqw,64px)] mb-[3cqh] mt-[2cqh] min-h-0 flex-1" onKeyDown={i => {
@@ -705,7 +705,7 @@ function ImmersioLanding({
         opacity: .8
       }}>{"Last stop — "}{contactTitle}</span></div>} />,
     $e = <PaperChapter index={4} seam={1} seed={505} label={labels[4]} last setRef={ct} uid={v} upperBg={<><StudyBackdrop /><GrainTexture opacity={.25} /></>} upper={<div className="tpp-fill learn-final">
-        <Reveal d={0} className="learn-final-heading"><p className="learn-eyebrow">LET’S START WITH A CONVERSATION</p><h2 className="tpp-h tpp-sec-h">{contactTitle}</h2><p>A small taste of Immersio. Pick a moment, find your words.</p></Reveal>
+        <Reveal d={0} className="learn-final-heading"><p className="learn-eyebrow">TRY A SHORT SAMPLE</p><h2 className="tpp-h tpp-sec-h">{contactTitle}</h2><p>This sample uses answer choices. In the app, chat with an AI partner by voice or text.</p></Reveal>
         <Reveal d={.12} r={-2} className="learn-demo-wrap"><LessonPreview goal={lessonGoal} onGoalChange={setLessonGoal} /></Reveal>
         <Reveal d={.25} className="learn-final-note"><span className="tpp-hand">You don’t have to be perfect. You just have to begin.</span></Reveal>
         <footer className="learn-footer"><span>© {De} {name} <span className="tpp-wide-i">· A little English, every day.</span></span><button type="button" className="tpp-label" onClick={() => Z(0)}>Back to the beginning ↑</button></footer>

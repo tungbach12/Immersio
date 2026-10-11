@@ -324,7 +324,7 @@ export default function ScenarioBuilder() {
     if (!confirm("Are you sure you want to delete this scenario? This cannot be undone.")) return;
     try {
       await adminService.deleteScenario(id);
-      setScenarios(scenarios.filter(s => s.Id !== id));
+      setScenarios(scenarios.filter(s => s.id !== id));
       loadScenarios();
       setSuccess("Scenario archived.");
       setTimeout(() => setSuccess(""), 3000);

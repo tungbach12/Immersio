@@ -1,0 +1,455 @@
+.profile-workspace {
+  max-width: 930px;
+  margin: 0 auto;
+}
+.preferences-workspace,
+.help-workspace {
+  max-width: 850px;
+  margin: 0 auto;
+}
+.preference-settings {
+  margin-top: 30px;
+}
+.preference-settings > button {
+  margin-top: 22px;
+}
+.preference-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 23px 0;
+  border-bottom: 1px solid var(--slate-700);
+}
+.preference-row:first-child {
+  padding-top: 4px;
+}
+.preference-row h2 {
+  font-size: 23px;
+}
+.preference-row p {
+  color: var(--slate-400);
+  font-size: 12px;
+  line-height: 1.8;
+  margin-top: 9px;
+}
+.preference-switch {
+  height: 28px;
+  width: 50px;
+  border-radius: 30px;
+  background: var(--slate-700);
+  padding: 4px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.preference-switch span {
+  display: block;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #fffdf6;
+  transition: transform 0.2s;
+}
+.preference-switch.is-checked {
+  background: var(--primary);
+}
+.preference-switch.is-checked span {
+  transform: translateX(22px);
+}
+.preference-switch:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.help-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 30px;
+}
+.help-faq {
+  padding: 0 25px;
+}
+.help-faq h2 {
+  font: 500 15px var(--font-body);
+  letter-spacing: 0;
+}
+.help-faq h2 button {
+  width: 100%;
+  padding: 23px 0;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+  line-height: 1.6;
+}
+.help-faq svg {
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.help-faq svg.is-open {
+  transform: rotate(180deg);
+}
+.help-faq > div > p {
+  padding: 0 0 24px;
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--slate-400);
+}
+.help-contact {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  margin-top: 24px;
+  background: #edf0df;
+}
+.help-contact > svg {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+.help-contact > div {
+  flex: 1;
+}
+.help-contact h2 {
+  font-size: 24px;
+}
+.help-contact p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--slate-400);
+  margin-top: 8px;
+}
+.help-contact > a {
+  background: var(--primary);
+  color: #fffdf6;
+  white-space: nowrap;
+}
+.profile-identity {
+  margin-top: 30px;
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+.profile-photo {
+  position: relative;
+  flex-shrink: 0;
+}
+.profile-photo > span {
+  display: grid;
+  place-items: center;
+  width: 105px;
+  height: 105px;
+  border-radius: 50%;
+  background: #e3e8d3;
+  color: #176557;
+  overflow: hidden;
+  font:
+    37px Georgia,
+    serif;
+  border: 5px solid #f7f5eb;
+}
+.profile-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.profile-photo > button {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--surface);
+  background: var(--primary);
+  color: #fffdf6;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.profile-identity h2 {
+  font-size: 32px;
+  margin: 10px 0;
+}
+.profile-email {
+  font-size: 13px;
+  color: var(--slate-400);
+  overflow-wrap: anywhere;
+}
+.profile-membership {
+  display: inline-block;
+  font-size: 10px;
+  margin-top: 13px;
+  border: 1px solid var(--slate-700);
+  border-radius: 30px;
+  padding: 5px 12px;
+  background: var(--surface-hover);
+}
+.profile-account-links {
+  padding: 6px 26px;
+}
+.profile-account-links a {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  padding: 25px 0;
+  border-bottom: 1px solid var(--slate-700);
+  transition: color 0.2s;
+}
+.profile-account-links a:last-child {
+  border-bottom: 0;
+}
+.profile-account-links a:hover {
+  color: var(--primary);
+}
+.profile-account-links a > span {
+  flex: 1;
+}
+.profile-account-links strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+}
+.profile-account-links small {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--slate-400);
+}
+.profile-sign-out {
+  margin-top: 23px;
+  display: flex;
+  justify-content: flex-end;
+}
+.subscription-billing {
+  margin: 30px 0 24px;
+  display: inline-flex;
+  gap: 5px;
+  padding: 5px;
+  border: 1px solid var(--slate-700);
+  border-radius: 50px;
+  background: var(--surface);
+}
+.subscription-billing button {
+  padding: 12px 22px;
+  border-radius: 40px;
+  color: var(--slate-400);
+  font-size: 12px;
+  cursor: pointer;
+}
+.subscription-billing button[aria-pressed="true"] {
+  background: var(--primary);
+  color: #fffdf6;
+}
+.subscription-billing button > span {
+  font-size: 9px;
+  margin-left: 7px;
+}
+.subscription-billing-note {
+  font-size: 11px;
+  color: var(--slate-400);
+  margin-bottom: 22px;
+}
+.subscription-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.subscription-plan {
+  display: flex;
+  flex-direction: column;
+  padding: 28px;
+}
+.subscription-plan.is-popular {
+  border-color: #97ad85;
+  background: #f1f3e6;
+}
+.subscription-plan.is-current {
+  border-color: var(--primary);
+}
+.subscription-plan-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 22px;
+  color: var(--primary);
+}
+.subscription-plan-heading span {
+  font-size: 9px;
+}
+.subscription-plan h2 {
+  font-size: 28px;
+}
+.subscription-price {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin: 20px 0 12px;
+  flex-wrap: wrap;
+}
+.subscription-price strong {
+  font:
+    33px Georgia,
+    serif;
+  letter-spacing: -0.035em;
+}
+.subscription-price span {
+  font-size: 11px;
+  color: var(--slate-400);
+}
+.subscription-plan-description {
+  font-size: 12px;
+  color: var(--slate-400);
+  line-height: 1.8;
+  min-height: 44px;
+}
+.subscription-plan ul {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 23px 0 30px;
+  flex: 1;
+}
+.subscription-plan li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--slate-300);
+}
+.subscription-plan li svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--primary);
+}
+.subscription-plan > button {
+  width: 100%;
+  font-size: 12px;
+}
+.subscription-comparison {
+  margin-top: 45px;
+}
+.subscription-table-wrap {
+  padding: 0;
+  overflow: auto;
+}
+.subscription-table-wrap table {
+  width: 100%;
+  min-width: 670px;
+  text-align: left;
+  border-collapse: collapse;
+}
+.subscription-table-wrap th,
+.subscription-table-wrap td {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--slate-700);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.subscription-table-wrap thead th {
+  color: var(--primary);
+  background: var(--surface-hover);
+  font-size: 13px;
+  font-weight: 500;
+}
+.subscription-table-wrap tbody th {
+  font-weight: 500;
+}
+.subscription-table-wrap td {
+  color: var(--slate-400);
+}
+.subscription-table-wrap tr:last-child td,
+.subscription-table-wrap tr:last-child th {
+  border-bottom: 0;
+}
+.subscription-scroll-hint {
+  display: none;
+  font-size: 10px;
+  color: var(--slate-400);
+  margin-top: 12px;
+}
+@media (max-width: 1100px) {
+  .subscription-plan-grid {
+    gap: 12px;
+  }
+  .subscription-plan {
+    padding: 23px;
+  }
+  .subscription-price strong {
+    font-size: 27px;
+  }
+}
+@media (max-width: 767px) {
+  .preference-row {
+    gap: 18px;
+  }
+  .preference-row h2 {
+    font-size: 21px;
+  }
+  .help-faq {
+    padding: 0 20px;
+  }
+  .help-contact {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .help-contact > div {
+    flex-basis: 70%;
+  }
+  .help-contact > a {
+    margin-left: 40px;
+  }
+  .profile-identity {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 22px;
+  }
+  .profile-identity h2 {
+    font-size: 29px;
+  }
+  .profile-identity .workspace-eyebrow {
+    font-size: 9px;
+  }
+  .profile-account-links {
+    padding: 4px 20px;
+  }
+  .profile-account-links a {
+    gap: 15px;
+  }
+  .profile-account-links strong {
+    font-size: 14px;
+  }
+  .profile-account-links small {
+    font-size: 11px;
+    line-height: 1.7;
+  }
+  .profile-sign-out {
+    justify-content: center;
+  }
+  .subscription-plan-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .subscription-plan {
+    padding: 26px;
+  }
+  .subscription-price strong {
+    font-size: 36px;
+  }
+  .subscription-plan-description {
+    min-height: 0;
+  }
+  .subscription-billing button {
+    padding: 11px 17px;
+  }
+  .subscription-scroll-hint {
+    display: block;
+  }
+  .subscription-comparison h2 {
+    font-size: 25px;
+  }
+}

@@ -1,5 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@300;400;500;600&family=Montserrat:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,400;1,9..40,500&family=Archivo:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import "tailwindcss";
+@import "./styles/theme.css";
+@import "./styles/workspace.css";
+@import "./styles/dashboard.css";
+@import "./styles/scenarios.css";
+@import "./styles/learning-tools.css";
+@import "./styles/flashcards.css";
+@import "./styles/pronunciation.css";
+@import "./styles/dictionary.css";
+@import "./styles/conversation.css";
+@import "./styles/account.css";
+@import "./styles/admin.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -516,104 +527,104 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* In light mode, override text-white on plain text elements to keep them readable against bright backgrounds */
-:root:not(.dark) h1.text-white:not(.dark, .dark *),
-:root:not(.dark) h2.text-white:not(.dark, .dark *),
-:root:not(.dark) h3.text-white:not(.dark, .dark *),
-:root:not(.dark) h4.text-white:not(.dark, .dark *),
-:root:not(.dark) h5.text-white:not(.dark, .dark *),
-:root:not(.dark) h6.text-white:not(.dark, .dark *),
-:root:not(.dark) p.text-white:not(.dark, .dark *),
-:root:not(.dark) input.text-white:not(.dark, .dark *),
-:root:not(.dark) textarea.text-white:not(.dark, .dark *),
-:root:not(.dark) select.text-white:not(.dark, .dark *),
-:root:not(.dark) span.text-white:not(.bg-indigo-600):not(.bg-blue-600):not(.bg-gradient-to-r):not(.bg-gradient-vibrant):not(.bg-indigo-500):not(.bg-purple-600):not(.bg-emerald-500):not(.bg-amber-500):not(.bg-white\/20):not(.bg-white\/10):not(.dark, .dark *),
-:root:not(.dark) div.text-white:not(.bg-indigo-600):not(.bg-blue-600):not(.bg-gradient-to-r):not(.bg-gradient-vibrant):not(.bg-indigo-500):not(.bg-purple-600):not(.bg-emerald-500):not(.bg-amber-500):not(.bg-white\/20):not(.bg-white\/10):not(.dark, .dark *),
-:root:not(.dark) span.font-black.italic.tracking-tighter.text-white:not(.dark, .dark *) {
+:root:not(.dark):not([data-workspace-theme="student"]) h1.text-white:not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) h2.text-white:not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) h3.text-white:not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) h4.text-white:not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) h5.text-white:not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) h6.text-white:not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) p.text-white:not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) input.text-white:not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) textarea.text-white:not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) select.text-white:not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) span.text-white:not(.bg-indigo-600):not(.bg-blue-600):not(.bg-gradient-to-r):not(.bg-gradient-vibrant):not(.bg-indigo-500):not(.bg-purple-600):not(.bg-emerald-500):not(.bg-amber-500):not(.bg-white\/20):not(.bg-white\/10):not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) div.text-white:not(.bg-indigo-600):not(.bg-blue-600):not(.bg-gradient-to-r):not(.bg-gradient-vibrant):not(.bg-indigo-500):not(.bg-purple-600):not(.bg-emerald-500):not(.bg-amber-500):not(.bg-white\/20):not(.bg-white\/10):not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) span.font-black.italic.tracking-tighter.text-white:not(.dark, .dark *) {
   color: var(--slate-100) !important;
 }
 
 /* Ensure inputs and other fields have high contrast and matching backgrounds in light mode */
-:root:not(.dark) input:not(.dark, .dark *),
-:root:not(.dark) textarea:not(.dark, .dark *),
-:root:not(.dark) select:not(.dark, .dark *) {
+:root:not(.dark):not([data-workspace-theme="student"]) input:not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) textarea:not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) select:not(.dark, .dark *) {
   background-color: var(--surface) !important;
   color: var(--slate-100) !important;
   border-color: var(--slate-700) !important;
 }
 
 /* Translucent color adjustments to avoid washed-out elements on light background */
-:root:not(.dark) .bg-white\/5:not(.dark, .dark *) {
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-white\/5:not(.dark, .dark *) {
   background-color: var(--slate-800) !important;
 }
-:root:not(.dark) .bg-white\/10:not(.dark, .dark *) {
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-white\/10:not(.dark, .dark *) {
   background-color: var(--slate-700) !important;
 }
-:root:not(.dark) .bg-white\/20:not(.dark, .dark *) {
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-white\/20:not(.dark, .dark *) {
   background-color: var(--slate-600) !important;
 }
-:root:not(.dark) .bg-black\/40:not(.dark, .dark *) {
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-black\/40:not(.dark, .dark *) {
   background-color: var(--slate-850) !important;
 }
 
 /* Translucent border overrides to use logo theme-compatible warm gray-brown border */
-:root:not(.dark) .border-white\/5:not(.dark, .dark *),
-:root:not(.dark) .border-white\/10:not(.dark, .dark *),
-:root:not(.dark) .border-white\/20:not(.dark, .dark *) {
+:root:not(.dark):not([data-workspace-theme="student"]) .border-white\/5:not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) .border-white\/10:not(.dark, .dark *),
+:root:not(.dark):not([data-workspace-theme="student"]) .border-white\/20:not(.dark, .dark *) {
   border-color: var(--slate-700) !important;
 }
 
 /* Flashcards Light Mode Overrides for clean physical card feel */
-:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) {
+:root:not(.dark):not([data-workspace-theme="student"]) .preserve-3d > div:not(.dark, .dark *) {
   background-color: #ffffff !important;
   background-image: none !important;
   border: 1px solid var(--slate-700) !important;
   box-shadow: 0 15px 35px rgba(67, 44, 37, 0.08) !important;
 }
-:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) * {
+:root:not(.dark):not([data-workspace-theme="student"]) .preserve-3d > div:not(.dark, .dark *) * {
   color: var(--slate-100) !important;
 }
 /* Ensure highlights/badges inside the card still have correct color tags */
-:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .text-emerald-400,
-:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .bg-emerald-500\/10 *,
-:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .bg-emerald-500\/10 {
+:root:not(.dark):not([data-workspace-theme="student"]) .preserve-3d > div:not(.dark, .dark *) .text-emerald-400,
+:root:not(.dark):not([data-workspace-theme="student"]) .preserve-3d > div:not(.dark, .dark *) .bg-emerald-500\/10 *,
+:root:not(.dark):not([data-workspace-theme="student"]) .preserve-3d > div:not(.dark, .dark *) .bg-emerald-500\/10 {
   color: #15803d !important;
   background-color: rgba(21, 128, 61, 0.1) !important;
 }
-:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .text-indigo-300,
-:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .bg-indigo-500\/10 *,
-:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .bg-indigo-500\/10 {
+:root:not(.dark):not([data-workspace-theme="student"]) .preserve-3d > div:not(.dark, .dark *) .text-indigo-300,
+:root:not(.dark):not([data-workspace-theme="student"]) .preserve-3d > div:not(.dark, .dark *) .bg-indigo-500\/10 *,
+:root:not(.dark):not([data-workspace-theme="student"]) .preserve-3d > div:not(.dark, .dark *) .bg-indigo-500\/10 {
   color: #f25b29 !important;
   background-color: rgba(242, 91, 41, 0.1) !important;
 }
-:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .text-amber-300,
-:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .bg-amber-500\/10 *,
-:root:not(.dark) .preserve-3d > div:not(.dark, .dark *) .bg-amber-500\/10 {
+:root:not(.dark):not([data-workspace-theme="student"]) .preserve-3d > div:not(.dark, .dark *) .text-amber-300,
+:root:not(.dark):not([data-workspace-theme="student"]) .preserve-3d > div:not(.dark, .dark *) .bg-amber-500\/10 *,
+:root:not(.dark):not([data-workspace-theme="student"]) .preserve-3d > div:not(.dark, .dark *) .bg-amber-500\/10 {
   color: #b45309 !important;
   background-color: rgba(180, 83, 9, 0.1) !important;
 }
 
 /* Light mode brand gradient overrides */
-:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) {
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-gradient-vibrant:not(.dark, .dark *) {
   background: linear-gradient(135deg, #f25b29 0%, #ff843d 50%, #fbbf24 100%) !important;
 }
 
 /* Prevent light mode text-white overrides inside vibrant gradients */
-:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) h1.text-white,
-:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) h2.text-white,
-:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) h3.text-white,
-:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) h4.text-white,
-:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) h5.text-white,
-:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) h6.text-white,
-:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) p.text-white,
-:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) p.text-white\/70,
-:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) span.text-white,
-:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) div.text-white,
-:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) .text-white,
-:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) span.relative.z-10.italic.tracking-tighter {
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-gradient-vibrant:not(.dark, .dark *) h1.text-white,
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-gradient-vibrant:not(.dark, .dark *) h2.text-white,
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-gradient-vibrant:not(.dark, .dark *) h3.text-white,
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-gradient-vibrant:not(.dark, .dark *) h4.text-white,
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-gradient-vibrant:not(.dark, .dark *) h5.text-white,
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-gradient-vibrant:not(.dark, .dark *) h6.text-white,
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-gradient-vibrant:not(.dark, .dark *) p.text-white,
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-gradient-vibrant:not(.dark, .dark *) p.text-white\/70,
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-gradient-vibrant:not(.dark, .dark *) span.text-white,
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-gradient-vibrant:not(.dark, .dark *) div.text-white,
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-gradient-vibrant:not(.dark, .dark *) .text-white,
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-gradient-vibrant:not(.dark, .dark *) span.relative.z-10.italic.tracking-tighter {
   color: #ffffff !important;
 }
 
-:root:not(.dark) .bg-gradient-vibrant:not(.dark, .dark *) .text-white\/70 {
+:root:not(.dark):not([data-workspace-theme="student"]) .bg-gradient-vibrant:not(.dark, .dark *) .text-white\/70 {
   color: rgba(255, 255, 255, 0.7) !important;
 }
 

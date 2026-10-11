@@ -20,6 +20,9 @@ import java.util.UUID;
 
 @Service
 public class AdminService {
+    /** How many days of history the dashboard charts show. */
+    private static final int CHART_WINDOW_DAYS = 30;
+
     private final UserRepository userRepository;
     private final SystemSettingRepository systemSettingRepository;
     private final JdbcTemplate jdbcTemplate;
@@ -37,7 +40,37 @@ public class AdminService {
         long cards = count("select count(*) from \"Cards\" where \"IsDeleted\" = false");
         long revenue = count("select coalesce(sum(\"Amount\"), 0) from \"PaymentTransactions\" where \"Status\" = 'Paid'");
         return new AdminDashboardStatsDto(userRepository.countByIsDeletedFalse(),
-                userRepository.countActiveSubscriptions(Instant.now()), revenue, scenarios, cards);
+                userRepository.countActiveSubscriptions(Instant.now()), revenue, scenarios, cards,
+                growthData(), sessionData());
+    }
+
+    /** Daily learner signups over the last {@value #CHART_WINDOW_DAYS} days, oldest first. */
+    private List<AdminDashboardStatsDto.GrowthPoint> growthData() {
+        return jdbcTemplate.queryForList("""
+                        select to_char("CreatedAt", 'YYYY-MM-DD') as day, count(*) as total
+                        from "Users"
+                        where "IsDeleted" = false
+                          and "CreatedAt" >= now() - make_interval(days => ?)
+                        group by 1 order by 1
+                        """, CHART_WINDOW_DAYS)
+                .stream()
+                .map(r -> new AdminDashboardStatsDto.GrowthPoint(
+                        String.valueOf(r.get("day")), ((Number) r.get("total")).longValue()))
+                .toList();
+    }
+
+    /** Daily practice sessions over the last {@value #CHART_WINDOW_DAYS} days, oldest first. */
+    private List<AdminDashboardStatsDto.SessionPoint> sessionData() {
+        return jdbcTemplate.queryForList("""
+                        select to_char("StartedAt", 'YYYY-MM-DD') as day, count(*) as total
+                        from "ScenarioSessions"
+                        where "StartedAt" >= now() - make_interval(days => ?)
+                        group by 1 order by 1
+                        """, CHART_WINDOW_DAYS)
+                .stream()
+                .map(r -> new AdminDashboardStatsDto.SessionPoint(
+                        String.valueOf(r.get("day")), ((Number) r.get("total")).longValue()))
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -80,4 +113,29 @@ public class AdminService {
     }
 
     private long count(String sql) { return jdbcTemplate.queryForObject(sql, Long.class); }
+
+    /**
+     * Ensures the install has at least one account that can reach {@code /admin}.
+     *
+     * <p>On a fresh database the first registered user is promoted. On an existing
+     * one — where users predate this rule — {@code count() == 0} never fires, so
+     * this also grants {@code ADMIN_EMAIL}, when set, an admin role. Without
+     * either path an upgraded install can end up with no administrator at all.
+     *
+     * <p>Never demotes or overwrites a role that is already set.
+     */
+    static void bootstrapAdminRole(UserRepository userRepository, User user) {
+        bootstrapAdminRole(userRepository, user, System.getenv("ADMIN_EMAIL"));
+    }
+
+    static void bootstrapAdminRole(UserRepository userRepository, User user, String configuredAdminEmail) {
+        if (userRepository.count() == 0) {
+            user.setRole("Admin");
+            return;
+        }
+        if (configuredAdminEmail != null && !configuredAdminEmail.isBlank()
+                && userRepository.countByRoleAndEmailIgnoreCase("Admin", configuredAdminEmail) == 0) {
+            user.setRole("Admin");
+        }
+    }
 }

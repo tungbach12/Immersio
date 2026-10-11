@@ -7,13 +7,13 @@ Language learning platform with AI roleplay scenarios, spaced-repetition flashca
 
 | Layer | Tech |
 |---|---|
-| Backend | ASP.NET Core 9, C#, Clean Architecture |
-| Database | PostgreSQL + EF Core |
+| Backend | Java 21, Spring Boot 4 (Modulith), Maven |
+| Database | PostgreSQL + Flyway + Hibernate (`ddl-auto: validate`) |
 | Frontend | React 19 + TypeScript + Vite + Tailwind CSS v4 |
-| AI | Groq, Gemini, Nvidia (LLM); Azure Speech (pronunciation) |
+| AI | 9Router VPS1 (all LLM/JSON/TTS); Azure Speech (pronunciation) |
 | Payments | PayOS (Vietnamese gateway) |
 | Storage | Cloudinary (images) |
-| Deploy | VPS (Docker Compose + Nginx) + Vercel (frontend) |
+| Deploy | VPS (Docker Compose + Nginx) |
 
 ## Ports & URLs
 
@@ -21,22 +21,27 @@ Language learning platform with AI roleplay scenarios, spaced-repetition flashca
 |---|---|
 | Backend API | http://localhost:5249 |
 | Frontend dev | http://localhost:3000 |
-| Swagger UI | http://localhost:5249/api/swagger |
+| Swagger UI | http://localhost:5249/swagger-ui.html |
+| Health | http://localhost:5249/api/health |
 
 ## Architecture
 
 ```
-immersioFe/          React SPA (Vercel)
-src/
-  Immersio.Domain/         Entities, domain exceptions
-  Immersio.Application/    Services, DTOs, interfaces
-  Immersio.Infrastructure/ EF Core, repositories, external APIs
-  Immersio.WebApi/         Controllers, Program.cs, middleware
+immersioFe/          React SPA
+backend/              Java 21 Spring Modulith
+  users/              auth, admin, health
+  flashcards/         decks + SRS
+  scenarios/          AI roleplay sessions
+  practice/           pronunciation, CEFR, TTS, dictionary
+  subscriptions/      plans, PayOS payments
+  upload/             Cloudinary
+  shared/             ApiResponse, GlobalExceptionHandler, JWT, email
 ```
 
-- All business logic in `Immersio.Application.Services`
+- Business logic lives in each module's `service/` package
 - Controllers are thin: validate auth → call service → return `ApiResponse<T>`
-- `GlobalExceptionMiddleware` maps domain exceptions to HTTP codes
+- `GlobalExceptionHandler` maps domain exceptions to HTTP codes
+- `ModulithArchitectureTest` enforces module boundaries — keep cross-module access to public API
 
 ## Auth Flow
 - JWT access token (15 min) + refresh token (7 days) with rotation
@@ -44,21 +49,22 @@ src/
 - Google OAuth supported (ClientId must match backend)
 
 ## Key Config Files
-- `src/Immersio.WebApi/appsettings.json` — DB connection, JWT key, API keys (NOT committed)
-- `immersioFe/.env` — `VITE_GOOGLE_CLIENT_ID`, `GROQ_API_KEY` (NOT committed)
+- `backend/src/main/resources/application.yml` — DB, JWT, AI, PayOS config (env-overridable)
+- `.env` at repo root — `JWT_SECRET`, `NINE_ROUTER_API_KEY`, `PAYOS_*`, `AZURE_SPEECH_*` (NOT committed)
+- `immersioFe/.env` — `VITE_GOOGLE_CLIENT_ID` (NOT committed)
 - `.github/workflows/deploy.yml` — CI/CD: build frontend → push Docker image → SSH deploy to VPS
 
 ## Domain Entities
 `User`, `Deck`/`Card` (SRS flashcards), `Scenario`/`ScenarioItem`/`ScenarioSession`/`SessionMessage` (AI roleplay), `UserPronunciationLog`, `SystemSetting`, `PaymentTransaction`
 
 ## Deployment
-- Frontend → Vercel (auto from `main`)
+- Frontend → `scp` to `/var/www/immersio` on VPS2 (nginx static)
 - Backend → GHCR Docker image → VPS via SSH (`appleboy/ssh-action`)
 - VPS: Docker Compose (`docker-compose.yml` at repo root) + Nginx reverse proxy
 
 ## Dev Defaults
 - Default admin seeded on startup: `admin@immersio.com` / `Admin123!`
-- EF Core migrations run automatically on startup
+- Flyway migrations run automatically on startup
 - `ThemeManager` in `App.tsx`: `/admin/*` routes always dark, student views always light
 
 ## Naming Conventions

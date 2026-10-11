@@ -37,7 +37,7 @@ cp ~/.claude/plugins/.../ecc-universal/scripts/harness-audit.js scripts/harness-
 
 | File | Mục đích |
 |---|---|
-| `.claude/settings.json` | Project-level permissions: cho phép các lệnh thường dùng (`npm`, `dotnet`, `git`) |
+| `.claude/settings.json` | Project-level permissions: cho phép các lệnh thường dùng (`npm`, `mvn`, `git`) |
 | `.claude/hooks.json` | Khai báo hook entry points (cần cho security guardrails check) |
 | `.claude/hooks/hooks.json` | Guard thực tế: block `git push --force`, `git reset --hard`, cảnh báo khi ghi `.env` / `appsettings.json` |
 | `.claude/memory.md` | Project memory: stack, ports, auth flow, deployment topology |

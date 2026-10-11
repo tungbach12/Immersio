@@ -1,29 +1,38 @@
-import { Users, Play, Clock, CreditCard } from "lucide-react";
+import { Users, Sparkles, Layers, CreditCard } from "lucide-react";
 import type { AdminDashboardStats } from "@/services/admin";
 
+const VND = new Intl.NumberFormat("vi-VN");
+
 export function AdminSummary({ stats }: { stats: AdminDashboardStats }) {
+  // Every field is read defensively: the endpoint is the source of truth and a
+  // missing field must degrade to a placeholder, never crash the dashboard.
+  const totalUsers = stats.totalUsers ?? 0;
+  const activeSubscriptions = stats.activeSubscriptions ?? 0;
+  const totalRevenueVnd = stats.totalRevenueVnd ?? 0;
+  const totalScenarios = stats.totalScenarios ?? 0;
+
   const metrics = [
     {
       label: "Learners",
-      value: stats.totalUsers.toLocaleString(),
+      value: totalUsers.toLocaleString(),
       detail: "Registered accounts",
       icon: Users,
     },
     {
-      label: "Active conversations",
-      value: stats.activeSessions.toLocaleString(),
-      detail: "Current practice sessions",
-      icon: Play,
+      label: "Active plans",
+      value: activeSubscriptions.toLocaleString(),
+      detail: "Subscriptions currently active",
+      icon: Sparkles,
     },
     {
-      label: "Average practice",
-      value: stats.averageDuration,
-      detail: "Time per session",
-      icon: Clock,
+      label: "Scenarios",
+      value: totalScenarios.toLocaleString(),
+      detail: "Published roleplay scenarios",
+      icon: Layers,
     },
     {
       label: "Revenue",
-      value: stats.revenue,
+      value: `${VND.format(totalRevenueVnd)} ₫`,
       detail: "Paid memberships",
       icon: CreditCard,
     },

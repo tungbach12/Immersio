@@ -12,9 +12,9 @@ Two independently runnable parts:
 
 | Part | Path | Tech | URL |
 |---|---|---|---|
-| Backend API | `src/` | ASP.NET Core 9, C#, PostgreSQL | `http://localhost:5249` |
+| Backend API | `backend/` | Java 21, Spring Boot 4 Modulith, PostgreSQL | `http://localhost:5249` |
 | Frontend SPA | `immersioFe/` | React 19 + TypeScript + Vite | `http://localhost:3000` |
-| Swagger UI | — | — | `http://localhost:5249/api/swagger` |
+| Swagger UI | — | — | `http://localhost:5249/swagger-ui.html` |
 
 ---
 
@@ -70,7 +70,8 @@ Defined in `.claude/hooks/hooks.json`, these run automatically:
 Pre-approved in `.claude/settings.json` (no prompt required):
 ```
 npm run lint/build/dev/ci/install
-dotnet build/run/test/ef
+./mvnw spring-boot:run / test / verify / compile (from `backend/`)
+npm test / npm run test:watch (from `immersioFe/`) — frontend component + service tests
 git status/diff/log/add/commit/checkout/branch/fetch/pull
 ls, find, Read(**), node scripts/harness-audit.js
 ```
@@ -131,7 +132,7 @@ Invoke with `/ecc:skill-name` or ask Claude to activate:
 | Vite config, plugins, HMR, env vars | `/ecc:vite-patterns` |
 | REST API design (controllers) | `/ecc:api-design`, `/ecc:backend-patterns` |
 | PostgreSQL queries or schema | `/ecc:postgres-patterns` |
-| EF Core migrations | `/ecc:database-migrations` |
+| Flyway migrations | `/ecc:database-migrations` |
 | TDD step-by-step | `/ecc:tdd-workflow` |
 | E2E browser tests | `/ecc:e2e-testing` |
 | Security audit | `/ecc:security-review` |
@@ -153,7 +154,7 @@ Claude spawns these automatically or on request:
 | `code-reviewer` | After writing or modifying any code |
 | `tdd-guide` | New features, bug fixes |
 | `security-reviewer` | Auth, payments, DB queries, user input handling |
-| `build-error-resolver` | `dotnet build` or `npm build` failures |
+| `build-error-resolver` | `mvn` or `npm run build` failures |
 | `react-reviewer` | Changes to `.tsx`/`.jsx` files |
 | `typescript-reviewer` | Changes to `.ts` files |
 | `e2e-runner` | Critical user flows |
@@ -163,56 +164,58 @@ Spawn multiple agents in parallel when their work is independent.
 
 ---
 
-## Backend (ASP.NET Core)
+## Backend (Java 21 / Spring Modulith)
 
 ### Commands
 
 ```bash
-dotnet run --project src/Immersio.WebApi              # API on http://localhost:5249
-dotnet build src/Immersio.sln
-dotnet test
+cd backend
+./mvnw spring-boot:run                    # API on http://localhost:5249
+./mvnw test                               # 205 tests
+./mvnw verify                             # tests + Modulith architecture check
 
-# EF Core migrations
-dotnet ef migrations add <Name> \
-  --project src/Immersio.Infrastructure \
-  --startup-project src/Immersio.WebApi
-dotnet ef database update \
-  --project src/Immersio.Infrastructure \
-  --startup-project src/Immersio.WebApi
+# Flyway migrations run automatically on boot (ddl-auto: validate).
+# Add a new one as backend/src/main/resources/db/migration/V<N>__<name>.sql
 ```
 
 ### Configuration
 
-Copy `src/Immersio.WebApi/appsettings.example.json` → `appsettings.json` (not committed):
+`backend/src/main/resources/application.yml`. Every key reads a preferred env var with a
+fallback to the .NET-era name the production `.env` already contains (e.g. `Jwt__Key`,
+`PayOS__ClientId`), so existing deployments need no `.env` changes:
 
-| Key | Purpose |
+| Env var | Purpose |
 |---|---|
-| `ConnectionStrings:DefaultConnection` | PostgreSQL connection string |
-| `Jwt:Key` | ≥32-byte base64 secret |
-| `Google:ClientId` | Google OAuth (must match frontend) |
-| `NINE_ROUTER_API_KEY` | 9Router key (all AI routes through 9Router VPS1) |
-| `Azure:Speech` | Pronunciation scoring |
-| `Cloudinary` | Image uploads |
-| `Email:Smtp` | Gmail SMTP |
-| `PayOS` | Vietnamese payment gateway |
+| `SPRING_DATASOURCE_URL` / `_USERNAME` / `_PASSWORD` | PostgreSQL connection |
+| `JWT_SECRET` (fallback `Jwt__Key`) | ≥32-byte base64 signing secret |
+| `GOOGLE_CLIENT_ID` (fallback `Google__ClientId`) | Google OAuth (must match frontend) |
+| `NINE_ROUTER_API_KEY` | 9Router key — all AI chat/JSON/TTS routes through 9Router VPS1 |
+| `AZURE_SPEECH_API_KEY` / `_REGION` | Pronunciation scoring (9Router edge-tts fallback) |
+| `EMAIL_SMTP_*` | Gmail SMTP |
+| `PAYOS_*` | Vietnamese payment gateway |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated allowed origins |
 
 ### Architecture
 
-Clean Architecture — four projects:
+Spring Modulith — one module per feature area, under `backend/src/main/java/com/immersio/`:
 
-| Project | Role |
+| Module | Role |
 |---|---|
-| `Immersio.Domain` | Entities, domain exceptions |
-| `Immersio.Application` | Service interfaces + implementations, DTOs |
-| `Immersio.Infrastructure` | EF Core `ApplicationDbContext`, repositories, external API wrappers |
-| `Immersio.WebApi` | Controllers, `Program.cs` DI wiring, `GlobalExceptionMiddleware` |
+| `users` | Auth (register/login/Google/JWT refresh), admin ops, `/api/health` |
+| `flashcards` | `Deck`/`Card` entities + SRS scheduling |
+| `scenarios` | AI roleplay sessions, chat, custom flashcard generation |
+| `practice` | Pronunciation assessment, CEFR analysis, TTS, dictionary lookup |
+| `subscriptions` | Plans, PayOS payments, webhook, admin transaction approval |
+| `upload` | Cloudinary image uploads |
+| `shared` | `ApiResponse` envelope, `GlobalExceptionHandler`, JWT, password hashing, email |
 
-- All business logic lives in `Immersio.Application.Services`
 - Controllers are thin: validate auth → call service → return `ApiResponse<T>`
-- `GlobalExceptionMiddleware` maps `NotFoundException`, `UnauthorizedException`, `ConflictException` → HTTP codes
-- EF Core migrations + seed data (admin user, default scenarios) run automatically on startup
+- `GlobalExceptionHandler` maps domain exceptions → HTTP codes
+- Flyway owns the schema; Hibernate runs `ddl-auto: validate` (never creates/drops)
+- `ModulithArchitectureTest` enforces that modules don't reach into each other's internals
 
 **Auth flow**: JWT access tokens (15 min) + refresh tokens (7 days) with rotation.
+Legacy .NET PBKDF2-SHA512 hashes still verify and are re-hashed to BCrypt on first login.
 
 **Domain entities**: `User`, `Deck`/`Card` (SRS), `Scenario`/`ScenarioItem`/`ScenarioSession`/`SessionMessage` (AI roleplay), `UserPronunciationLog`, `SystemSetting`, `PaymentTransaction`.
 

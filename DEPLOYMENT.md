@@ -2,7 +2,7 @@
 
 Full step-by-step guide for deploying Immersio to production.
 Architecture: **React SPA (Vercel or VPS + Nginx)** + **Java 21 Spring Modulith API (Docker on VPS)** + **PostgreSQL (Docker)**.  
-*(Legacy .NET 9 backend preserved under `src/` as a zero-risk rollback option.)*
+*(The legacy .NET 9 backend was removed from the source tree; its published image remains a zero-risk rollback option. See [Rollback](#14-rollback).)*
 
 ---
 
@@ -21,7 +21,7 @@ Architecture: **React SPA (Vercel or VPS + Nginx)** + **Java 21 Spring Modulith 
 11. [Manual Deploy (without CI)](#11-manual-deploy-without-ci)
 12. [Database Management & Cutover](#12-database-management--cutover)
 13. [Monitoring & Logs](#13-monitoring--logs)
-14. [Rollback to .NET](#14-rollback-to-net)
+14. [Rollback](#14-rollback)
 15. [Environment Variable Reference](#15-environment-variable-reference)
 
 ---
@@ -140,7 +140,7 @@ Production runs the Java backend from `backend/` (Spring Boot 4.1, Java 21, Spri
 | Config | `backend/src/main/resources/application.yml` — reads the **same env names** the .NET stack used (`Jwt__Key`, `Google__ClientId`, `Email__Smtp__*`, `PayOS__*`, …) via placeholder fallbacks, plus explicit `SPRING_DATASOURCE_*` from `docker-compose.yml` |
 | Schema | Flyway (`backend/src/main/resources/db/migration`). On the existing production DB Flyway **baselines** (V1 is skipped, schema already exists) and Hibernate runs `ddl-auto: validate` at boot |
 | Passwords | Legacy .NET PBKDF2-SHA512 hashes verify transparently and are re-hashed to BCrypt on first login (upgrade-on-login) |
-| Legacy code | `src/` (.NET) + `ghcr.io/<owner>/immersio-be:latest` remain published — rollback is a one-line compose change (see [Rollback to .NET](#14-rollback-to-net)) |
+| Legacy image | `ghcr.io/<owner>/immersio-be:latest` remains published — rollback is a one-line compose change (see [Rollback](#14-rollback)) |
 
 ---
 
@@ -433,7 +433,7 @@ Create `V<N>__<description>.sql` (N = next version). **Never edit an already-app
 3. Verify: `curl http://localhost/api/health` → `{"success":true,...,"status":"UP"}`.
 4. Verify login with an existing account (legacy PBKDF2 hash → BCrypt upgrade path).
 5. Watch logs: `docker logs immersio-api --tail 200` — Flyway baseline line + Hibernate validate success.
-6. If anything is wrong → [Rollback to .NET](#14-rollback-to-net) (one line + `docker compose up -d`).
+6. If anything is wrong → [Rollback](#14-rollback) (one line + `docker compose up -d`).
 
 ### Backup database
 
@@ -508,10 +508,14 @@ curl http://localhost/api/health
 
 ---
 
-## 14. Rollback to .NET
+## 14. Rollback
 
-The legacy ASP.NET backend remains published as `ghcr.io/<owner>/immersio-be:latest`, and the
-previous image stays cached on the VPS (`docker image prune -f` only removes *dangling* images).
+Rollback is **image-based**. The legacy ASP.NET backend remains published as
+`ghcr.io/<owner>/immersio-be:latest`, and the previous image stays cached on the VPS
+(`docker image prune -f` only removes *dangling* images).
+
+> The .NET **source** has been removed from this repository. It is still recoverable from git
+> history (last commit touching `src/`: `f927824`) — see [Recovering the .NET source](#recovering-the-net-source).
 
 ### Instant rollback (VPS, ~15 seconds)
 
@@ -530,12 +534,27 @@ curl -s http://127.0.0.1:5249/api/health   # .NET has no /api/health — use /sw
 docker logs immersio-api --tail 50
 ```
 
-### Durable rollback (source of truth)
+### Rebuilding from the published image
 
 ```bash
-git revert <java-cutover-commit> && git push origin main
-# CI redeploys both frontend and the .NET backend image
+docker compose pull immersio-api && docker compose up -d
 ```
+
+### Recovering the .NET source
+
+The rollback path above needs only the published image. If you need the .NET **source** back
+(for example to build a fixed image), restore it from git history:
+
+```bash
+# restore the whole tree at its last committed state
+git checkout f927824 -- src/
+
+# or inspect it without restoring
+git show f927824:src/Immersio.WebApi/Program.cs
+```
+
+Note this restores it at its **2026-08-16** state — later fixes that only ever landed in the
+Java port are not in it.
 
 > Note: the database does NOT need rolling back. Flyway only added a
 > `flyway_schema_history` table; the .NET EF Core stack ignores it.

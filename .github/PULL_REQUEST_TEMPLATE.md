@@ -15,7 +15,7 @@
 
 ## Test Plan
 - [ ] Frontend: `npm run lint` passes
-- [ ] Backend: `dotnet build` passes
+- [ ] Backend: `./mvnw verify` passes
 - [ ] Tested locally end-to-end
 
 ## Security

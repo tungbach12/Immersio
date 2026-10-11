@@ -252,7 +252,52 @@ public class ScenarioService {
     }
 
     public void seedScenarios() {
+        if (scenarios.count() > 0) return; // never clobber a curated catalogue
+        for (String[] seed : DEFAULT_SCENARIOS) {
+            scenarios.save(new Scenario(seed[0], seed[1], seed[2], seed[3], seed[4], seed[5], seed[6], seed[7], seed[8], seed[9]));
+        }
     }
+
+    /**
+     * Starter roleplay scenarios, so a fresh install has something to practise.
+     * Columns: title, language, level, category, description, duration,
+     * imageUrl, contextPrompt, initialMessage, avatarUrl.
+     */
+    private static final String[][] DEFAULT_SCENARIOS = {
+            {
+                    "Ordering phở at a Hanoi street stall",
+                    "Vietnamese", "Beginner", "Food & drink",
+                    "Ask for a bowl of phở and pay the bill.",
+                    "5 min",
+                    "/scenarios/pho.jpg",
+                    "You are the owner of a small phở stall in Hanoi. Speak naturally, keep replies short, "
+                            + "and always answer in Vietnamese. Prices are in thousands of đồng.",
+                    "Chào bạn, dùng gì ạ?",
+                    "/avatars/stall-owner.jpg",
+            },
+            {
+                    "Checking into a Hanoi hotel",
+                    "Vietnamese", "Intermediate", "Travel",
+                    "Reserve a room and ask about breakfast and checkout.",
+                    "8 min",
+                    "/scenarios/hotel.jpg",
+                    "You are a receptionist at a mid-range Hanoi hotel. Be courteous and efficient, "
+                            + "answer in Vietnamese, and quote prices in USD.",
+                    "Xin chào, bạn có đặt phòng chưa ạ?",
+                    "/avatars/receptionist.jpg",
+            },
+            {
+                    "Negotiating a street-market price",
+                    "Vietnamese", "Advanced", "Shopping",
+                    "Talk a market vendor down to a fair price for a silk scarf.",
+                    "10 min",
+                    "/scenarios/market.jpg",
+                    "You are a friendly but firm market vendor selling silk scarves. Push back on low "
+                            + "offers, stay in character, and answer in Vietnamese.",
+                    "Scarf này bao nhiêu tiền chị?",
+                    "/avatars/vendor.jpg",
+            },
+    };
 
     // ------------------------------------------------------------------
     // Pure helpers (unit tested)

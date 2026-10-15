@@ -38,6 +38,11 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-your_secure_password_here}
       - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=55 -Djava.security.egd=file:/dev/urandom
+      # Redis cache. Redis is an optimisation only: RedisCacheConfig registers a
+      # CacheErrorHandler that logs and falls through, so an unreachable Redis
+      # degrades to the DB/LLM path instead of failing the request.
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     env_file:
       - .env
       - path: secrets.env
@@ -46,6 +51,8 @@ services:
       - "127.0.0.1:5249:5249"
     depends_on:
       postgres-db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - immersio-network
@@ -56,8 +63,42 @@ services:
         reservations:
           memory: 320M
 
+  # Cache for expensive LLM results (dictionary lookup) and the scenarios catalog.
+  # Capped hard: this VPS is memory-constrained, and allkeys-lru evicts rather
+  # than OOMing if the cap is ever reached.
+  redis:
+    image: redis:7-alpine
+    container_name: immersio-redis
+    restart: always
+    command:
+      - redis-server
+      - --maxmemory
+      - 48mb
+      - --maxmemory-policy
+      - allkeys-lru
+      - --appendonly
+      - "yes"
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - immersio-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 32M
+
 volumes:
   pgdata:
+  redisdata:
 
 networks:
   immersio-network:

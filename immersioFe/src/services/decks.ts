@@ -45,7 +45,10 @@ export async function addDeck(name: string): Promise<Deck> {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(name),
+    // The API reads the name from a `name` key (`body.get("name")`).
+    // Sending the bare string made Spring fail to bind the body and answer HTTP 500,
+    // which the dialog surfaced as "Your words could not be saved."
+    body: JSON.stringify({ name }),
   });
 
   if (!response.ok) {

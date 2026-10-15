@@ -34,6 +34,14 @@ spring:
       minimum-idle: 2
       idle-timeout: 300000
       connection-timeout: 20000
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      # Fail fast: an unreachable or slow Redis must degrade to the DB/LLM path,
+      # never hang the request. See RedisCacheConfig's error handler.
+      timeout: 2s
+      connect-timeout: 2s
   jpa:
     hibernate:
       ddl-auto: validate

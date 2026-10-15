@@ -1,6 +1,7 @@
 package com.immersio.shared.config;
 
 import java.time.Duration;
+import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.immersio.practice.api.dto.DictionaryEntryDto;
@@ -55,16 +56,26 @@ class RedisCacheConfigTest {
 
     @Test
     @DisplayName("a cached payload cannot instantiate a class outside the allowlist")
-    void typeValidatorBlocksForeignTypes() {
+    void typeValidatorBlocksForeignTypes() throws Exception {
         ObjectMapper mapper = RedisCacheConfig.cacheObjectMapper();
 
-        // Simulate a hostile/corrupt cache entry naming an arbitrary class.
-        String hostile = """
-                ["java.lang.Runtime","calc",["id","id"]]
-                """;
+        // Serialise with the real mapper so the fixture matches what Redis actually
+        // stores, then read it back. ScenarioDto has a `double rating`, which Jackson
+        // returns as BigDecimal — the validator must permit java.math.* or the read
+        // fails with "denied resolution" (observed on first deploy).
+        com.immersio.scenarios.api.dto.ScenarioDto original =
+                new com.immersio.scenarios.api.dto.ScenarioDto(
+                        java.util.UUID.fromString("7bcf1a97-a50a-4867-9c36-d8bfce62059b"),
+                        "Discovery: Shibuya Navigation", "English", "Beginner", "Navigation",
+                        "Learn to navigate.", 4.5, "10", null, "ctx", "msg", null,
+                        false, null, null, null, null, List.of());
 
-        assertThatThrownBy(() -> mapper.readValue(hostile, Object.class))
-                .as("polymorphic typing must reject types outside com.immersio/java.util/java.time")
-                .isNotNull();
+        String json = mapper.writeValueAsString(original);
+        assertThat(json).contains("ScenarioDto");
+
+        Object back = mapper.readValue(json, Object.class);
+        assertThat(back).isInstanceOf(com.immersio.scenarios.api.dto.ScenarioDto.class);
+        assertThat(((com.immersio.scenarios.api.dto.ScenarioDto) back).rating()).isEqualTo(4.5);
+        assertThat(((com.immersio.scenarios.api.dto.ScenarioDto) back).id()).isEqualTo(original.id());
     }
 }

@@ -62,6 +62,12 @@ public class RedisCacheConfig implements CachingConfigurer {
                 .allowIfSubType("com.immersio.")
                 .allowIfSubType("java.util.")
                 .allowIfSubType("java.time.")
+                // Jackson reads a JSON decimal back as BigDecimal and an integral back
+                // as BigInteger, so DTO `double`/`long` fields need these allowed or
+                // every read fails with "denied resolution". java.lang covers the
+                // boxed primitives Jackson substitutes.
+                .allowIfSubType("java.math.")
+                .allowIfSubType("java.lang.")
                 .build();
         return new ObjectMapper()
                 .registerModule(new JavaTimeModule())

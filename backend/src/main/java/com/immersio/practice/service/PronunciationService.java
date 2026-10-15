@@ -13,7 +13,11 @@ import com.immersio.practice.domain.UserPronunciationLog;
 import com.immersio.practice.repository.UserPronunciationLogRepository;
 import com.immersio.users.domain.User;
 import com.immersio.users.repository.UserRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
+// Cache name lives in RedisCacheConfig; static import keeps the annotation literal.
+import static com.immersio.shared.config.RedisCacheConfig.DICTIONARY_CACHE;
 
 import java.util.List;
 import java.util.UUID;
@@ -113,6 +117,8 @@ public class PronunciationService {
     }
 
     /** Port of .NET DictionaryLookup: validates nothing (controller does), resolves language. */
+    @Cacheable(cacheNames = DICTIONARY_CACHE,
+            key = "#request.resolvedTargetLanguage() + ':' + #request.word().toLowerCase().trim()")
     public DictionaryEntryDto lookupWord(DictionaryLookupRequest request) {
         String word = request.word() == null ? "" : request.word().trim();
         return llm.lookupWord(word, request.resolvedTargetLanguage());

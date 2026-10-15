@@ -30,8 +30,13 @@ import com.immersio.shared.exception.ResourceNotFoundException;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+// Cache names live in RedisCacheConfig; static imports keep the annotations literal.
+import static com.immersio.shared.config.RedisCacheConfig.SCENARIOS_CACHE;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -98,6 +103,7 @@ public class ScenarioService {
     // ------------------------------------------------------------------
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = SCENARIOS_CACHE, key = "'all'")
     public List<ScenarioDto> getScenarios() {
         return scenarios.findByDeletedFalseOrderByTitleAsc().stream().map(this::dto).toList();
     }
@@ -222,12 +228,14 @@ public class ScenarioService {
     // ------------------------------------------------------------------
 
     @Transactional
+    @CacheEvict(cacheNames = SCENARIOS_CACHE, allEntries = true)
     public ScenarioDto createScenario(CreateScenarioDto r) {
         return dto(scenarios.save(new Scenario(r.title(), r.language(), r.level(), r.category(), r.description(),
                 r.duration(), r.imageUrl(), r.contextPrompt(), r.initialMessage(), r.avatarUrl())));
     }
 
     @Transactional
+    @CacheEvict(cacheNames = SCENARIOS_CACHE, allEntries = true)
     public ScenarioDto updateScenario(UUID id, CreateScenarioDto r) {
         Scenario s = scenarios.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Scenario not found."));
@@ -237,6 +245,7 @@ public class ScenarioService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = SCENARIOS_CACHE, allEntries = true)
     public void deleteScenario(UUID id) {
         Scenario s = scenarios.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Scenario not found."));

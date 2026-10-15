@@ -1,0 +1,134 @@
+services:
+  immersio-api:
+    container_name: immersio-api
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: "671088640"
+        reservations:
+          memory: "335544320"
+    environment:
+      Azure__Speech__ApiKey: ${AZURE_SPEECH_API_KEY}
+      Azure__Speech__Endpoint: https://southeastasia.api.cognitive.microsoft.com/
+      Azure__Speech__Region: southeastasia
+      Cloudinary__ApiKey: ${CLOUDINARY_API_KEY}
+      Cloudinary__ApiSecret: ${CLOUDINARY_API_SECRET}
+      Cloudinary__CloudName: ${CLOUDINARY_CLOUD_NAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      Email__Smtp__FromEmail: ${EMAIL_SMTP_FROM_EMAIL}
+      Email__Smtp__FromName: IMMERSIO
+      Email__Smtp__Host: ${EMAIL_SMTP_HOST}
+      Email__Smtp__Password: ${EMAIL_SMTP_PASSWORD}
+      Email__Smtp__Port: ${EMAIL_SMTP_PORT}
+      Email__Smtp__Username: ${EMAIL_SMTP_USERNAME}
+      Google__ClientId: ${GOOGLE_CLIENT_ID}
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=55 -Djava.security.egd=file:/dev/urandom
+      Jwt__AccessTokenExpiryMinutes: "15"
+      Jwt__Audience: ImmersioUsers
+      Jwt__Issuer: ImmersioApi
+      Jwt__Key: ${JWT_KEY}
+      Jwt__RefreshTokenExpiryDays: "7"
+      NINE_ROUTER_API_KEY: ${NINE_ROUTER_API_KEY}
+      PayOS__ApiKey: ${PAYOS_API_KEY}
+      PayOS__ClientId: ${PAYOS_CLIENT_ID}
+      PayOS__ChecksumKey: ${PAYOS_CHECKSUM_KEY}
+      PayOS__ReturnUrl: https://immersio.me/payment/payos-return
+      PayOS__CancelUrl: https://immersio.me/payment/payos-return
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/ImmersioDb
+      SPRING_DATASOURCE_USERNAME: postgres
+      # Redis cache (dictionary lookups + scenarios catalog)
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    image: ghcr.io/tungbach12/immersio-be-java:latest
+    networks:
+      - immersio-network
+    ports:
+      - target: 5249
+        published: "5249"
+        protocol: tcp
+        host_ip: 127.0.0.1
+    restart: always
+
+  postgres-db:
+    container_name: immersio-db
+    deploy:
+      resources:
+        limits:
+          memory: "268435456"
+        reservations:
+          memory: "134217728"
+    environment:
+      POSTGRES_DB: ImmersioDb
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ImmersioDb"]
+      timeout: 5s
+      interval: 5s
+      retries: 5
+    image: postgres:16-alpine
+    networks:
+      - immersio-network
+    ports:
+      - target: 5432
+        published: "5432"
+        protocol: tcp
+        host_ip: 127.0.0.1
+    restart: always
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Cache for expensive LLM results (dictionary) and the scenarios catalog.
+  # Capped hard: VPS2 is memory-constrained, and allkeys-lru evicts rather
+  # than OOMing if the cap is ever reached.
+  redis:
+    container_name: immersio-redis
+    command:
+      - redis-server
+      - --maxmemory
+      - 48mb
+      - --maxmemory-policy
+      - allkeys-lru
+      - --appendonly
+      - "yes"
+    deploy:
+      resources:
+        limits:
+          memory: "134217728"
+        reservations:
+          memory: "33554432"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 3s
+      interval: 5s
+      retries: 5
+    image: redis:7-alpine
+    networks:
+      - immersio-network
+    ports:
+      - target: 6379
+        published: "6379"
+        protocol: tcp
+        host_ip: 127.0.0.1
+    restart: always
+    volumes:
+      - redisdata:/data
+
+networks:
+  immersio-network:
+    name: immersio_immersio-network
+    driver: bridge
+
+volumes:
+  pgdata:
+    name: immersio_pgdata
+  redisdata:
+    name: immersio_redisdata
